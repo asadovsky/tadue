@@ -1,0 +1,50 @@
+/**
+ * Copyright 2012 Adam Sadovsky. All rights reserved.
+ */
+
+#account-box {
+  padding-top: 0.5em;
+  width: 100%;
+}
+
+#outer-box {
+  border-bottom: 1px solid #bbb;
+  border-top: 1px solid #bbb;
+  margin-top: -1.2em;
+}
+
+#signup-box, #login-box {
+  background-color: #eee;
+  display: block;
+  padding: 1em 1.4em 1em 0;
+  position: relative;
+  z-index: 2;
+}
+
+#login-box {
+  display: none;
+}
+
+#new-user {
+  margin-left: 1.5em;
+}
+
+#existing-user {
+  margin-left: -1px;
+}
+
+.tab {
+  border: 1px solid #bbb;
+  border-radius: 5px;
+  color: #66c;  /* same as anchor color */
+  cursor: pointer;
+  display: inline-block;
+  padding: 0.5em 1em 1.5em 1em;
+  position: relative;
+  text-align: center;
+}
+
+.active-tab {
+  background-color: #eee;
+  z-index: 1;
+}

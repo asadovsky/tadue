@@ -1,0 +1,3 @@
+cron:
+- url: /tasks/enqueue-reminder-emails
+  schedule: every 24 hours

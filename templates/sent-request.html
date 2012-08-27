@@ -1,0 +1,17 @@
+{{define "sent-request-title"}}Sent request{{end}}
+
+{{define "sent-request-body"}}
+{{if not .Data.user.EmailOk}}
+Thanks! Once you verify your email address, we'll send your
+<a href="{{.Data.payUrl}}">payment request</a> to {{.Data.payerEmail}}.
+{{else}}
+Thanks! We've sent your <a href="{{.Data.payUrl}}">payment request</a> to
+{{.Data.payerEmail}}.
+{{end}}
+<br><br>
+We'll also send them periodic reminders to make sure they don't forget to pay
+you.
+<br><br>
+To check on your payment requests, visit your <a href="/account">payments
+  page</a>.
+{{end}}

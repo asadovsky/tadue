@@ -1,0 +1,18 @@
+{{define "pay-title"}}Payment request{{end}}
+
+{{define "pay-css"}}
+<link type="text/css" rel="stylesheet" href="/css/pay.css">
+{{end}}
+
+{{define "pay-body"}}
+{{.Data.req.PayerEmail}}, you owe {{.Data.payee.FullName}}
+({{.Data.payee.PaypalEmail}}) ${{.Data.req.Amount}}.
+<br><br>Description: {{.Data.req.Description}}
+<div id="paypal-button">
+  <a href="{{.Data.url}}&method=paypal">
+    <img src="/static/pay_with_paypal.gif">
+  </a>
+  <br><br>
+  All transactions must comply with the <a href="https://cms.paypal.com/us/cgi-bin/?&cmd=_render-content&content_ID=ua/AcceptableUse_full">PayPal Acceptable Use Policy</a>.
+</div>
+{{end}}

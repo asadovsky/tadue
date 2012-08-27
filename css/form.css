@@ -1,0 +1,78 @@
+/**
+ * Copyright 2012 Adam Sadovsky. All rights reserved.
+ */
+
+input, select {
+  padding: 0.2em;
+}
+
+input {
+  font-size: 1.1em;
+}
+
+select {
+  font-size: 0.9em;
+}
+
+.main-button {
+  background: -moz-linear-gradient(#fe7, #ed3);
+  background: -ms-linear-gradient(#fe7, #ed3);
+  background: -webkit-linear-gradient(#fe7, #ed3);
+  background: linear-gradient(#fe7, #ed3);
+  border: solid 1px #ba3;
+  border-radius: 3px;
+  color: #333;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 0.5em;
+  padding: 0.5em 2em;
+  text-shadow: 1px 1px #fff;
+}
+
+.main-button:hover, .main-button:active {
+  border: solid 1px #981;
+}
+
+.main-button:active {
+  background: #ed3;
+  border: solid 1px #ba3;
+  text-shadow: none;
+}
+
+table.form {
+  width: 100%;
+}
+
+.form td {
+  padding-top: 0.9em;
+}
+
+.form tr:first-child td {
+  padding-top: 0;
+}
+
+#copy-email-row td {
+  font-size: 0.9em;
+  padding-left: 1.2em;
+  padding-top: 0.4em;
+}
+
+.field-name {
+  padding-right: 0.6em;
+  text-align: right;
+  vertical-align: middle;
+  width: 10em;
+}
+
+.field-input {
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  width: 20em;
+}
+
+.error-msg {
+  color: #f44;
+  font-size: 0.9em;
+  font-weight: bold;
+  padding-left: 0.4em;
+}

@@ -1,0 +1,19 @@
+Hello {{.payerEmail}},
+<br><br>
+{{if .isReminder}}
+This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested
+${{.amount}} from you via Tadue.
+<br><br>
+Description: {{.description}}
+<br><br>
+This request was made on {{.creationDate}}.
+{{else}}
+{{.payeeFullName}} ({{.payeeEmail}}) has requested ${{.amount}} from you via
+Tadue.
+<br><br>
+Description: {{.description}}
+{{end}}
+<br><br>
+<a href="{{.payUrl}}">Click here</a> to make your payment.
+<br><br>
+Thanks,<br>The Tadue Team

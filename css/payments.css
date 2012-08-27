@@ -1,0 +1,130 @@
+/**
+ * Copyright 2012 Adam Sadovsky. All rights reserved.
+ */
+
+.warning {
+  background-color: #fdc;
+  border: 1px solid #ca9;
+  padding: 0.5em;
+}
+
+#top-msg {
+  margin-bottom: 2em;
+}
+
+#button-row {
+  margin-bottom: 0.5em;
+}
+
+.button {
+  background: -moz-linear-gradient(#fff, #ddd);
+  background: -ms-linear-gradient(#fff, #ddd);
+  background: -webkit-linear-gradient(#fff, #ddd);
+  background: linear-gradient(#fff, #ddd);
+  border: solid 1px #aaa;
+  border-radius: 2px;
+  color: #333;
+  cursor: pointer;
+  display: inline-block;
+  margin-right: 0.3em;
+  padding: 0.3em 1.2em;
+  text-shadow: 1px 1px #fff;
+}
+
+.button:hover, .button:active {
+  border: solid 1px #777;
+}
+
+.button:active {
+  background: #ddd;
+  border: solid 1px #aaa;
+  text-shadow: none;
+}
+
+.button[disabled] {
+  background: #eee;
+  border: solid 1px #ccc;
+  color: #888;
+  cursor: auto;
+  text-shadow: none;
+}
+
+#undo {
+  color: #66c;  /* same as anchor color */
+  cursor: pointer;
+  display: none;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+#undo:hover {
+  text-decoration: underline;
+}
+
+#payments-table {
+  width: 100%;
+}
+
+.highlight {
+  background: #ffc !important;  /* override is-paid background */
+}
+
+#payments-table td, #payments-table th {
+  font-size: 0.9em;
+  height: 2em;
+  padding-left: 1.4em;
+  vertical-align: middle;
+/*border-left: 1px solid #000;*/
+}
+
+#payments-table th {
+  text-align: left;
+}
+
+#payments-table td {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#payments-table #no-requests-msg {
+  font-size: 1em;
+  height: 5em;
+  padding-left: 0;
+  text-align: center;
+}
+
+#payments-table .is-paid {
+  background: #eee;
+}
+
+#payments-table .cell-checkbox {
+  padding-left: 0.5em;
+  width: 4%;
+}
+
+#payments-table .cell-email {
+  padding-left: 0;
+  width: 22%;
+}
+
+#payments-table .cell-amount {
+  text-align: right;
+  width: 12%;
+}
+
+#payments-table .cell-description {
+  width: 28%;
+}
+
+#payments-table .cell-status {
+  width: 20%;
+}
+
+#payments-table .cell-creation-date {
+  padding-right: 0.5em;
+  text-align: right;
+  width: 14%;
+}

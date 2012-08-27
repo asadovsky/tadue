@@ -1,0 +1,78 @@
+{{define "request-payment-title"}}Request payment{{end}}
+
+{{define "request-payment-css"}}
+<link type="text/css" rel="stylesheet" href="/css/form.css">
+<link type="text/css" rel="stylesheet" href="/css/request-payment.css">
+{{end}}
+
+{{define "request-payment-js"}}
+<script type="text/javascript" src="/js/signup.js"></script>
+<script type="text/javascript" src="/js/request-payment.js"></script>
+{{end}}
+
+{{define "request-payment-body"}}
+<form action="/request-payment" method="post" onsubmit="return checkForm();">
+  <table class="form">
+    <tr>
+      <td class="field-name">Payer's email</td>
+      <td class="field-value">
+        <input type="text" name="payer-email" id="payer-email" class="field-input">
+        <span id="payer-email-err" class="error-msg"></span>
+      </td>
+    </tr>
+    <tr>
+      <td class="field-name">Amount (USD)</td>
+      <td class="field-value">
+        <input type="text" name="amount" id="amount" class="field-input">
+        <span id="amount-err" class="error-msg"></span>
+      </td>
+    </tr>
+    <tr>
+      <td class="field-name">Payment type</td>
+      <td>
+        <select name="payment-type">
+          <option value="personal">Personal</option>
+          <option value="goods">Goods</option>
+          <option value="services">Services</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td class="field-name">Description</td>
+      <td class="field-value">
+        <input type="text" name="description" id="description" class="field-input">
+        <span id="description-err" class="error-msg"></span>
+      </td>
+    </tr>
+    {{if not .FullName}}
+    <tr>
+      <td colspan="10">
+        <input type="hidden" name="do-signup" value="true" id="do-signup">
+        <div id="account-box">
+          <div id="new-user" class="tab active-tab">New user
+          </div><div id="existing-user" class="tab">Existing user</div>
+          <div id="outer-box">
+            <div id="signup-box">
+              <table class="form">
+                {{template "signup-table"}}
+              </table>
+            </div>
+            <div id="login-box">
+              <table class="form">
+                {{template "login-table"}}
+              </table>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    {{end}}
+    <tr>
+      <td></td>
+      <td id="submit-row">
+        <input type="submit" class="main-button" value="Submit">
+      </td>
+    </tr>
+  </table>
+</form>
+{{end}}

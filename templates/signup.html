@@ -1,0 +1,61 @@
+{{define "signup-title"}}Sign up{{end}}
+
+{{define "signup-css"}}
+<link type="text/css" rel="stylesheet" href="/css/form.css">
+{{end}}
+
+{{define "signup-js"}}
+<script type="text/javascript" src="/js/signup.js"></script>
+{{end}}
+
+{{define "signup-table"}}
+<tr>
+  <td class="field-name">Full name</td>
+  <td class="field-value">
+    <input type="text" name="signup-name" id="signup-name" class="field-input">
+    <span id="signup-name-err" class="error-msg"></span>
+  </td>
+</tr>
+<tr>
+  <td class="field-name">Email</td>
+  <td class="field-value">
+    <input type="text" name="signup-email" id="signup-email" class="field-input">
+    <span id="signup-email-err" class="error-msg"></span>
+  </td>
+</tr>
+<tr>
+  <td class="field-name">Paypal email</td>
+  <td class="field-value">
+    <input type="text" name="signup-paypal" id="signup-paypal" class="field-input">
+    <span id="signup-paypal-err" class="error-msg"></span>
+  </td>
+</tr>
+<tr id="copy-email-row">
+  <td></td>
+  <td>
+    <input type="checkbox" name="signup-copy-email" id="signup-copy-email">
+    <label for="signup-copy-email">Same as primary email</label>
+  </td>
+</tr>
+<tr>
+  <td class="field-name">New password</td>
+  <td class="field-value">
+    <input type="password" name="signup-password" id="signup-password" class="field-input">
+    <span id="signup-password-err" class="error-msg"></span>
+  </td>
+</tr>
+{{end}}
+
+{{define "signup-body"}}
+<form action="/signup" method="post" onsubmit="return checkSignupForm();">
+  <table class="form">
+    {{template "signup-table"}}
+    <tr>
+      <td></td>
+      <td>
+        <input type="submit" class="main-button" value="Submit">
+      </td>
+    </tr>
+  </table>
+</form>
+{{end}}

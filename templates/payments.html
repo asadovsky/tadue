@@ -1,0 +1,71 @@
+{{define "payments-title"}}Payments{{end}}
+
+{{define "payments-css"}}
+<link type="text/css" rel="stylesheet" href="/css/payments.css">
+{{end}}
+
+{{define "payments-js"}}
+<script type="text/javascript" src="/js/payments.js"></script>
+{{end}}
+
+{{define "payments-body"}}
+<div id="top-msg">
+  {{if .Data.isNew}}
+  Thanks for signing up!
+  <br><br>
+  Before you can send payment requests, you'll need to verify your email
+  address.
+  <br><br>
+  A verification link has been sent to {{.Data.user.Email}}.
+  {{else}}
+  {{if not .Data.user.EmailOk}}
+  <div class="warning">
+    Your email address ({{.Data.user.Email}}) has not been verified.
+    <br><br>
+    If you have not received an email containing a verification
+    link, <a href="/account/sendverif">click here</a> to request a new one.
+  </div>
+  {{end}}
+</div>
+<div id="button-row">
+  <input type="button" class="button" id="mark-as-paid" value="Mark as paid">
+  <input type="button" class="button" id="send-reminder" value="Send reminder email">
+  <input type="button" class="button" id="delete" value="Delete">
+  <span id="undo">Undo</span>
+</div>
+{{template "payments-data" .Data}}
+{{end}}
+{{end}}
+
+{{define "payments-data"}}
+<div id="payments-data">
+  <input id="undoable-req-ids" type="hidden" value="{{.undoableReqIds}}">
+  <table id="payments-table">
+    <tr>
+      <th class="cell-checkbox"><input type="checkbox" id="master-checkbox"></th>
+      <th class="cell-email">Email</th>
+      <th class="cell-amount">Amount</th>
+      <th class="cell-description">Description</th>
+      <th class="cell-status">Status</th>
+      <th class="cell-creation-date">Request date</th>
+    </tr>
+    {{if not .rendReqs}}
+    <tr>
+      <td id="no-requests-msg" colspan=100>No payment
+        requests. <a href="/request-payment">Click here</a> to make one.</td>
+    </tr>
+    {{end}}
+    {{range .rendReqs}}
+    <tr{{if .IsPaid}} class="is-paid"{{end}}>
+      <input class="row-req-id" type="hidden" value="{{.ReqId}}">
+      <td class="cell-checkbox"><input type="checkbox" class="checkbox"></td>
+      <td class="cell-email" title="{{.PayerEmail}}">{{.PayerEmail}}</td>
+      <td class="cell-amount">{{.Amount}}</td>
+      <td class="cell-description" title="{{.Description}}">{{.Description}}</td>
+      <td class="cell-status">{{.Status}}</td>
+      <td class="cell-creation-date">{{.CreationDate}}</td>
+    </tr>
+    {{end}}
+  </table>
+</div>
+{{end}}

@@ -1,0 +1,23 @@
+p0
+- End-to-end testing
+
+p1
+- Memcached
+- Add settings page (password change, paypal email, etc.)
+- Nicer homepage
+- Write unit tests, e.g. for payments page
+- Handle ajax error
+- For templates, use map that asserts looked-up keys exist
+- Add GetFormValueOrDie function
+
+p2
+- Time zone
+- Filler content (about, terms, etc.)
+- Add "forgot password" reset mechanism
+- Security, e.g. throttle QPS per IP
+- Limit how much money a user can receive per week
+- More logging
+- Refresh index.yaml file
+- Periodic summary email?
+- Batch process to delete expired VerifyEmail records, deleted PayRequests, etc.
+- Error if JS or cookies disabled
