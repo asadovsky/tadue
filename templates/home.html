@@ -1,11 +1,15 @@
 {{define "home-title"}}Home{{end}}
 
+{{define "home-css"}}
+<link type="text/css" rel="stylesheet" href="/css/form.css">
+{{end}}
+
 {{define "home-body"}}
-<div>Tadue makes it easy to collect payments.</div>
-<ol>
-  <li>Request a payment.</li>
-  <li>Tadue takes care of payment reminders.</li>
-  <li>Tadue keeps you in the loop.</li>
-</ol>
-Alpha test.
+<p>Tadue makes it easy to collect payments from your friends.</p>
+<p>When you request a payment, Tadue will send the payer a PayPal link, pre-filled with all the payment details. For personal payments, there is no charge.</p>
+<p>From there, Tadue will take care of sending periodic reminders and keeping track of whether you've been paid. No more awkward conversations, no more stress!</p>
+<p>And best of all, it's free!</p>
+<form method="link" action="/request-payment">
+  <input type="submit" class="main-button" value="Make a payment request">
+</form>
 {{end}}

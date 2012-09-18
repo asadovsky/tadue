@@ -179,8 +179,7 @@ func doSendVerif(c *Context) error {
 	}
 
 	msg := &mail.Message{
-		// Sender:   "noreply@tadue.com",
-		Sender:   "asadovskybiz@gmail.com",
+		Sender:   "noreply@tadue.com",
 		To:       []string{v.Email},
 		Subject:  "Welcome to Tadue",
 		HTMLBody: string(body),
@@ -271,11 +270,27 @@ func getPayRequestOrDie(c *Context, reqKey *datastore.Key) *PayRequest {
 // Handlers
 
 func handleHome(w http.ResponseWriter, r *http.Request, c *Context) {
-	if r.Method != "GET" || r.URL.Path != "/" {
+	if r.URL.Path != "/" {
 		Serve404(w)
 		return
 	}
 	RenderPageOrDie(w, c, "home", nil)
+}
+
+func handleAbout(w http.ResponseWriter, r *http.Request, c *Context) {
+	RenderPageOrDie(w, c, "about", nil)
+}
+
+func handleTerms(w http.ResponseWriter, r *http.Request, c *Context) {
+	RenderPageOrDie(w, c, "terms", nil)
+}
+
+func handlePrivacy(w http.ResponseWriter, r *http.Request, c *Context) {
+	RenderPageOrDie(w, c, "privacy", nil)
+}
+
+func handleHelp(w http.ResponseWriter, r *http.Request, c *Context) {
+	RenderPageOrDie(w, c, "help", nil)
 }
 
 func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -660,7 +675,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
 	AssertLoggedIn(c)
-	RenderPageOrDie(w, c, "text", "settings")
+	RenderPageOrDie(w, c, "settings", nil)
 }
 
 func handleSendVerif(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -771,8 +786,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 		subject += fmt.Sprintf(" request from %s", template.HTMLEscapeString(payee.FullName))
 
 		msg := &mail.Message{
-			// Sender:   "noreply@tadue.com",
-			Sender:   "asadovskybiz@gmail.com",
+			Sender:   "noreply@tadue.com",
 			To:       []string{req.PayerEmail},
 			Subject:  subject,
 			HTMLBody: string(body),
@@ -830,8 +844,7 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 	CheckError(err)
 
 	msg := &mail.Message{
-		// Sender:   "noreply@tadue.com",
-		Sender:   "asadovskybiz@gmail.com",
+		Sender:   "noreply@tadue.com",
 		To:       []string{req.PayeeEmail},
 		Subject:  "You've been paid!",
 		HTMLBody: string(body),
@@ -917,10 +930,10 @@ func init() {
 	http.HandleFunc("/tasks/enqueue-reminder-emails", WrapHandler(handleEnqueueReminderEmails))
 	http.HandleFunc("/tasks/send-got-paid-email", WrapHandler(handleSendGotPaidEmail))
 	// Bottom links.
-	http.HandleFunc("/about", PlaceholderHandler("about"))
-	http.HandleFunc("/privacy", PlaceholderHandler("privacy"))
-	http.HandleFunc("/terms", PlaceholderHandler("terms"))
-	http.HandleFunc("/help", PlaceholderHandler("help"))
+	http.HandleFunc("/about", WrapHandler(handleAbout))
+	http.HandleFunc("/privacy", WrapHandler(handlePrivacy))
+	http.HandleFunc("/terms", WrapHandler(handleTerms))
+	http.HandleFunc("/help", WrapHandler(handleHelp))
 	// Admin links.
 	http.HandleFunc("/admin/dump", WrapHandler(handleDump))
 	// Development links.

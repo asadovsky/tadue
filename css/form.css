@@ -55,6 +55,10 @@ table.form {
   font-size: 0.9em;
   padding-left: 1.2em;
   padding-top: 0.4em;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .field-name {
@@ -68,6 +72,14 @@ table.form {
   border: 1px solid #bbb;
   border-radius: 3px;
   width: 20em;
+}
+
+.field-input:focus {
+  border: 1px solid #66c;
+}
+
+.field-input:disabled {
+  background: #eee;
 }
 
 .error-msg {

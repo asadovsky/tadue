@@ -18,21 +18,6 @@ import (
 	"appengine/urlfetch"
 )
 
-// Sandbox values.
-const (
-	kSandboxHost     = "http://98.248.42.191"
-	kUserId          = "adam_1335650859_biz_api1.gmail.com"
-	kPassword        = "1335650898"
-	kSignature       = "A9gqVQB8-mmb1uodjDQ9XZGG8wdlAohgwF511kB0uyIlOlahuHK9YiQb"
-	kAppId           = "APP-80W284485P519543T"
-	kPayEndpoint     = "https://svcs.sandbox.paypal.com/AdaptivePayments/Pay"
-	kDetailsEndpoint = "https://svcs.sandbox.paypal.com/AdaptivePayments/PaymentDetails"
-	kPayBaseUrl      = "https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_ap-payment"
-	kValidateIpnUrl  = "https://www.sandbox.paypal.com/cgi-bin/webscr"
-)
-
-// TODO(sadovsky): Add prod values.
-
 var headers = map[string]string{
 	"X-PAYPAL-SECURITY-USERID":      kUserId,
 	"X-PAYPAL-SECURITY-PASSWORD":    kPassword,

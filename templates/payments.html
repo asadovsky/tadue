@@ -11,19 +11,17 @@
 {{define "payments-body"}}
 <div id="top-msg">
   {{if .Data.isNew}}
-  Thanks for signing up!
-  <br><br>
-  Before you can send payment requests, you'll need to verify your email
-  address.
-  <br><br>
-  A verification link has been sent to {{.Data.user.Email}}.
+  <p>Thanks for signing up!</p>
+  <p>
+    Before you can send payment requests, you'll need to verify your email address.
+    <br>A verification link has been sent to {{.Data.user.Email}}.
+  </p>
   {{else}}
   {{if not .Data.user.EmailOk}}
   <div class="warning">
     Your email address ({{.Data.user.Email}}) has not been verified.
-    <br><br>
-    If you have not received an email containing a verification
-    link, <a href="/account/sendverif">click here</a> to request a new one.
+    <br>
+    If you have not received an email containing a verification link, <a href="/account/sendverif">click here</a> to request a new one.
   </div>
   {{end}}
 </div>
@@ -51,8 +49,7 @@
     </tr>
     {{if not .rendReqs}}
     <tr>
-      <td id="no-requests-msg" colspan=100>No payment
-        requests. <a href="/request-payment">Click here</a> to make one.</td>
+      <td id="no-requests-msg" colspan=100>No payment requests. <a href="/request-payment">Click here</a> to make one.</td>
     </tr>
     {{end}}
     {{range .rendReqs}}

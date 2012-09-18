@@ -1,17 +1,11 @@
-{{define "sent-request-title"}}Sent request{{end}}
+{{define "sent-request-title"}}Sent Request{{end}}
 
 {{define "sent-request-body"}}
 {{if not .Data.user.EmailOk}}
-Thanks! Once you verify your email address, we'll send your
-<a href="{{.Data.payUrl}}">payment request</a> to {{.Data.payerEmail}}.
+<p>Thanks! Once you verify your email address, we'll send your <a href="{{.Data.payUrl}}">payment request</a> to {{.Data.payerEmail}}.</p>
 {{else}}
-Thanks! We've sent your <a href="{{.Data.payUrl}}">payment request</a> to
-{{.Data.payerEmail}}.
+<p>Thanks! We've sent your <a href="{{.Data.payUrl}}">payment request</a> to {{.Data.payerEmail}}.</p>
 {{end}}
-<br><br>
-We'll also send them periodic reminders to make sure they don't forget to pay
-you.
-<br><br>
-To check on your payment requests, visit your <a href="/account">payments
-  page</a>.
+<p>We'll also send them periodic reminders to make sure they don't forget to pay you.</p>
+<p>To check on your payment requests, visit your <a href="/account">payments page</a>.</p>
 {{end}}

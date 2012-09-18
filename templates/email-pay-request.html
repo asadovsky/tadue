@@ -1,15 +1,13 @@
 Hello {{.payerEmail}},
 <br><br>
 {{if .isReminder}}
-This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested
-${{.amount}} from you via Tadue.
+This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested ${{.amount}} from you via Tadue.
 <br><br>
 Description: {{.description}}
 <br><br>
 This request was made on {{.creationDate}}.
 {{else}}
-{{.payeeFullName}} ({{.payeeEmail}}) has requested ${{.amount}} from you via
-Tadue.
+{{.payeeFullName}} ({{.payeeEmail}}) has requested ${{.amount}} from you via Tadue.
 <br><br>
 Description: {{.description}}
 {{end}}
