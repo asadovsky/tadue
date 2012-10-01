@@ -1,11 +1,1 @@
-/**
- * Copyright 2012 Adam Sadovsky. All rights reserved.
- */
-#logo {
-  background-color: #448;
-  color: #fff;
-  display: inline-block;
-  font-family: alice, serif;
-  font-size: 60px;
-  line-height: 1em;
-}
+#logo{background-color:#448;color:#fff;display:inline-block;font-family:alice, serif;font-size:60px;line-height:1em;}
