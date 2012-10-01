@@ -1,6 +1,6 @@
 p0
-- Make settings page (change password, name, paypal email, etc.)
 - Switch primary user key to int
+- Finish settings page (change name, paypal email, etc.)
 - Refresh index.yaml file
 
 Not launch blocking below
