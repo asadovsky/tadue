@@ -1,19 +1,22 @@
 p0
-- Fill in "about" page
 - Make settings page (change password, name, paypal email, etc.)
+- Switch primary user key to int
+- Refresh index.yaml file
+
+Not launch blocking below
 
 p1
-- Memcached
+- Fill in "about" page
 - Handle ajax errors
 - Time zone
+- Shorten password reset link lifespan to 30 minutes
 
 p2
-- Write unit tests, e.g. for payments page
-- For templates, use map that asserts that looked-up keys exist
-- Add GetFormValueOrDie function
-- Forgotten password reset mechanism
 - New ToS page
-- Refresh index.yaml file
+- Memcached
+- Write unit tests, e.g. for payments page
+- For templates, use structs, or use FindOrDie map
+- Add GetFormValueOrDie function
 
 p3
 - Security, e.g. throttle QPS per IP

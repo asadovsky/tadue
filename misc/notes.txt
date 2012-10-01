@@ -3,7 +3,11 @@ for f in `ls ~/active/dev/tadue/tadue/*.go`; do echo "  $f" && gofmt $f > a && d
 for f in `ls ~/active/dev/tadue/tadue/*.go`; do gofmt -w $f; done
 
 Run JSLint on everything:
-for f in `ls ~/active/dev/tadue/js/*.js`; do if [[ "$f" != *jquery* ]]; then jslint --browser --devel --predef "$" --var --nomen --indent 2 $f; fi; done
+http://www.jslint.com/lint.html
+for f in `ls ~/active/dev/tadue/js/*.js`; do if [[ "$f" != *jquery* ]]; then jslint --browser --devel --predef "$" --var --nomen --sub --color --indent 2 $f; fi; done
+
+Run LESS CSS compiler on everything:
+rm ~/active/dev/tadue/css/*.css && for f in `ls ~/active/dev/tadue/less/*.less`; do css=`echo $f | sed 's|.less$|.css|' | sed 's|/less/|/css/|'`; lessc $f > $css; done
 
 Diff with opendiff:
 git difftool -t opendiff -y
@@ -28,10 +32,10 @@ python -m smtpd -n -c DebuggingServer localhost:1025
 Run dev_appserver:
 /usr/local/google_appengine_go/dev_appserver.py tadue --clear_datastore --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025
 
-Fix bugs in dev_appserver admin:
+Bugs in dev_appserver admin:
 http://code.google.com/p/googleappengine/issues/detail?id=7948
 http://code.google.com/p/googleappengine/issues/detail?id=7885
 
-Change 2**31-1 to 2L**31-1 (and similar) here:
-/usr/local/google_appengine_go/google/appengine/ext/admin/__init__.py
-/usr/local/google_appengine_go/google/appengine/api/datastore.py
+Replace all 2** with 2L** as follows:
+cd /usr/local/google_appengine_go
+find ./ -type f -name '*.py' | xargs sed -i '' -e 's/2\*\*/2L**/g'

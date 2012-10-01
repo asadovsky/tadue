@@ -26,26 +26,27 @@ type User struct {
 	Salt        string
 	PassHash    string // hash of salted password
 	FullName    string // full name of user
-	PaypalEmail string // paypal account email
+	PayPalEmail string // paypal account email
 	EmailOk     bool   // true if user has verified their primary email
 }
 
 // Keyed by secure random number.
 type VerifyEmail struct {
 	Email     string    // email account to verify
-	Timestamp time.Time // when this verification request was sent
+	Timestamp time.Time // when this request was made
 }
 
 // Keyed by secure random number.
 type ResetPassword struct {
-	Email string // email account for which to reset password
+	Email     string    // email account for which to reset password
+	Timestamp time.Time // when this request was made
 }
 
 // Stores paypal response to one "Pay" request.
 // Pay API reference: http://goo.gl/D6dUR
 // TODO(sadovsky):
 //  - Convert timestamp to time.Time?
-type PaypalPayResponse struct {
+type PayPalPayResponse struct {
 	Ack           string // responseEnvelope.ack
 	Build         string // responseEnvelope.build
 	CorrelationId string // responseEnvelope.correlationId
@@ -58,7 +59,7 @@ type PaypalPayResponse struct {
 // TODO(sadovsky):
 //  - Maybe store more fields, e.g. status_for_sender_txn.
 //  - Store array of txns so we can support chained payments?
-type PaypalIpnMessage struct {
+type PayPalIpnMessage struct {
 	Status     string // status
 	PayerEmail string // sender_email
 	PayeeEmail string // transaction[0].receiver
@@ -86,8 +87,7 @@ type PayRequest struct {
 }
 
 func NewEphemeralKey(c appengine.Context, kind string) *datastore.Key {
-	expirationDate := time.Now().AddDate(0, 0, 2) // expires in 2 days
-	key := fmt.Sprintf("%v-%s", expirationDate.Unix(), string(SecureRandom(32)))
+	key := fmt.Sprintf("%v-%s", time.Now().Unix(), string(SecureRandom(32)))
 	return datastore.NewKey(c, kind, key, 0, nil)
 }
 

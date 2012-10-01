@@ -1,5 +1,52 @@
 {{define "settings-title"}}Settings{{end}}
 
+{{define "settings-css"}}
+<link type="text/css" rel="stylesheet" href="/css/form.css">
+<link type="text/css" rel="stylesheet" href="/css/settings.css">
+{{end}}
+
+{{define "settings-js"}}
+<script type="text/javascript" src="/js/settings.js"></script>
+{{end}}
+
 {{define "settings-body"}}
-Coming soon.
+<form action="/settings" method="post" onsubmit="return checkSettingsForm();">
+  <table class="form">
+    <tr>
+      <td class="field-name">Email</td>
+      <td class="field-value">
+        <input type="text" class="field-input" name="email" id="email">
+      </td>
+      <td><span class="error-msg"></span></td>
+    </tr>
+    <tr>
+      <td class="field-name">Password</td>
+      <td class="field-value">
+        <a href="/account/change-password">Change password</a>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td class="field-name">Full name</td>
+      <td class="field-value">
+        <input type="text" class="field-input" name="name" id="name">
+      </td>
+      <td><span class="error-msg"></span></td>
+    </tr>
+    <tr>
+      <td class="field-name">PayPal email</td>
+      <td class="field-value">
+        <input type="text" class="field-input" name="paypal-email" id="paypal-email">
+      </td>
+      <td><span class="error-msg"></span></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <input type="submit" class="main-button" value="Save">
+      </td>
+      <td></td>
+    </tr>
+  </table>
+</form>
 {{end}}

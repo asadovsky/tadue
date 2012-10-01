@@ -42,7 +42,20 @@ func (c *Context) SetAec(aec appengine.Context) {
 	c.aec = aec
 }
 
+func (c *Context) LoggedIn() bool {
+	return c.session != nil
+}
+
+func (c *Context) AssertLoggedIn() {
+	Assert(c.session != nil, "Not logged in")
+}
+
+func (c *Context) AssertNotLoggedIn() {
+	Assert(c.session == nil, "Logged in")
+}
+
 func (c *Context) Session() *Session {
+	Assert(c.session != nil, "Session is nil") // catch common mistake
 	return c.session
 }
 

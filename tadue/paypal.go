@@ -1,6 +1,5 @@
 // Copyright 2012 Adam Sadovsky. All rights reserved.
 
-// Style note: We always write Paypal with a lowercase second 'p'.
 // TODO(sadovsky): This should probably be a separate package.
 
 package tadue
@@ -53,9 +52,9 @@ func getResponseBody(resp *http.Response, err error) (string, error) {
 	return string(bytes), nil
 }
 
-func SendPaypalPayRequest(reqId, payeePaypalEmail, description string, amount float32,
-	c appengine.Context) (*PaypalPayResponse, error) {
-	c.Debugf("SendPayRequest, payee=%q", payeePaypalEmail)
+func PayPalSendPayRequest(reqId, payeePayPalEmail, description string, amount float32,
+	c appengine.Context) (*PayPalPayResponse, error) {
+	c.Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
 
 	baseUrl := fmt.Sprintf("http://%s", appengine.DefaultVersionHostname(c))
 	if kSandboxHost != "" {
@@ -67,14 +66,14 @@ func SendPaypalPayRequest(reqId, payeePaypalEmail, description string, amount fl
 	v := url.Values{}
 	v.Set("requestEnvelope.errorLanguage", "en_US")
 	v.Set("actionType", "PAY")
-	v.Set("receiverList.receiver(0).email", payeePaypalEmail)
+	v.Set("receiverList.receiver(0).email", payeePayPalEmail)
 	amountStr := strconv.FormatFloat(float64(amount), 'f', 2, 32)
 	v.Set("receiverList.receiver(0).amount", amountStr)
 	v.Set("receiverList.receiver(0).paymentType", "PERSONAL")
 	v.Set("currencyCode", "USD")
 	v.Set("feesPayer", "EACHRECEIVER")
 	v.Set("memo", description)
-	v.Set("cancelUrl", fmt.Sprintf("%s/pay/cancel?reqId=%s", baseUrl, reqId))
+	v.Set("cancelUrl", fmt.Sprintf("%s/pay?reqId=%s", baseUrl, reqId))
 	v.Set("returnUrl", fmt.Sprintf("%s/pay/done?reqId=%s", baseUrl, reqId))
 	// Note: IPN requires port 80, at least in the sandbox. This constraint is not
 	// documented.
@@ -97,9 +96,9 @@ func SendPaypalPayRequest(reqId, payeePaypalEmail, description string, amount fl
 	if err != nil {
 		return nil, err
 	}
-	c.Infof("Pay response: %v", values)
+	c.Debugf("Pay response: %v", values)
 
-	res := &PaypalPayResponse{
+	res := &PayPalPayResponse{
 		Ack:           values.Get("responseEnvelope.ack"),
 		Build:         values.Get("responseEnvelope.build"),
 		CorrelationId: values.Get("responseEnvelope.correlationId"),
@@ -110,8 +109,8 @@ func SendPaypalPayRequest(reqId, payeePaypalEmail, description string, amount fl
 }
 
 // IPN handler references: http://goo.gl/bIX2Q and http://goo.gl/F1uej
-func ValidateIpn(requestBody string, c appengine.Context) (*PaypalIpnMessage, error) {
-	c.Debugf("ValidateIpn")
+func PayPalValidateIpn(requestBody string, c appengine.Context) (*PayPalIpnMessage, error) {
+	c.Debugf("PayPalValidateIpn")
 
 	// Post back to IPN server to get verification.
 	postBody := fmt.Sprintf("cmd=_notify-validate&%s", requestBody)
@@ -131,9 +130,9 @@ func ValidateIpn(requestBody string, c appengine.Context) (*PaypalIpnMessage, er
 	if err != nil {
 		return nil, err
 	}
-	c.Infof("IPN message: %v", values)
+	c.Debugf("IPN message: %v", values)
 
-	res := &PaypalIpnMessage{
+	res := &PayPalIpnMessage{
 		Status:     values.Get("status"),
 		PayerEmail: values.Get("sender_email"),
 		PayeeEmail: values.Get("transaction[0].receiver"),
@@ -143,7 +142,7 @@ func ValidateIpn(requestBody string, c appengine.Context) (*PaypalIpnMessage, er
 	return res, nil
 }
 
-func MakePaypalPayUrl(payKey string) string {
+func PayPalMakePayUrl(payKey string) string {
 	// TODO(sadovsky): Make this more robust.
 	return fmt.Sprintf("%s&paykey=%s", kPayBaseUrl, payKey)
 }

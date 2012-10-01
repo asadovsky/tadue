@@ -90,8 +90,8 @@ func setContentTypeUtf8(w http.ResponseWriter) {
 
 func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interface{}) {
 	fullName := ""
-	if session := c.Session(); session != nil {
-		fullName = session.FullName
+	if c.LoggedIn() {
+		fullName = c.Session().FullName
 	}
 
 	rd := &RenderData{FullName: fullName, Data: data}
@@ -196,10 +196,6 @@ func Assert(condition bool, format string, v ...interface{}) {
 		e.Err = errors.New(fmt.Sprintf(format, v...))
 		panic(e)
 	}
-}
-
-func AssertLoggedIn(c *Context) {
-	Assert(c.Session() != nil, "Not logged in")
 }
 
 func NewSalt() string {

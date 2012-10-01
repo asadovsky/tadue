@@ -1,9 +1,11 @@
 /**
  * Copyright 2012 Adam Sadovsky. All rights reserved.
  */
+
 * {
   box-sizing: border-box;
 }
+
 /* Disable dotted outlines in Firefox. */
 :focus {
   outline: none;
@@ -11,9 +13,11 @@
 ::-moz-focus-inner {
   border: 0;
 }
+
 .display-none {
   display: none;
 }
+
 body {
   background-color: #fff;
   color: #333;
@@ -23,14 +27,16 @@ body {
   margin: 0;
   overflow-y: scroll;
 }
-input,
-select {
+
+input, select {
   margin: 0;
 }
+
 table {
   border-collapse: collapse;
   border-spacing: 0;
 }
+
 a {
   color: #66c;
   font-weight: bold;
@@ -39,18 +45,22 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
 .menu {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+
 .menu li {
   float: left;
   margin-left: 1.3em;
 }
+
 .menu li:first-child {
   margin-left: 0;
 }
+
 .menu .menu {
   display: none;
   background: #fff;
@@ -60,21 +70,23 @@ a:hover {
   position: absolute;
   right: 0;
   width: 160px;
-  z-index: 1;
-  /* should be in front of footer */
-
+  z-index: 1;  /* should be in front of footer */
 }
+
 .menu li:hover .menu {
   display: block;
 }
+
 .menu .menu li {
   float: none;
   margin-left: 0;
   width: 100%;
 }
+
 .menu .menu li a {
   width: 100%;
 }
+
 #top-nav {
   background-color: #448;
   height: 100px;
@@ -82,6 +94,7 @@ a:hover {
   position: relative;
   width: 100%;
 }
+
 #top-nav-content {
   bottom: 0;
   font-size: 14px;
@@ -90,6 +103,7 @@ a:hover {
   width: 800px;
   margin-left: -400px;
 }
+
 #top-nav-logo {
   background-image: url("/static/logo.png");
   background-repeat: no-repeat;
@@ -101,54 +115,62 @@ a:hover {
   width: 154px;
   height: 60px;
 }
+
 #top-nav-links {
   bottom: 0;
   font-weight: bold;
   position: absolute;
   right: 0;
 }
+
 #top-nav-links a {
   color: #ddd;
-  display: inline-block;
-  /* force padding to take effect */
-
+  display: inline-block;  /* force padding to take effect */
   padding-bottom: 5px;
 }
+
 #top-nav-links li:hover a {
   color: #fff;
   text-decoration: none;
 }
+
 #top-nav-links .menu li:hover {
   background: #def;
 }
+
 #top-nav-links li .menu a {
   color: #333;
   padding: 0.7em;
 }
-#title,
-#body {
+
+#title, #body {
   margin: 0 auto 0;
   width: 800px;
 }
+
 #title {
   clear: both;
   font-size: 1.9em;
   margin-bottom: 1em;
 }
+
 .header {
   font-weight: bold;
   margin-top: 1.5em;
   margin-bottom: 1em;
 }
+
 #bottom-nav-begin {
   clear: both;
 }
+
 #bottom-nav {
   height: 4em;
   margin-top: 3em;
   position: relative;
   width: 100%;
 }
+
 #bottom-nav-content {
   border-top: 1px solid #bbb;
   font-size: 14px;
@@ -158,14 +180,17 @@ a:hover {
   width: 800px;
   margin-left: -400px;
 }
+
 #bottom-nav-links {
   font-weight: bold;
   left: 0;
   position: absolute;
 }
+
 #bottom-nav-links a {
   color: #666;
 }
+
 #bottom-nav-copyright {
   color: #999;
   position: absolute;

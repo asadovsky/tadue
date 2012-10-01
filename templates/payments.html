@@ -25,10 +25,10 @@
   </div>
   {{end}}
 </div>
-<div id="button-row">
-  <input type="button" class="button" id="mark-as-paid" value="Mark as paid">
-  <input type="button" class="button" id="send-reminder" value="Send reminder email">
-  <input type="button" class="button" id="delete" value="Delete">
+<div id="action-button-row">
+  <input type="button" class="action-button" id="mark-as-paid" value="Mark as paid">
+  <input type="button" class="action-button" id="send-reminder" value="Send reminder email">
+  <input type="button" class="action-button" id="delete" value="Delete">
   <span id="undo">Undo</span>
 </div>
 {{template "payments-data" .Data}}
@@ -56,7 +56,9 @@
     <tr{{if .IsPaid}} class="is-paid"{{end}}>
       <input class="row-req-id" type="hidden" value="{{.ReqId}}">
       <td class="cell-checkbox"><input type="checkbox" class="checkbox"></td>
-      <td class="cell-email" title="{{.PayerEmail}}">{{.PayerEmail}}</td>
+      <td class="cell-email" title="{{.PayerEmail}}">
+        <a class="pay-url-link" href="{{.PayUrl}}">{{.PayerEmail}}</a>
+      </td>
       <td class="cell-amount">{{.Amount}}</td>
       <td class="cell-description" title="{{.Description}}">{{.Description}}</td>
       <td class="cell-status">{{.Status}}</td>

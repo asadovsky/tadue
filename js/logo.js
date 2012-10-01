@@ -21,7 +21,6 @@ var drawLogo = function () {
   ctx.fillText('tadue', 0, canvas.height - 1);
 
   var imgSrc = canvas.toDataURL('image/png');
-  console.log(imgSrc);
   $('#ilogo').attr('src', imgSrc);
 };
 

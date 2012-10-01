@@ -30,12 +30,24 @@ func makePayUrl(reqId string, c *Context) string {
 		appengine.DefaultVersionHostname(c.Aec()), reqId)
 }
 
+func makeWrongPasswordError(email string) error {
+	return errors.New(fmt.Sprintf("Wrong password for user: %q", email))
+}
+
 func makePayRequestQuery(userKey *datastore.Key, isPaid bool) *datastore.Query {
 	q := datastore.NewQuery("PayRequest")
 	if userKey != nil {
 		q = q.Ancestor(userKey)
 	}
 	return q.Filter("DeletionDate =", time.Unix(0, 0)).Filter("IsPaid =", isPaid)
+}
+
+func makeSentLinkMessage(linkType, email string) string {
+	return fmt.Sprintf("%s link sent to %s.", linkType, email)
+}
+
+func makeExpiredLinkError(linkType string) error {
+	return errors.New(fmt.Sprintf("%s link has expired. Please request another.", linkType))
 }
 
 // Applies updateFn to each PayRequest specified in reqIds.
@@ -46,7 +58,7 @@ func updatePayRequests(
 	c *Context) ([]string, error) {
 	Assert(len(reqIds) > 0, "No reqIds")
 	if checkUser {
-		AssertLoggedIn(c)
+		c.AssertLoggedIn()
 	}
 
 	// NOTE(sadovsky): Multi-row, single entity group transaction.
@@ -80,6 +92,58 @@ func updatePayRequests(
 	return updatedReqIds, nil
 }
 
+// If password is nil, performs update without checking password.
+// Use with caution!
+func updateUser(email string, password *string, updateFn func(user *User) bool, c *Context) error {
+	// Sanity check.
+	if password != nil {
+		c.AssertLoggedIn()
+		Assert(c.Session().Email == email, "")
+	}
+	return datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		userKey := ToUserKey(c.Aec(), email)
+		user := &User{}
+		if err := datastore.Get(aec, userKey, user); err != nil {
+			return err
+		}
+		// Check password.
+		if password != nil && SaltAndHash(user.Salt, *password) != user.PassHash {
+			return makeWrongPasswordError(user.Email)
+		}
+		if updateFn(user) {
+			if _, err := datastore.Put(aec, userKey, user); err != nil {
+				return err
+			}
+		}
+		return nil
+	}, nil)
+}
+
+// TODO(sadovsky): Delete ResetPassword record.
+func useResetPassword(encodedKey string, c *Context) (string, error) {
+	key, err := datastore.DecodeKey(encodedKey)
+	CheckError(err)
+	v := &ResetPassword{}
+	CheckError(datastore.Get(c.Aec(), key, v))
+	if time.Now().After(v.Timestamp.AddDate(0, 0, RESET_PASSWORD_LIFESPAN)) {
+		return "", makeExpiredLinkError("Password reset")
+	}
+	return v.Email, nil
+}
+
+// TODO(sadovsky): Delete VerifyEmail record.
+func useVerifyEmail(encodedKey string, c *Context) (string, error) {
+	key, err := datastore.DecodeKey(encodedKey)
+	CheckError(err)
+	v := &VerifyEmail{}
+	CheckError(datastore.Get(c.Aec(), key, v))
+	if time.Now().After(v.Timestamp.AddDate(0, 0, VERIFY_EMAIL_LIFESPAN)) {
+		return "", makeExpiredLinkError("Email verification")
+	}
+	return v.Email, nil
+}
+
+// FIXME(sadovsky): Differentiate between user error and app error.
 func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	// TODO(sadovsky): Form validation.
 	email := r.FormValue("login-email")
@@ -88,11 +152,10 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 	var err error
 	user := &User{}
 	if email != "" {
-		key := ToUserKey(c.Aec(), email)
-		err = datastore.Get(c.Aec(), key, user)
+		userKey := ToUserKey(c.Aec(), email)
+		err = datastore.Get(c.Aec(), userKey, user)
 	}
 	if email == "" || err == datastore.ErrNoSuchEntity {
-		// TODO(sadovsky): Handle "user does not exist" case better.
 		return nil, errors.New(fmt.Sprintf("No such user: %q", email))
 	}
 	CheckError(err)
@@ -100,14 +163,14 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 	if SaltAndHash(user.Salt, password) == user.PassHash {
 		c.Aec().Infof("Logged in user: %q", user.Email)
 	} else {
-		// TODO(sadovsky): Handle "wrong password" case better.
-		return nil, errors.New(fmt.Sprintf("Wrong password for user: %q", email))
+		return nil, makeWrongPasswordError(user.Email)
 	}
 
 	CheckError(MakeSession(user.Email, user.FullName, w, c))
 	return user, nil
 }
 
+// FIXME(sadovsky): Differentiate between user error and app error.
 func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	// TODO(sadovsky): Form validation.
 	salt := NewSalt()
@@ -116,27 +179,26 @@ func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error)
 		Salt:        salt,
 		PassHash:    SaltAndHash(salt, r.FormValue("signup-password")),
 		FullName:    r.FormValue("signup-name"),
-		PaypalEmail: r.FormValue("signup-paypal"),
+		PayPalEmail: r.FormValue("signup-paypal-email"),
 	}
-	// TODO(sadovsky): Check that this Paypal account is valid and confirmed.
 	if r.FormValue("signup-copy-email") == "on" {
-		newUser.PaypalEmail = r.FormValue("signup-email")
+		newUser.PayPalEmail = r.FormValue("signup-email")
 	}
+	// TODO(sadovsky): Check that the PayPal account is valid and confirmed.
 
 	// Check whether user already exists. If so, report error; if not, create new
 	// account.
-	key := ToUserKey(c.Aec(), newUser.Email)
+	userKey := ToUserKey(c.Aec(), newUser.Email)
 	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
 		user := &User{}
-		err := datastore.Get(aec, key, user)
+		err := datastore.Get(aec, userKey, user)
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
 		if err == nil { // entity already exists
-			// TODO(sadovsky): Handle "user already exists" case better.
 			return errors.New(fmt.Sprintf("User already exists: %q", user.Email))
 		}
-		if _, err := datastore.Put(aec, key, newUser); err != nil {
+		if _, err := datastore.Put(aec, userKey, newUser); err != nil {
 			return err
 		}
 		aec.Infof("New user: %q", newUser.Email)
@@ -150,13 +212,51 @@ func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error)
 	if err = MakeSession(newUser.Email, newUser.FullName, w, c); err != nil {
 		return nil, err
 	}
-	if err = doSendVerif(c); err != nil {
+	if err = doInitiateVerifyEmail(c); err != nil {
 		return nil, err
 	}
 	return newUser, nil
 }
 
-func doSendVerif(c *Context) error {
+func doInitiateResetPassword(email string, c *Context) error {
+	// First, check that it's a known user email.
+	user := getUserOrDie(email, c)
+
+	// Next, create the ResetPassword record.
+	v := &ResetPassword{
+		Email:     email,
+		Timestamp: time.Now(),
+	}
+	key := NewEphemeralKey(c.Aec(), "ResetPassword")
+	key, err := datastore.Put(c.Aec(), key, v)
+	if err != nil {
+		return err
+	}
+
+	// Finally, send the email.
+	resetUrl := fmt.Sprintf("http://%s/account/change-password?key=%s",
+		appengine.DefaultVersionHostname(c.Aec()), key.Encode())
+	data := map[string]interface{}{
+		"fullName": user.FullName,
+		"email":    user.Email,
+		"resetUrl": resetUrl,
+	}
+	body, err := ExecuteTemplate("email-reset-password.html", data)
+	if err != nil {
+		return err
+	}
+
+	msg := &mail.Message{
+		Sender:   "noreply@tadue.com",
+		To:       []string{v.Email},
+		Subject:  "Reset your Tadue password",
+		HTMLBody: string(body),
+	}
+	return mail.Send(c.Aec(), msg)
+}
+
+func doInitiateVerifyEmail(c *Context) error {
+	// Create the VerifyEmail record.
 	v := &VerifyEmail{
 		Email:     c.Session().Email,
 		Timestamp: time.Now(),
@@ -167,6 +267,7 @@ func doSendVerif(c *Context) error {
 		return err
 	}
 
+	// Send the email.
 	verifUrl := fmt.Sprintf("http://%s/account/verif?key=%s",
 		appengine.DefaultVersionHostname(c.Aec()), key.Encode())
 	data := map[string]interface{}{
@@ -208,6 +309,7 @@ func doEnqueueGotPaidEmail(reqId string, c *Context) error {
 	return err
 }
 
+// TODO(sadovsky): Maybe use updateUser() here.
 func doSetEmailOk(email string, c *Context) (bool, error) {
 	userKey := ToUserKey(c.Aec(), email)
 	user := &User{}
@@ -249,14 +351,14 @@ func doSetEmailOk(email string, c *Context) (bool, error) {
 }
 
 func getUserOrDie(email string, c *Context) *User {
-	key := ToUserKey(c.Aec(), email)
+	userKey := ToUserKey(c.Aec(), email)
 	user := &User{}
-	CheckError(datastore.Get(c.Aec(), key, user))
+	CheckError(datastore.Get(c.Aec(), userKey, user))
 	return user
 }
 
 func getUserFromSessionOrDie(c *Context) *User {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	return getUserOrDie(c.Session().Email, c)
 }
 
@@ -309,7 +411,7 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	reqKey, err := datastore.DecodeKey(reqId)
 	CheckError(err)
 
-	msg, err := ValidateIpn(string(requestBytes), c.Aec())
+	msg, err := PayPalValidateIpn(string(requestBytes), c.Aec())
 	CheckError(err)
 	c.Aec().Infof("%+v", msg) // plus flag (%+v) adds field names
 
@@ -378,9 +480,9 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(datastore.Get(c.Aec(), reqKey, req))
 
 	// If request has already been paid, show an error.
-	// TODO(sadovsky): Make this more elegant.
+	// TODO(sadovsky): Make error message more friendly.
 	if req.PaymentDate != time.Unix(0, 0) {
-		RenderPageOrDie(w, c, "text", fmt.Sprintf("Already paid."))
+		RenderPageOrDie(w, c, "text", "Already paid.")
 		return
 	}
 
@@ -397,16 +499,21 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 	} else { // method == "paypal"
 		// Note: According to the documentation, the pay key is only valid for three
 		// hours. As such, we cannot request it before the payer arrives.
-		response, err := SendPaypalPayRequest(
-			reqId, payee.PaypalEmail, req.Description, req.Amount, c.Aec())
+		response, err := PayPalSendPayRequest(
+			reqId, payee.PayPalEmail, req.Description, req.Amount, c.Aec())
 		CheckError(err)
 		// TODO(sadovsky): Store the response inside the PayRequest via transaction.
 		if response.Ack != "Success" {
 			ServeError(w, response)
 			return
 		}
-		http.Redirect(w, r, MakePaypalPayUrl(response.PayKey), http.StatusFound)
+		http.Redirect(w, r, PayPalMakePayUrl(response.PayKey), http.StatusFound)
 	}
+}
+
+func handlePayDone(w http.ResponseWriter, r *http.Request, c *Context) {
+	// TODO(sadovsky): Invite user to sign up for Tadue.
+	RenderPageOrDie(w, c, "text", "Payment processed successfully. Thanks for using Tadue!")
 }
 
 func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -418,25 +525,24 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 		var user *User
 		var err error
 
-		// Note: The following logic elegantly handles the case where user signs up
-		// during payment request, then re-posts the form.
-		if c.Session() == nil {
+		if c.LoggedIn() {
+			user = getUserFromSessionOrDie(c)
+		} else {
 			doSignupValue := r.FormValue("do-signup")
 			if doSignupValue == "true" {
 				user, err = doSignup(w, r, c)
 				CheckError(err)
 			} else {
 				Assert(doSignupValue == "false", "Invalid doSignupValue: %q", doSignupValue)
+				// TODO(sadovsky): Show nice error page.
 				user, err = doLogin(w, r, c)
 				CheckError(err)
 			}
-		} else {
-			user = getUserFromSessionOrDie(c)
 		}
 
 		// At this point the user must be logged in, and we must have their User
 		// struct.
-		AssertLoggedIn(c)
+		c.AssertLoggedIn()
 		Assert(user != nil, "User is nil")
 
 		amount, err := strconv.ParseFloat(strings.TrimLeft(r.FormValue("amount"), "$"), 32)
@@ -482,18 +588,19 @@ func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 	if r.Method == "GET" {
 		RenderPageOrDie(w, c, "login", nil)
 	} else if r.Method == "POST" {
-		Assert(c.Session() == nil, "Already logged in")
+		c.AssertNotLoggedIn()
 		CheckError(r.ParseForm())
+		// TODO(sadovsky): Show nice error page.
 		_, err := doLogin(w, r, c)
 		CheckError(err)
-		http.Redirect(w, r, "/account", http.StatusFound)
+		http.Redirect(w, r, "/payments", http.StatusFound)
 	} else {
 		Serve404(w)
 	}
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request, c *Context) {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	CheckError(DeleteSession(w, c))
 	RenderPageOrDie(w, c, "home", nil)
 }
@@ -502,11 +609,11 @@ func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
 	if r.Method == "GET" {
 		RenderPageOrDie(w, c, "signup", nil)
 	} else if r.Method == "POST" {
-		Assert(c.Session() == nil, "Already logged in")
+		c.AssertNotLoggedIn()
 		CheckError(r.ParseForm())
 		_, err := doSignup(w, r, c)
 		CheckError(err)
-		http.Redirect(w, r, "/account?new", http.StatusFound)
+		http.Redirect(w, r, "/payments?new", http.StatusFound)
 	} else {
 		Serve404(w)
 	}
@@ -514,6 +621,7 @@ func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
 
 type RenderablePayRequest struct {
 	ReqId        string
+	PayUrl       string
 	PayerEmail   string
 	Amount       string
 	Description  string
@@ -559,6 +667,7 @@ func getRecentPayRequestsOrDie(email string, c *Context) []RenderablePayRequest 
 	for i, pr := range reqs {
 		rpr := &rendReqs[i]
 		rpr.ReqId = reqKeys[i].Encode()
+		rpr.PayUrl = makePayUrl(rpr.ReqId, c)
 		rpr.PayerEmail = pr.PayerEmail
 		rpr.Amount = fmt.Sprintf("$%.2f", pr.Amount)
 		rpr.Description = pr.Description
@@ -581,7 +690,7 @@ func getRecentPayRequestsOrDie(email string, c *Context) []RenderablePayRequest 
 }
 
 func handleAccount(w http.ResponseWriter, r *http.Request, c *Context) {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	CheckError(r.ParseForm())
 	isNew := r.Form["new"] != nil
 
@@ -597,7 +706,7 @@ func handleAccount(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func renderRecentRequests(w http.ResponseWriter, undoableReqIds []string, c *Context) {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	rendReqs := getRecentPayRequestsOrDie(c.Session().Email, c)
 	data := map[string]interface{}{
 		"rendReqs":       rendReqs,
@@ -612,7 +721,7 @@ func handleMarkAsPaid(w http.ResponseWriter, r *http.Request, c *Context) {
 		Serve404(w)
 		return
 	}
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	CheckError(r.ParseForm())
 	reqIds := strings.Split(r.FormValue("reqIds"), ",")
 	undo := r.Form["undo"] != nil
@@ -640,7 +749,7 @@ func handleSendReminder(w http.ResponseWriter, r *http.Request, c *Context) {
 		Serve404(w)
 		return
 	}
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	CheckError(r.ParseForm())
 	reqIds := strings.Split(r.FormValue("reqIds"), ",")
 	// TODO(sadovsky): Show error if user is not verified.
@@ -656,7 +765,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 		Serve404(w)
 		return
 	}
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	CheckError(r.ParseForm())
 	reqIds := strings.Split(r.FormValue("reqIds"), ",")
 	undo := r.Form["undo"] != nil
@@ -674,15 +783,71 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	RenderPageOrDie(w, c, "settings", nil)
 }
 
+// Handles both changes and resets.
+func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
+	CheckError(r.ParseForm())
+	encodedKey := r.FormValue("key")
+	isPasswordResetRequest := encodedKey != ""
+	if !isPasswordResetRequest {
+		// TODO(sadovsky): Instead of asserting, redirect to login page.
+		c.AssertLoggedIn()
+	}
+	if r.Method == "GET" {
+		if !isPasswordResetRequest {
+			RenderPageOrDie(w, c, "change-password", map[string]string{"key": ""})
+		} else { // password reset request
+			_, err := useResetPassword(encodedKey, c)
+			if err != nil {
+				RenderPageOrDie(w, c, "text", err)
+				return
+			}
+			RenderPageOrDie(w, c, "change-password", map[string]string{"key": encodedKey})
+		}
+	} else if r.Method == "POST" {
+		var err error = nil
+		updateFn := func(user *User) bool {
+			salt := NewSalt()
+			user.Salt = salt
+			user.PassHash = SaltAndHash(salt, r.FormValue("new-password"))
+			return true
+		}
+		if !isPasswordResetRequest {
+			currentPassword := r.FormValue("current-password")
+			err = updateUser(c.Session().Email, &currentPassword, updateFn, c)
+		} else { // password reset request
+			email, err := useResetPassword(encodedKey, c)
+			CheckError(err)
+			err = updateUser(email, nil, updateFn, c)
+		}
+		// FIXME(sadovsky): Differentiate between user error and app error.
+		CheckError(err)
+		RenderPageOrDie(w, c, "text", "Password changed successfully.")
+	} else {
+		Serve404(w)
+	}
+}
+
+func handleResetPassword(w http.ResponseWriter, r *http.Request, c *Context) {
+	if r.Method == "GET" {
+		RenderPageOrDie(w, c, "reset-password", nil)
+	} else if r.Method == "POST" {
+		CheckError(r.ParseForm())
+		email := r.FormValue("email")
+		CheckError(doInitiateResetPassword(email, c))
+		RenderPageOrDie(w, c, "text", makeSentLinkMessage("Password reset", email))
+	} else {
+		Serve404(w)
+	}
+}
+
 func handleSendVerif(w http.ResponseWriter, r *http.Request, c *Context) {
-	AssertLoggedIn(c)
-	CheckError(doSendVerif(c))
-	RenderPageOrDie(w, c, "text",
-		fmt.Sprintf("A new verification link has been sent to %s.", c.Session().Email))
+	c.AssertLoggedIn()
+	CheckError(doInitiateVerifyEmail(c))
+	RenderPageOrDie(w, c, "text", makeSentLinkMessage("Email verification", c.Session().Email))
 }
 
 func doRenderVerifMsg(sentEmail bool, w http.ResponseWriter, c *Context) {
@@ -694,7 +859,7 @@ func doRenderVerifMsg(sentEmail bool, w http.ResponseWriter, c *Context) {
 }
 
 func handleDebugVerif(w http.ResponseWriter, r *http.Request, c *Context) {
-	AssertLoggedIn(c)
+	c.AssertLoggedIn()
 	sentEmail, err := doSetEmailOk(c.Session().Email, c)
 	CheckError(err)
 	doRenderVerifMsg(sentEmail, w, c)
@@ -704,26 +869,12 @@ func handleVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(r.ParseForm())
 	encodedKey := r.FormValue("key")
 	Assert(encodedKey != "", "No key")
-	key, err := datastore.DecodeKey(encodedKey)
-	CheckError(err)
-
-	v := &VerifyEmail{}
-	CheckError(datastore.Get(c.Aec(), key, v))
-
-	// Check whether verification request has expired.
-	// TODO(sadovsky): Make error message more friendly.
-	if time.Now().After(v.Timestamp.AddDate(0, 0, VERIFICATION_LIFESPAN)) {
-		RenderPageOrDie(w, c, "text",
-			fmt.Sprintf("Verification link has expired. Please request another."))
-		return
+	email, err := useVerifyEmail(encodedKey, c)
+	if err != nil {
+		RenderPageOrDie(w, c, "text", err)
 	}
-
-	// TODO(sadovsky): Check that email matches?
-	sentEmail, err := doSetEmailOk(v.Email, c)
+	sentEmail, err := doSetEmailOk(email, c)
 	CheckError(err)
-
-	// Note: We do not delete the VerifyEmail record; it will eventually expire
-	// and be deleted by a batch deletion process.
 	doRenderVerifMsg(sentEmail, w, c)
 }
 
@@ -766,7 +917,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 		isReminder := req.ReminderSentDate != time.Unix(0, 0)
 		data := map[string]interface{}{
 			"payerEmail":    req.PayerEmail,
-			"payeeEmail":    payee.PaypalEmail,
+			"payeeEmail":    payee.PayPalEmail,
 			"payeeFullName": payee.FullName,
 			"amount":        renderAmount(req.Amount),
 			"description":   req.Description,
@@ -907,19 +1058,20 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 func init() {
 	http.HandleFunc("/", WrapHandler(handleHome))
 	http.HandleFunc("/ipn", WrapHandler(handleIpn))
-	// Account.
-	http.HandleFunc("/account", WrapHandler(handleAccount))
-	http.HandleFunc("/account/settings", WrapHandler(handleSettings))
+	// Account stuff.
+	http.HandleFunc("/settings", WrapHandler(handleSettings))
+	http.HandleFunc("/account/change-password", WrapHandler(handleChangePassword))
+	http.HandleFunc("/account/reset-password", WrapHandler(handleResetPassword))
 	http.HandleFunc("/account/sendverif", WrapHandler(handleSendVerif))
 	http.HandleFunc("/account/verif", WrapHandler(handleVerif))
-	// Account ajax handlers.
-	http.HandleFunc("/account/mark-as-paid", WrapHandler(handleMarkAsPaid))
-	http.HandleFunc("/account/send-reminder", WrapHandler(handleSendReminder))
-	http.HandleFunc("/account/delete", WrapHandler(handleDelete))
+	// Payments page and its ajax handlers.
+	http.HandleFunc("/payments", WrapHandler(handleAccount))
+	http.HandleFunc("/payments/mark-as-paid", WrapHandler(handleMarkAsPaid))
+	http.HandleFunc("/payments/send-reminder", WrapHandler(handleSendReminder))
+	http.HandleFunc("/payments/delete", WrapHandler(handleDelete))
 	// Request and pay.
 	http.HandleFunc("/pay", WrapHandler(handlePay))
-	http.HandleFunc("/pay/cancel", PlaceholderHandler("pay/cancel"))
-	http.HandleFunc("/pay/done", PlaceholderHandler("pay/done"))
+	http.HandleFunc("/pay/done", WrapHandler(handlePayDone))
 	http.HandleFunc("/request-payment", WrapHandler(handleRequestPayment))
 	// Signup, login, logout.
 	http.HandleFunc("/login", WrapHandler(handleLogin))

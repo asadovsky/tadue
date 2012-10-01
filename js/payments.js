@@ -9,7 +9,7 @@ var updateVisibleState = function () {
     $(this).closest('tr').toggleClass('highlight', $(this).is(':checked'));
   };
   $('.checkbox').each(toggleHighlight);
-  $('.button').prop('disabled', $('.checkbox:checked').size() === 0);
+  $('.action-button').prop('disabled', $('.checkbox:checked').size() === 0);
   if ($('.checkbox').size() === 0) {
     $('#master-checkbox').prop('disabled', true);
   } else {
@@ -60,17 +60,17 @@ var applyAction = function (url) {
 
 // Called when user clicks "mark as paid" button.
 var markAsPaid = function () {
-  applyAction('/account/mark-as-paid');
+  applyAction('/payments/mark-as-paid');
 };
 
 // Called when user clicks "send reminder" button.
 var sendReminder = function () {
-  applyAction('/account/send-reminder');
+  applyAction('/payments/send-reminder');
 };
 
 // Called when user clicks "delete" button.
 var doDelete = function () {
-  applyAction('/account/delete');
+  applyAction('/payments/delete');
 };
 
 // Note: We use a global click handler instead of targeting checkbox elements

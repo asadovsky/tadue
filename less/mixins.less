@@ -1,0 +1,50 @@
+/**
+ * Copyright 2012 Adam Sadovsky. All rights reserved.
+ */
+
+.border-radius (@radius) {
+  -moz-border-radius: @radius;
+  -webkit-border-radius: @radius;
+  border-radius: @radius;
+}
+
+.background-linear-gradient (@top, @bottom) {
+  background: -moz-linear-gradient(@top, @bottom);
+  background: -ms-linear-gradient(@top, @bottom);
+  background: -webkit-linear-gradient(@top, @bottom);
+  background: linear-gradient(@top, @bottom);
+}
+
+.user-select (@value) {
+  -moz-user-select: @value;
+  -ms-user-select: @value;
+  -webkit-user-select: @value;
+  user-select: @value;
+}
+
+.button (@top, @bottom) {
+  .background-linear-gradient(@top, @bottom);
+  border: solid 1px darken(@bottom, 20%);
+  color: #333;
+  cursor: pointer;
+  display: inline-block;
+  text-shadow: 1px 1px #fff;
+
+  &:hover {
+    border: solid 1px darken(@bottom, 35%);
+  }
+
+  &:active {
+    background: @bottom;
+    border: solid 1px darken(@bottom, 20%);
+    text-shadow: none;
+  }
+
+  &[disabled] {
+    background: mix(@top, @bottom, 50%);
+    border: solid 1px darken(@bottom, 10%);
+    color: #888;
+    cursor: auto;
+    text-shadow: none;
+  }
+}
