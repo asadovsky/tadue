@@ -18,15 +18,15 @@ var updateVisibleState = function () {
   }
 };
 
-// Returns a comma-separated list of request ids for selected rows.
-var getSelectedReqIds = function () {
+// Returns a comma-separated list of request codes for selected rows.
+var getSelectedReqCodes = function () {
   var getValue = function () { return $(this).val(); };
-  return $('.checkbox:checked').parents().siblings('.row-req-id').map(getValue).get().join(',');
+  return $('.checkbox:checked').parents().siblings('.row-req-code').map(getValue).get().join(',');
 };
 
 // TODO(sadovsky): Handle ajax failure.
-var applyActionToReqIds = function (url, reqIds, undo) {
-  var data = {'reqIds': reqIds};
+var applyActionToReqCodes = function (url, reqCodes, undo) {
+  var data = {'reqCodes': reqCodes};
   if (undo) {
     data.undo = null;
   }
@@ -38,12 +38,12 @@ var applyActionToReqIds = function (url, reqIds, undo) {
   });
   request.done(function (data) {
     $('#payments-data').html(data);
-    var undoableReqIds = $('#undoable-req-ids').val();
-    if (!undo && undoableReqIds !== '') {
+    var undoableReqCodes = $('#undoable-req-codes').val();
+    if (!undo && undoableReqCodes !== '') {
       $('#undo').css('display', 'inline');
       $('#undo').off('click');  // remove all existing click handlers
       $('#undo').on('click', function () {
-        applyActionToReqIds(url, undoableReqIds, true);
+        applyActionToReqCodes(url, undoableReqCodes, true);
       });
     } else {
       $('#undo').css('display', 'none');
@@ -55,7 +55,7 @@ var applyActionToReqIds = function (url, reqIds, undo) {
 };
 
 var applyAction = function (url) {
-  applyActionToReqIds(url, getSelectedReqIds(), false);
+  applyActionToReqCodes(url, getSelectedReqCodes(), false);
 };
 
 // Called when user clicks "mark as paid" button.

@@ -10,6 +10,7 @@ Run LESS CSS compiler on everything:
 rm ~/active/dev/tadue/css/*.css && for f in `ls ~/active/dev/tadue/less/*.less`; do css=`echo $f | sed 's|.less$|.css|' | sed 's|/less/|/css/|'`; lessc --compress $f > $css; done
 
 Diff with opendiff:
+git difftool -t tkdiff -y
 git difftool -t opendiff -y
 
 Port routing:
@@ -30,7 +31,7 @@ Run Python SMTP debug server:
 python -m smtpd -n -c DebuggingServer localhost:1025
 
 Run dev_appserver:
-/usr/local/google_appengine_go/dev_appserver.py tadue --clear_datastore --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025
+/usr/local/google_appengine_go/dev_appserver.py tadue --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025
 
 Bugs in dev_appserver admin:
 http://code.google.com/p/googleappengine/issues/detail?id=7948

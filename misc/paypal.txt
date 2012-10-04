@@ -1,0 +1,60 @@
+############################################################
+# Sandbox accounts
+
+Business:
+adam_1335650859_biz@gmail.com
+
+Personal:
+alice_1335651424_per@gmail.com
+bob_1335651500_per@gmail.com
+
+All passwords are 88888888
+
+
+############################################################
+# Pay request
+
+Notes:
+ - senderEmail is not needed for explicit-approval payments
+ - paymentType is PERSONAL
+ - memo ends up in message to recipient
+
+curl -s --insecure \
+-H "X-PAYPAL-SECURITY-USERID: adam_1335650859_biz_api1.gmail.com" \
+-H "X-PAYPAL-SECURITY-PASSWORD: 1335650898" \
+-H "X-PAYPAL-SECURITY-SIGNATURE: A9gqVQB8-mmb1uodjDQ9XZGG8wdlAohgwF511kB0uyIlOlahuHK9YiQb" \
+-H "X-PAYPAL-REQUEST-DATA-FORMAT: NV" \
+-H "X-PAYPAL-RESPONSE-DATA-FORMAT: NV" \
+-H "X-PAYPAL-APPLICATION-ID: APP-80W284485P519543T" \
+https://svcs.sandbox.paypal.com/AdaptivePayments/Pay -d \
+"requestEnvelope.errorLanguage=en_US\
+&actionType=PAY\
+&receiverList.receiver(0).email=bob_1335651500_per@gmail.com\
+&receiverList.receiver(0).amount=20.00\
+&receiverList.receiver(0).paymentType=PERSONAL\
+&currencyCode=USD\
+&feesPayer=EACHRECEIVER\
+&memo=Foobar\
+&cancelUrl=http://your_cancel_url\
+&returnUrl=http://your_return_url\
+&ipnNotificationUrl=http://your_ipn_notification_url"
+
+Response:
+responseEnvelope.timestamp=2012-10-03T01%3A10%3A21.840-07%3A00&responseEnvelope.ack=Success&responseEnvelope.correlationId=1f97c5dfc2cb1&responseEnvelope.build=3779320&payKey=AP-8P960869412395110&paymentExecStatus=CREATED
+
+From there, build a URL like this and redirect the user:
+https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_ap-payment&paykey=AP-8P960869412395110
+
+
+############################################################
+# Payment details request
+
+curl -s --insecure \
+-H "X-PAYPAL-SECURITY-USERID: adam_1335650859_biz_api1.gmail.com" \
+-H "X-PAYPAL-SECURITY-PASSWORD: 1335650898" \
+-H "X-PAYPAL-SECURITY-SIGNATURE: A9gqVQB8-mmb1uodjDQ9XZGG8wdlAohgwF511kB0uyIlOlahuHK9YiQb" \
+-H "X-PAYPAL-REQUEST-DATA-FORMAT: NV" \
+-H "X-PAYPAL-RESPONSE-DATA-FORMAT: NV" \
+-H "X-PAYPAL-APPLICATION-ID: APP-80W284485P519543T" \
+https://svcs.sandbox.paypal.com/AdaptivePayments/PaymentDetails -d \
+"payKey=AP-8P960869412395110&requestEnvelope.errorLanguage=en_US"

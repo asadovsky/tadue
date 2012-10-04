@@ -52,7 +52,7 @@ func getResponseBody(resp *http.Response, err error) (string, error) {
 	return string(bytes), nil
 }
 
-func PayPalSendPayRequest(reqId, payeePayPalEmail, description string, amount float32,
+func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount float32,
 	c appengine.Context) (*PayPalPayResponse, error) {
 	c.Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
 
@@ -61,7 +61,7 @@ func PayPalSendPayRequest(reqId, payeePayPalEmail, description string, amount fl
 		baseUrl = kSandboxHost
 	}
 
-	// NOTE(sadovsky): We could add a trackingId here, but reqId in url seems good
+	// NOTE(sadovsky): We could add a trackingId here, but reqCode in url seems good
 	// enough.
 	v := url.Values{}
 	v.Set("requestEnvelope.errorLanguage", "en_US")
@@ -73,11 +73,11 @@ func PayPalSendPayRequest(reqId, payeePayPalEmail, description string, amount fl
 	v.Set("currencyCode", "USD")
 	v.Set("feesPayer", "EACHRECEIVER")
 	v.Set("memo", description)
-	v.Set("cancelUrl", fmt.Sprintf("%s/pay?reqId=%s", baseUrl, reqId))
-	v.Set("returnUrl", fmt.Sprintf("%s/pay/done?reqId=%s", baseUrl, reqId))
+	v.Set("cancelUrl", fmt.Sprintf("%s/pay?reqCode=%s", baseUrl, reqCode))
+	v.Set("returnUrl", fmt.Sprintf("%s/pay/done?reqCode=%s", baseUrl, reqCode))
 	// Note: IPN requires port 80, at least in the sandbox. This constraint is not
 	// documented.
-	v.Set("ipnNotificationUrl", fmt.Sprintf("%s/ipn?reqId=%s", baseUrl, reqId))
+	v.Set("ipnNotificationUrl", fmt.Sprintf("%s/ipn?reqCode=%s", baseUrl, reqCode))
 
 	// Last param (body) inferred from PostForm() implementation in
 	// http://golang.org/src/pkg/net/http/client.go.

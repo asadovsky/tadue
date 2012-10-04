@@ -37,7 +37,7 @@
 
 {{define "payments-data"}}
 <div id="payments-data">
-  <input id="undoable-req-ids" type="hidden" value="{{.undoableReqIds}}">
+  <input id="undoable-req-codes" type="hidden" value="{{.undoableReqCodes}}">
   <table id="payments-table">
     <tr>
       <th class="cell-checkbox"><input type="checkbox" id="master-checkbox"></th>
@@ -54,7 +54,7 @@
     {{end}}
     {{range .rendReqs}}
     <tr{{if .IsPaid}} class="is-paid"{{end}}>
-      <input class="row-req-id" type="hidden" value="{{.ReqId}}">
+      <input class="row-req-code" type="hidden" value="{{.ReqCode}}">
       <td class="cell-checkbox"><input type="checkbox" class="checkbox"></td>
       <td class="cell-email" title="{{.PayerEmail}}">
         <a class="pay-url-link" href="{{.PayUrl}}">{{.PayerEmail}}</a>

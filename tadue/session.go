@@ -10,33 +10,31 @@ import (
 )
 
 const (
-	cookieSessionKey string = "sk"
+	cookieKeyForSessionKey string = "sk"
 )
 
 // TODO(sadovsky): Add memcached layer.
 
 // Makes a new session, sets session key cookie, and updates context.
-func MakeSession(email, fullName string, w http.ResponseWriter, c *Context) error {
+func MakeSession(userId int64, email, fullName string, w http.ResponseWriter, c *Context) error {
 	sessionKey := NewSessionKey(c.Aec())
 	session := &Session{
-		Email:     email,
+		UserId:    userId,
 		Timestamp: time.Now(),
+		Email:     email,
 		FullName:  fullName,
 	}
 	if _, err := datastore.Put(c.Aec(), sessionKey, session); err != nil {
 		return err
 	}
-	// TODO(sadovsky): Maybe save sessionKey.StringID() instead of
-	// sessionKey.Encode(). Can sessionKey.StringID() contain invalid chars?
-	http.SetCookie(w, NewCookie(cookieSessionKey, sessionKey.Encode(), COOKIE_LIFESPAN))
-	c.SetSession(sessionKey.StringID(), session)
+	http.SetCookie(w, NewCookie(cookieKeyForSessionKey, sessionKey.Encode(), COOKIE_LIFESPAN))
+	c.SetSession(sessionKey, session)
 	return nil
 }
 
 // Reads an existing session and updates context.
-// TODO(sadovsky): Handle session expiration.
 func ReadSession(r *http.Request, c *Context) error {
-	cookie, err := r.Cookie(cookieSessionKey)
+	cookie, err := r.Cookie(cookieKeyForSessionKey)
 	// TODO(sadovsky): Distinguish between "no cookie" and real errors.
 	if err != nil {
 		return err
@@ -49,18 +47,18 @@ func ReadSession(r *http.Request, c *Context) error {
 	if err = datastore.Get(c.Aec(), sessionKey, session); err != nil {
 		return err
 	}
-	c.SetSession(sessionKey.StringID(), session)
+	// TODO(sadovsky): Check whether session has expired.
+	c.SetSession(sessionKey, session)
 	return nil
 }
 
 // Deletes existing session (if any) and updates context.
 func DeleteSession(w http.ResponseWriter, c *Context) error {
-	key := ToSessionKey(c.Aec(), c.SessionKey())
-	if err := datastore.Delete(c.Aec(), key); err != nil {
+	if err := datastore.Delete(c.Aec(), c.SessionKey()); err != nil {
 		return err
 	}
 	// Expire the session cookie.
-	http.SetCookie(w, NewCookie(cookieSessionKey, "", -1))
+	http.SetCookie(w, NewCookie(cookieKeyForSessionKey, "", -1))
 	c.DeleteSession()
 	return nil
 }

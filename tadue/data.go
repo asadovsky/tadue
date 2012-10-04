@@ -10,17 +10,20 @@ import (
 	"appengine/datastore"
 )
 
-// Data associated with session key.
-// TODO(sadovsky):
-//  - Maybe just store a key-value map?
+// Keyed by secure random number (NewSessionKey).
 type Session struct {
-	Email     string    // key into user table
+	UserId    int64
 	Timestamp time.Time // when this session was created
+	Email     string    // email of user, stored here for convenience
 	FullName  string    // full name of user, stored here for convenience
 }
 
-// TODO(sadovsky):
-//  - Maybe add bool specifying whether user accepts paypal.
+// Keyed by email address string.
+type UserId struct {
+	UserId int64
+}
+
+// Keyed by int (NewIncompleteKey).
 type User struct {
 	Email       string // primary email of account holder
 	Salt        string
@@ -30,15 +33,33 @@ type User struct {
 	EmailOk     bool   // true if user has verified their primary email
 }
 
-// Keyed by secure random number.
+// Keyed by int (NewIncompleteKey), with payee User as parent.
+// TODO(sadovsky):
+//  - Use enum for PaymentType.
+//  - Add field for currency code (same as in paypal request).
+//  - Maybe add a PaymentStatus struct.
+type PayRequest struct {
+	PayeeEmail       string // primary email of payee
+	PayerEmail       string // email of payer
+	Amount           float32
+	PaymentType      string // "personal", "goods", or "services"
+	Description      string
+	CreationDate     time.Time
+	IsPaid           bool      // needed for datastore queries
+	PaymentDate      time.Time // unix epoch if not yet paid in full
+	DeletionDate     time.Time // unix epoch if not deleted
+	ReminderSentDate time.Time // most recent reminder send date, or unix epoch
+}
+
+// Keyed by secure random number (NewEphemeralKey).
 type VerifyEmail struct {
-	Email     string    // email account to verify
+	UserId    int64     // user to verify
 	Timestamp time.Time // when this request was made
 }
 
-// Keyed by secure random number.
+// Keyed by secure random number (NewEphemeralKey).
 type ResetPassword struct {
-	Email     string    // email account for which to reset password
+	UserId    int64     // user for which to reset password
 	Timestamp time.Time // when this request was made
 }
 
@@ -67,24 +88,8 @@ type PayPalIpnMessage struct {
 	PayKey     string // pay_key
 }
 
-// Key in datastore is numeric id.
-// TODO(sadovsky):
-//  - Use enum for PaymentType.
-//  - Add field for currency code (same as in paypal request).
-//  - Add a PaymentStatus struct. We'll need to keep track of paypal
-//    transactions, in-person payments, confirmations, etc.
-type PayRequest struct {
-	PayeeEmail       string // primary email of payee
-	PayerEmail       string // email of payer
-	Amount           float32
-	PaymentType      string // "personal", "goods", or "services"
-	Description      string
-	CreationDate     time.Time
-	IsPaid           bool      // needed for datastore queries
-	PaymentDate      time.Time // unix epoch if not yet paid in full
-	DeletionDate     time.Time // unix epoch if not deleted
-	ReminderSentDate time.Time // most recent reminder send date, or unix epoch
-}
+//////////////////////////////
+// Key factories
 
 func NewEphemeralKey(c appengine.Context, kind string) *datastore.Key {
 	key := fmt.Sprintf("%v-%s", time.Now().Unix(), string(SecureRandom(32)))
@@ -99,6 +104,81 @@ func ToSessionKey(c appengine.Context, randomKey string) *datastore.Key {
 	return datastore.NewKey(c, "Session", randomKey, 0, nil)
 }
 
-func ToUserKey(c appengine.Context, email string) *datastore.Key {
-	return datastore.NewKey(c, "User", email, 0, nil)
+func ToUserKey(c appengine.Context, userId int64) *datastore.Key {
+	return datastore.NewKey(c, "User", "", userId, nil)
+}
+
+func ToUserIdKey(c appengine.Context, email string) *datastore.Key {
+	return datastore.NewKey(c, "UserId", email, 0, nil)
+}
+
+//////////////////////////////
+// Simple data getters
+
+func GetUserOrDie(key *datastore.Key, c *Context) *User {
+	user := &User{}
+	CheckError(datastore.Get(c.Aec(), key, user))
+	return user
+}
+
+func GetUserId(email string, c *Context) (int64, error) {
+	userIdKey := ToUserIdKey(c.Aec(), email)
+	userId := &UserId{}
+	if err := datastore.Get(c.Aec(), userIdKey, userId); err != nil {
+		return 0, err
+	}
+	return userId.UserId, nil
+}
+
+func GetUserIdOrDie(email string, c *Context) int64 {
+	userId, err := GetUserId(email, c)
+	CheckError(err)
+	return userId
+}
+
+func GetUserFromUserId(userId int64, c *Context) (*User, error) {
+	userKey := ToUserKey(c.Aec(), userId)
+	user := &User{}
+	if err := datastore.Get(c.Aec(), userKey, user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func GetUserFromUserIdOrDie(userId int64, c *Context) *User {
+	user, err := GetUserFromUserId(userId, c)
+	CheckError(err)
+	return user
+}
+
+func GetUserFromSessionOrDie(c *Context) *User {
+	c.AssertLoggedIn()
+	return GetUserFromUserIdOrDie(c.Session().UserId, c)
+}
+
+func GetUserFromEmail(email string, c *Context) (int64, *User, error) {
+	userId, err := GetUserId(email, c)
+	if err != nil {
+		return 0, nil, err
+	}
+	user, err := GetUserFromUserId(userId, c)
+	if err != nil {
+		return 0, nil, err
+	}
+	return userId, user, nil
+}
+
+func GetUserFromEmailOrDie(email string, c *Context) (int64, *User) {
+	userId, user, err := GetUserFromEmail(email, c)
+	CheckError(err)
+	return userId, user
+}
+
+//////////////////////////////
+// Other util functions
+
+func GetPayeeUserKey(reqCode string) *datastore.Key {
+	reqKey, err := datastore.DecodeKey(reqCode)
+	CheckError(err)
+	return reqKey.Parent()
 }
