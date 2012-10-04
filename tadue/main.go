@@ -282,7 +282,7 @@ func doInitiateVerifyEmail(c *Context) error {
 	verifUrl := fmt.Sprintf("http://%s/account/verif?key=%s",
 		appengine.DefaultVersionHostname(c.Aec()), key.Encode())
 	data := map[string]interface{}{
-		"fullname": c.Session().FullName,
+		"fullName": c.Session().FullName,
 		"verifUrl": verifUrl,
 	}
 	body, err := ExecuteTemplate("email-verif.html", data)
@@ -928,6 +928,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 		msg := &mail.Message{
 			Sender:   "noreply@tadue.com",
 			To:       []string{req.PayerEmail},
+			Cc:       []string{req.PayeeEmail},
 			Subject:  subject,
 			HTMLBody: string(body),
 		}

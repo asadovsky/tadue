@@ -1,8 +1,6 @@
 p0
-- Switch primary user key to int
-- Finish settings page (change name, paypal email, etc.)
+- Finish settings page (change name, email, paypal email, etc.)
 - When user changes name or email, update session too
-- CC payee on pay-request emails
 - Refresh index.yaml file
 
 Not launch blocking below
@@ -12,7 +10,7 @@ p1
 - Handle ajax errors
 - Time zone
 - Shorten password reset link lifespan to 30 minutes
-- Move session into cookie
+- Maybe move session state into cookie
 
 p2
 - New ToS page
