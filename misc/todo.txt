@@ -1,7 +1,6 @@
 p0
 - Finish settings page (change name, email, paypal email, etc.)
 - When user changes name or email, update session too
-- Refresh index.yaml file
 
 Not launch blocking below
 
@@ -13,6 +12,7 @@ p1
 - Maybe move session state into cookie
 
 p2
+- Protect against CSRF
 - New ToS page
 - Memcached
 - Write unit tests, e.g. for payments page
