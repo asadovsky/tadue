@@ -69,6 +69,7 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 	v.Set("receiverList.receiver(0).email", payeePayPalEmail)
 	amountStr := strconv.FormatFloat(float64(amount), 'f', 2, 32)
 	v.Set("receiverList.receiver(0).amount", amountStr)
+	// TODO(sadovsky): Get payment type from the PayRequest.
 	v.Set("receiverList.receiver(0).paymentType", "PERSONAL")
 	v.Set("currencyCode", "USD")
 	v.Set("feesPayer", "EACHRECEIVER")

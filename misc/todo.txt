@@ -1,10 +1,9 @@
 p0
-- Finish settings page (change name, email, paypal email, etc.)
-- When user changes name or email, update session too
-
-Not launch blocking below
 
 p1
+- When user changes name, update name in upper right (check for XSS)
+- Allow user to change email
+- Require current password for updating info
 - Fill in "about" page
 - Handle ajax errors
 - Time zone
@@ -13,6 +12,7 @@ p1
 
 p2
 - Protect against CSRF
+- Check that all transactions are idempotent
 - New ToS page
 - Memcached
 - Write unit tests, e.g. for payments page

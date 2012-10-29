@@ -24,18 +24,20 @@ var checks = {};
   checks['confirm-password'] = checkConfirmPasswordFieldClosure;
 }());
 
-var runAllChecks = function () {
-  return runChecks(checks);
+var shouldRunAllChecks = false;
+var maybeRunAllChecks = function () {
+  if (shouldRunAllChecks) {
+    return runChecks(checks);
+  }
+  return true;
 };
 
-// Run checks when submit is pressed, and on every input event thereafter.
-var runAllChecksOnEveryInputEvent = false;
+// Run checks when button is pressed, and on every input event thereafter.
 var checkForm = function () {
-  if (!runAllChecksOnEveryInputEvent) {
-    runAllChecksOnEveryInputEvent = true;
-    $('input').each(function (index, el) {
-      el.addEventListener('input', runAllChecks, false);
-    });
-  }
-  return runAllChecks();
+  shouldRunAllChecks = true;
+  return maybeRunAllChecks();
 };
+
+$('input').each(function (index, el) {
+  el.addEventListener('input', maybeRunAllChecks, false);
+});

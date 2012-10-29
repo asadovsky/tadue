@@ -4,8 +4,7 @@
 
 // Trick JSLint. These vars are defined elsewhere.
 // TODO(sadovsky): Refactor to more cleanly share common components.
-var checkFullNameField, checkEmailField, checkPayPalEmailField, checkPasswordField;
-var checkConfirmPasswordField, runChecks;
+var checkFullNameField, checkEmailField, checkPasswordField, checkConfirmPasswordField, runChecks;
 
 // Maps element id to check function.
 var signupChecks = {};
@@ -32,7 +31,7 @@ var runSignupChecks = function () {
   return runChecks(signupChecks);
 };
 
-// Run checks when submit is pressed, and on every input event thereafter.
+// Run checks when button is pressed, and on every input event thereafter.
 var runSignupChecksOnEveryInputEvent = false;
 var checkSignupForm = function () {
   if (!runSignupChecksOnEveryInputEvent) {

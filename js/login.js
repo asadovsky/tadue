@@ -17,7 +17,7 @@ var runLoginChecks = function () {
   return runChecks(loginChecks);
 };
 
-// Run checks when submit is pressed, and on every input event thereafter.
+// Run checks when button is pressed, and on every input event thereafter.
 var runLoginChecksOnEveryInputEvent = false;
 var checkLoginForm = function () {
   if (!runLoginChecksOnEveryInputEvent) {

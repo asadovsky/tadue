@@ -49,7 +49,9 @@
     </tr>
     {{if not .rendReqs}}
     <tr>
-      <td id="no-requests-msg" colspan=100>No payment requests. <a href="/request-payment">Click here</a> to make one.</td>
+      <td id="no-requests-msg" colspan=100>
+        No payment requests. <a href="/request-payment">Click here</a> to make one.
+      </td>
     </tr>
     {{end}}
     {{range .rendReqs}}

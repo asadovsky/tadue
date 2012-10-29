@@ -2,10 +2,6 @@
 
 package tadue
 
-// TODO(sadovsky):
-//  - Protect against CSRF.
-//  - Check that all transactions are idempotent.
-
 import (
 	"errors"
 	"fmt"
@@ -189,9 +185,9 @@ func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error)
 
 	// Check whether user already exists. If so, report error; if not, create new
 	// account.
-	userIdKey := ToUserIdKey(c.Aec(), newUser.Email)
 	var userId int64 = 0
 	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		userIdKey := ToUserIdKey(c.Aec(), newUser.Email)
 		userIdStruct := &UserId{}
 		err := datastore.Get(aec, userIdKey, userIdStruct)
 		if err != nil && err != datastore.ErrNoSuchEntity {
@@ -320,29 +316,19 @@ func doEnqueueGotPaidEmail(reqCode string, c *Context) error {
 	return err
 }
 
-// TODO(sadovsky): Maybe use updateUser() here.
 func doSetEmailOk(userId int64, c *Context) (email string, sentPayRequestEmails bool, err error) {
-	userKey := ToUserKey(c.Aec(), userId)
-	user := &User{}
+	var user *User
 	alreadyVerified := false
-
-	// Update user.EmailOk.
-	err = datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
-		err := datastore.Get(aec, userKey, user)
-		if err != nil {
-			return err
-		}
-		// If already verified, do nothing.
+	updateFn := func(userToUpdate *User) bool {
+		user = userToUpdate
 		if user.EmailOk {
 			alreadyVerified = true
-			return nil
+			return false
 		}
 		user.EmailOk = true
-		_, err = datastore.Put(aec, userKey, user)
-		return err
-	}, nil)
-
-	if err != nil {
+		return true
+	}
+	if err := updateUser(userId, nil, updateFn, c); err != nil {
 		return "", false, err
 	} else if alreadyVerified {
 		return user.Email, false, nil
@@ -350,6 +336,7 @@ func doSetEmailOk(userId int64, c *Context) (email string, sentPayRequestEmails 
 	c.Aec().Infof("Verified email: %q", user.Email)
 
 	// Enqueue pay request emails.
+	userKey := ToUserKey(c.Aec(), userId)
 	q := makePayRequestQuery(userKey, false).KeysOnly()
 	reqKeys, err := q.GetAll(c.Aec(), nil)
 	CheckError(err)
@@ -546,7 +533,7 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 			PayeeEmail:       c.Session().Email,
 			PayerEmail:       r.FormValue("payer-email"),
 			Amount:           float32(amount),
-			PaymentType:      r.FormValue("payment-type"),
+			PaymentType:      GetPaymentTypeOrDie(r.FormValue("payment-type")),
 			Description:      r.FormValue("description"),
 			CreationDate:     time.Now(),
 			PaymentDate:      time.Unix(0, 0),
@@ -682,7 +669,7 @@ func getRecentPayRequestsOrDie(userId int64, c *Context) []RenderablePayRequest 
 	return rendReqs
 }
 
-func handleAccount(w http.ResponseWriter, r *http.Request, c *Context) {
+func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
 	CheckError(r.ParseForm())
 	isNew := r.Form["new"] != nil
@@ -777,7 +764,61 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
-	RenderPageOrDie(w, c, "settings", nil)
+	user := GetUserFromSessionOrDie(c)
+	data := map[string]interface{}{
+		"email":       user.Email,
+		"fullName":    user.FullName,
+		"payPalEmail": user.PayPalEmail,
+	}
+	RenderPageOrDie(w, c, "settings", data)
+}
+
+func handleUpdateInfo(w http.ResponseWriter, r *http.Request, c *Context) {
+	if r.Method != "POST" {
+		Serve404(w)
+		return
+	}
+	c.AssertLoggedIn()
+	CheckError(r.ParseForm())
+
+	// For now, we don't allow a user to change his email, because then we'd need
+	// to verify the new email before actually making the change.
+	fullName := r.FormValue("name")
+	payPalEmail := r.FormValue("paypal-email")
+
+	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		userKey := ToUserKey(c.Aec(), c.Session().UserId)
+		user := &User{}
+		if err := datastore.Get(aec, userKey, user); err != nil {
+			return err
+		}
+		if user.FullName == fullName && user.PayPalEmail == payPalEmail {
+			// Nothing changed, so just return.
+			return nil
+		}
+		if user.FullName != fullName {
+			// Update Session record.
+			// TODO(sadovsky): Move this to session.go?
+			session := &Session{}
+			if err := datastore.Get(aec, c.SessionKey(), session); err != nil {
+				return err
+			}
+			session.FullName = fullName
+			if _, err := datastore.Put(aec, c.SessionKey(), session); err != nil {
+				return err
+			}
+		}
+		// Update User record.
+		user.FullName = fullName
+		user.PayPalEmail = payPalEmail
+		if _, err := datastore.Put(aec, userKey, user); err != nil {
+			return err
+		}
+		return nil
+	}, makeXG())
+
+	CheckError(err)
+	ServeEmpty200(w)
 }
 
 // Handles both changes and resets.
@@ -1004,8 +1045,6 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		res = &PayRequest{}
 	} else if typeName == "User" {
 		res = &User{}
-	} else if typeName == "VerifyEmail" {
-		res = &VerifyEmail{}
 	} else {
 		Assert(false, "Cannot handle typeName: %q", typeName)
 	}
@@ -1034,7 +1073,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
-	typeNames := [...]string{"PayRequest", "Session", "User", "VerifyEmail"}
+	typeNames := [...]string{"PayRequest", "Session", "User", "UserId", "VerifyEmail"}
 	for _, typeName := range typeNames {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)
@@ -1048,14 +1087,15 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 func init() {
 	http.HandleFunc("/", WrapHandler(handleHome))
 	http.HandleFunc("/ipn", WrapHandler(handleIpn))
-	// Account stuff.
+	// Account-related handlers.
 	http.HandleFunc("/settings", WrapHandler(handleSettings))
+	http.HandleFunc("/settings/update-info", WrapHandler(handleUpdateInfo))
 	http.HandleFunc("/account/change-password", WrapHandler(handleChangePassword))
 	http.HandleFunc("/account/reset-password", WrapHandler(handleResetPassword))
 	http.HandleFunc("/account/sendverif", WrapHandler(handleSendVerif))
 	http.HandleFunc("/account/verif", WrapHandler(handleVerif))
 	// Payments page and its ajax handlers.
-	http.HandleFunc("/payments", WrapHandler(handleAccount))
+	http.HandleFunc("/payments", WrapHandler(handlePayments))
 	http.HandleFunc("/payments/mark-as-paid", WrapHandler(handleMarkAsPaid))
 	http.HandleFunc("/payments/send-reminder", WrapHandler(handleSendReminder))
 	http.HandleFunc("/payments/delete", WrapHandler(handleDelete))
@@ -1082,5 +1122,5 @@ func init() {
 	// TODO(sadovsky): Disable in prod.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
-	http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
+	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
 }

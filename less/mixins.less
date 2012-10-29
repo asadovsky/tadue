@@ -31,7 +31,7 @@
   text-shadow: 1px 1px #fff;
 
   &:hover {
-    border: solid 1px darken(@bottom, 35%);
+    border: solid 1px darken(@bottom, 40%);
   }
 
   &:active {
@@ -41,8 +41,8 @@
   }
 
   &[disabled] {
-    background: mix(@top, @bottom, 50%);
-    border: solid 1px darken(@bottom, 10%);
+    background: desaturate(mix(@top, @bottom, 50%), 10%);
+    border: solid 1px desaturate(darken(@bottom, 10%), 40%);
     color: #888;
     cursor: auto;
     text-shadow: none;

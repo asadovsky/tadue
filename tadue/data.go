@@ -33,16 +33,35 @@ type User struct {
 	EmailOk     bool   // true if user has verified their primary email
 }
 
+// Payment types.
+const (
+	_ = iota
+	PTPersonal
+	PTGoods
+	PTServices
+)
+
+var paymentTypeMap = map[string]int{
+	"personal": PTPersonal,
+	"goods":    PTGoods,
+	"services": PTServices,
+}
+
+func GetPaymentTypeOrDie(paymentTypeStr string) int {
+	res := paymentTypeMap[paymentTypeStr]
+	Assert(res != 0, fmt.Sprintf("Unknown paymentTypeStr: %q", paymentTypeStr))
+	return res
+}
+
 // Keyed by int (NewIncompleteKey), with payee User as parent.
 // TODO(sadovsky):
-//  - Use enum for PaymentType.
 //  - Add field for currency code (same as in paypal request).
 //  - Maybe add a PaymentStatus struct.
 type PayRequest struct {
 	PayeeEmail       string // primary email of payee
 	PayerEmail       string // email of payer
 	Amount           float32
-	PaymentType      string // "personal", "goods", or "services"
+	PaymentType      int // PTPersonal, PTGoods, or PTServices
 	Description      string
 	CreationDate     time.Time
 	IsPaid           bool      // needed for datastore queries

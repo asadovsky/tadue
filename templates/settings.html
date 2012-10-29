@@ -2,50 +2,46 @@
 
 {{define "settings-css"}}
 <link type="text/css" rel="stylesheet" href="/css/form.css">
-<link type="text/css" rel="stylesheet" href="/css/settings.css">
 {{end}}
 
 {{define "settings-js"}}
+<script type="text/javascript" src="/js/form.js"></script>
 <script type="text/javascript" src="/js/settings.js"></script>
 {{end}}
 
 {{define "settings-body"}}
-<form action="/settings" method="post" onsubmit="return checkSettingsForm();">
+<form action="javascript:void(0)">
   <table class="form">
     <tr>
       <td class="field-name">Email</td>
-      <td class="field-value">
-        <input type="text" class="field-input" name="email" id="email">
-      </td>
-      <td><span class="error-msg"></span></td>
+      <td class="field-value">{{.Data.email}}</td>
     </tr>
     <tr>
       <td class="field-name">Password</td>
       <td class="field-value">
         <a href="/account/change-password">Change password</a>
       </td>
-      <td></td>
     </tr>
     <tr>
       <td class="field-name">Full name</td>
       <td class="field-value">
-        <input type="text" class="field-input" name="name" id="name">
+        <input type="text" class="field-input" name="name" id="name" value="{{.Data.fullName}}">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>
     <tr>
       <td class="field-name">PayPal email</td>
       <td class="field-value">
-        <input type="text" class="field-input" name="paypal-email" id="paypal-email">
+        <input type="text" class="field-input" name="paypal-email" id="paypal-email"
+               value="{{.Data.payPalEmail}}">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>
     <tr>
       <td></td>
       <td>
-        <input type="submit" class="main-button" value="Save">
+        <input type="submit" class="main-button" id="save" value="Save" disabled="disabled">
       </td>
-      <td></td>
     </tr>
   </table>
 </form>

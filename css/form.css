@@ -1,9 +1,9 @@
 input,select{padding:0.2em;}
 input{font-size:1.1em;}
 select{font-size:0.9em;}
-.main-button{background:-moz-linear-gradient(#ffee77, #eedd33);background:-ms-linear-gradient(#ffee77, #eedd33);background:-webkit-linear-gradient(#ffee77, #eedd33);background:linear-gradient(#ffee77, #eedd33);border:solid 1px #ad9e0e;color:#333;cursor:pointer;display:inline-block;text-shadow:1px 1px #fff;border-radius:3px;margin-top:0.5em;padding:0.5em 2em;}.main-button:hover{border:solid 1px #665e08;}
+.main-button{background:-moz-linear-gradient(#ffee77, #eedd33);background:-ms-linear-gradient(#ffee77, #eedd33);background:-webkit-linear-gradient(#ffee77, #eedd33);background:linear-gradient(#ffee77, #eedd33);border:solid 1px #ad9e0e;color:#333;cursor:pointer;display:inline-block;text-shadow:1px 1px #fff;border-radius:3px;margin-top:0.5em;padding:0.5em 2em;}.main-button:hover{border:solid 1px #4e4807;}
 .main-button:active{background:#eedd33;border:solid 1px #ad9e0e;text-shadow:none;}
-.main-button[disabled]{background:#f7e655;border:solid 1px #dcc912;color:#888;cursor:auto;text-shadow:none;}
+.main-button[disabled]{background:#eede5e;border:solid 1px #aca242;color:#888;cursor:auto;text-shadow:none;}
 table.form{width:100%;}
 .form td{padding-right:0.8em;padding-top:0.9em;}
 .form tr:first-child td{padding-top:0;}

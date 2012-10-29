@@ -24,7 +24,6 @@ var getSelectedReqCodes = function () {
   return $('.checkbox:checked').parents().siblings('.row-req-code').map(getValue).get().join(',');
 };
 
-// TODO(sadovsky): Handle ajax failure.
 var applyActionToReqCodes = function (url, reqCodes, undo) {
   var data = {'reqCodes': reqCodes};
   if (undo) {
@@ -50,6 +49,7 @@ var applyActionToReqCodes = function (url, reqCodes, undo) {
     }
     updateVisibleState();
   });
+  // TODO(sadovsky): Handle ajax failure.
   request.fail(function (jqXHR, textStatus) {
   });
 };

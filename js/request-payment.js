@@ -51,7 +51,7 @@ var runAllChecks = function () {
   return valid;
 };
 
-// Run checks when submit is pressed, and on every input event thereafter.
+// Run checks when button is pressed, and on every input event thereafter.
 var runAllChecksOnEveryInputEvent = false;
 var checkRequestPaymentForm = function () {
   if (!runAllChecksOnEveryInputEvent) {
