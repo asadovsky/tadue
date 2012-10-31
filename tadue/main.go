@@ -22,8 +22,7 @@ import (
 
 func makePayUrl(reqCode string, c *Context) string {
 	// TODO(sadovsky): Use https?
-	return fmt.Sprintf("http://%s/pay?reqCode=%s",
-		appengine.DefaultVersionHostname(c.Aec()), reqCode)
+	return fmt.Sprintf("http://%s/pay?reqCode=%s", AppHostname(c), reqCode)
 }
 
 func makeWrongPasswordError(email string) error {
@@ -226,10 +225,10 @@ func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error)
 }
 
 func doInitiateResetPassword(email string, c *Context) error {
-	// First, check that it's a known user email.
+	// Check that it's a known user email.
 	userId, user := GetUserFromEmailOrDie(email, c)
 
-	// Next, create the ResetPassword record.
+	// Create the ResetPassword record.
 	v := &ResetPassword{
 		UserId:    userId,
 		Timestamp: time.Now(),
@@ -240,9 +239,9 @@ func doInitiateResetPassword(email string, c *Context) error {
 		return err
 	}
 
-	// Finally, send the email.
+	// Send the email.
 	resetUrl := fmt.Sprintf("http://%s/account/change-password?key=%s",
-		appengine.DefaultVersionHostname(c.Aec()), key.Encode())
+		AppHostname(c), key.Encode())
 	data := map[string]interface{}{
 		"fullName": user.FullName,
 		"email":    user.Email,
@@ -275,8 +274,7 @@ func doInitiateVerifyEmail(c *Context) error {
 	}
 
 	// Send the email.
-	verifUrl := fmt.Sprintf("http://%s/account/verif?key=%s",
-		appengine.DefaultVersionHostname(c.Aec()), key.Encode())
+	verifUrl := fmt.Sprintf("http://%s/account/verif?key=%s", AppHostname(c), key.Encode())
 	data := map[string]interface{}{
 		"fullName": c.Session().FullName,
 		"verifUrl": verifUrl,
@@ -391,7 +389,7 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	reqKey, err := datastore.DecodeKey(reqCode)
 	CheckError(err)
 
-	msg, err := PayPalValidateIpn(string(requestBytes), c.Aec())
+	msg, err := PayPalValidateIpn(string(requestBytes), c)
 	CheckError(err)
 	c.Aec().Infof("%+v", msg) // plus flag (%+v) adds field names
 
@@ -480,7 +478,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 		// Note: According to the documentation, the pay key is only valid for three
 		// hours. As such, we cannot request it before the payer arrives.
 		response, err := PayPalSendPayRequest(
-			reqCode, payee.PayPalEmail, req.Description, req.Amount, c.Aec())
+			reqCode, payee.PayPalEmail, req.Description, req.Amount, c)
 		CheckError(err)
 		// TODO(sadovsky): Store the response inside the PayRequest via transaction.
 		if response.Ack != "Success" {
@@ -1122,5 +1120,5 @@ func init() {
 	// TODO(sadovsky): Disable in prod.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
-	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
+	http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
 }

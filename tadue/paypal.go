@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"appengine"
 	"appengine/urlfetch"
 )
 
@@ -53,13 +52,10 @@ func getResponseBody(resp *http.Response, err error) (string, error) {
 }
 
 func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount float32,
-	c appengine.Context) (*PayPalPayResponse, error) {
-	c.Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
+	c *Context) (*PayPalPayResponse, error) {
+	c.Aec().Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
 
-	baseUrl := fmt.Sprintf("http://%s", appengine.DefaultVersionHostname(c))
-	if kSandboxHost != "" {
-		baseUrl = kSandboxHost
-	}
+	baseUrl := fmt.Sprintf("http://%s", AppHostnameForPayPal(c))
 
 	// NOTE(sadovsky): We could add a trackingId here, but reqCode in url seems good
 	// enough.
@@ -88,8 +84,8 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 	}
 	setHeaders(request)
 
-	c.Debugf("Pay request: %v", request)
-	respStr, err := getResponseBody(urlfetch.Client(c).Do(request))
+	c.Aec().Debugf("Pay request: %v", request)
+	respStr, err := getResponseBody(urlfetch.Client(c.Aec()).Do(request))
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +93,7 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 	if err != nil {
 		return nil, err
 	}
-	c.Debugf("Pay response: %v", values)
+	c.Aec().Debugf("Pay response: %v", values)
 
 	res := &PayPalPayResponse{
 		Ack:           values.Get("responseEnvelope.ack"),
@@ -110,14 +106,14 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 }
 
 // IPN handler references: http://goo.gl/bIX2Q and http://goo.gl/F1uej
-func PayPalValidateIpn(requestBody string, c appengine.Context) (*PayPalIpnMessage, error) {
-	c.Debugf("PayPalValidateIpn")
+func PayPalValidateIpn(requestBody string, c *Context) (*PayPalIpnMessage, error) {
+	c.Aec().Debugf("PayPalValidateIpn")
 
 	// Post back to IPN server to get verification.
 	postBody := fmt.Sprintf("cmd=_notify-validate&%s", requestBody)
-	c.Debugf("IPN post body: %v", postBody)
+	c.Aec().Debugf("IPN post body: %v", postBody)
 
-	respStr, err := getResponseBody(urlfetch.Client(c).Post(
+	respStr, err := getResponseBody(urlfetch.Client(c.Aec()).Post(
 		kValidateIpnUrl, "application/x-www-form-urlencoded", strings.NewReader(postBody)))
 	if err != nil {
 		return nil, err
@@ -131,7 +127,7 @@ func PayPalValidateIpn(requestBody string, c appengine.Context) (*PayPalIpnMessa
 	if err != nil {
 		return nil, err
 	}
-	c.Debugf("IPN message: %v", values)
+	c.Aec().Debugf("IPN message: %v", values)
 
 	res := &PayPalIpnMessage{
 		Status:     values.Get("status"),

@@ -12,12 +12,13 @@ p1
 
 p2
 - Protect against CSRF
-- Check that all transactions are idempotent
+- Allow user to update payment request description
 - New ToS page
 - Memcached
 - Write unit tests, e.g. for payments page
 - For templates, use structs, or use FindOrDie map
 - Add GetFormValueOrDie function
+- Check that all transactions are idempotent
 
 p3
 - Security, e.g. throttle QPS per IP

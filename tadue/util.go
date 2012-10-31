@@ -226,3 +226,17 @@ func NewCookie(name, value string, expirationInDays int) *http.Cookie {
 	}
 	return cookie
 }
+
+func AppHostname(c *Context) string {
+	if kAppHostname != "" {
+		return kAppHostname
+	}
+	return appengine.DefaultVersionHostname(c.Aec())
+}
+
+func AppHostnameForPayPal(c *Context) string {
+	if kAppHostnameForPayPal != "" {
+		return kAppHostnameForPayPal
+	}
+	return AppHostname(c)
+}
