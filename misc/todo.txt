@@ -1,9 +1,10 @@
 p0
 - Canonicalize emails for login, e.g. lower-case Gmail addresses
-- Fix PayPal's "redirecting you to Adam Sadovsky"
 
 p1
+- Fix PayPal's "redirecting you to Adam Sadovsky"
 - When user changes name, update name in upper right (check for XSS)
+- For emails, change sender name from "noreply" to "Tadue"
 - In handleSendReminder, optimistically show requests as sent
 - After someone pays, redirect them to homepage, with highlighted note
 - Require current password for updating info
