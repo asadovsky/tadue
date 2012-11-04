@@ -68,7 +68,7 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 	// TODO(sadovsky): Get payment type from the PayRequest.
 	v.Set("receiverList.receiver(0).paymentType", "PERSONAL")
 	v.Set("currencyCode", "USD")
-	v.Set("feesPayer", "EACHRECEIVER")
+	v.Set("feesPayer", "SENDER")
 	v.Set("memo", description)
 	v.Set("cancelUrl", fmt.Sprintf("%s/pay?reqCode=%s", baseUrl, reqCode))
 	v.Set("returnUrl", fmt.Sprintf("%s/pay/done?reqCode=%s", baseUrl, reqCode))
