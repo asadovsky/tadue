@@ -5,10 +5,10 @@
 {{end}}
 
 {{define "pay-body"}}
-<p>{{.Data.req.PayerEmail}}, you owe {{.Data.payee.FullName}} ({{.Data.payee.PayPalEmail}}) ${{.Data.req.Amount}}.</p>
-<p>Description: {{.Data.req.Description}}</p>
+<p>{{.Data.payerEmail}}, you owe {{.Data.payeeFullName}} ({{.Data.payeeEmail}}) {{.Data.amount}}.</p>
+<p>Description: {{.Data.description}}</p>
 <div id="paypal-button">
-  <a href="{{.Data.url}}&method=paypal">
+  <a href="{{.Data.payWithPayPalUrl}}">
     <img src="/static/pay_with_paypal.gif">
   </a>
 </div>

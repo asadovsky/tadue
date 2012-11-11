@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -146,8 +145,7 @@ func useVerifyEmail(encodedKey string, c *Context) (int64, error) {
 
 // FIXME(sadovsky): Differentiate between user error and app error.
 func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
-	// TODO(sadovsky): Form validation.
-	email := r.FormValue("login-email")
+	email := ParseEmail(r.FormValue("login-email"))
 	password := r.FormValue("login-password")
 	Assert(email != "", "")
 
@@ -168,17 +166,17 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 
 // FIXME(sadovsky): Differentiate between user error and app error.
 func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
-	// TODO(sadovsky): Form validation.
 	salt := NewSalt()
 	newUser := &User{
-		Email:       r.FormValue("signup-email"),
-		Salt:        salt,
-		PassHash:    SaltAndHash(salt, r.FormValue("signup-password")),
-		FullName:    r.FormValue("signup-name"),
-		PayPalEmail: r.FormValue("signup-paypal-email"),
+		Email:    ParseEmail(r.FormValue("signup-email")),
+		Salt:     salt,
+		PassHash: SaltAndHash(salt, r.FormValue("signup-password")),
+		FullName: ParseFullName(r.FormValue("signup-name")),
 	}
 	if r.FormValue("signup-copy-email") == "on" {
-		newUser.PayPalEmail = r.FormValue("signup-email")
+		newUser.PayPalEmail = newUser.Email
+	} else {
+		newUser.PayPalEmail = ParseEmail(r.FormValue("signup-paypal-email"))
 	}
 	// TODO(sadovsky): Check that the PayPal account is valid and confirmed.
 
@@ -381,8 +379,8 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	requestBytes, err := ioutil.ReadAll(r.Body)
 	CheckError(err)
 
-	// Note: If we call ParseForm() before ReadAll(), the IPN dance fails.
-	// ParseForm() must be mutating the request somehow.
+	// Note: If we call ParseForm() before ReadAll(), the IPN dance fails because
+	// ParseForm() mutates the r.Body (io.ReadCloser).
 	CheckError(r.ParseForm())
 	reqCode := r.FormValue("reqCode")
 	Assert(reqCode != "", "No reqCode")
@@ -400,14 +398,6 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 
-	currencyAndAmount := strings.Split(msg.Amount, " ")
-	Assert(len(currencyAndAmount) == 2, "Unexpected msg.Amount: %q", msg.Amount)
-	// TODO(sadovsky): Support other currencies.
-	Assert(currencyAndAmount[0] == "USD", "Unexpected currency in msg.Amount: %q", msg.Amount)
-
-	amount64, err := strconv.ParseFloat(currencyAndAmount[1], 32)
-	CheckError(err)
-
 	err = datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
 		req := &PayRequest{}
 		err := datastore.Get(aec, reqKey, req)
@@ -416,13 +406,12 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 		}
 
 		// Check payee email and amount.
-		// We don't check payer email because their paypal email may differ from
-		// their personal email.
+		// TODO(sadovsky): Maybe store payer's PayPal email, since we get it here.
 		if msg.PayeeEmail != req.PayeeEmail {
 			return errors.New(fmt.Sprintf("Wrong payee: %q != %q", msg.PayeeEmail, req.PayeeEmail))
 		}
-		if float32(amount64) != req.Amount {
-			return errors.New(fmt.Sprintf("Wrong amount: %v != %v", amount64, req.Amount))
+		if msg.Amount != req.Amount {
+			return errors.New(fmt.Sprintf("Wrong amount: %v != %v", msg.Amount, req.Amount))
 		}
 
 		// If already marked as paid, do nothing.
@@ -469,23 +458,22 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 
 	if method == "" {
 		data := map[string]interface{}{
-			"url":   r.URL.String(),
-			"req":   req,
-			"payee": payee,
+			"payerEmail":       req.PayerEmail,
+			"payeeEmail":       payee.PayPalEmail,
+			"payeeFullName":    payee.FullName,
+			"amount":           renderAmount(req.Amount),
+			"description":      req.Description,
+			"payWithPayPalUrl": fmt.Sprintf("%s&method=paypal", r.URL.String()),
 		}
 		RenderPageOrDie(w, c, "pay", data)
 	} else { // method == "paypal"
-		// Note: According to the documentation, the pay key is only valid for three
-		// hours. As such, we cannot request it before the payer arrives.
-		response, err := PayPalSendPayRequest(
+		// According to the PayPal documentation, the pay key is only valid for
+		// three hours, so we must request it when the payer arrives.
+		_, payUrl, err := PayPalSendPayRequest(
 			reqCode, payee.PayPalEmail, req.Description, req.Amount, c)
 		CheckError(err)
-		// TODO(sadovsky): Store the response inside the PayRequest via transaction.
-		if response.Ack != "Success" {
-			ServeError(w, response)
-			return
-		}
-		http.Redirect(w, r, PayPalMakePayUrl(response.PayKey), http.StatusFound)
+		// TODO(sadovsky): Maybe store the PayPalPayResponse inside the PayRequest.
+		http.Redirect(w, r, payUrl, http.StatusFound)
 	}
 }
 
@@ -498,8 +486,6 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 	if r.Method == "GET" {
 		RenderPageOrDie(w, c, "request-payment", nil)
 	} else if r.Method == "POST" {
-		CheckError(r.ParseForm())
-
 		var user *User
 		var err error
 
@@ -523,15 +509,11 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 		c.AssertLoggedIn()
 		Assert(user != nil, "User is nil")
 
-		amount, err := strconv.ParseFloat(strings.TrimLeft(r.FormValue("amount"), "$"), 32)
-		CheckError(err)
-
-		// TODO(sadovsky): Form validation.
 		req := &PayRequest{
 			PayeeEmail:       c.Session().Email,
-			PayerEmail:       r.FormValue("payer-email"),
-			Amount:           float32(amount),
-			PaymentType:      GetPaymentTypeOrDie(r.FormValue("payment-type")),
+			PayerEmail:       ParseEmail(r.FormValue("payer-email")),
+			Amount:           ParseAmount(r.FormValue("amount")),
+			PaymentType:      ParsePaymentType(r.FormValue("payment-type")),
 			Description:      r.FormValue("description"),
 			CreationDate:     time.Now(),
 			PaymentDate:      time.Unix(0, 0),
@@ -567,7 +549,6 @@ func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 		RenderPageOrDie(w, c, "login", nil)
 	} else if r.Method == "POST" {
 		c.AssertNotLoggedIn()
-		CheckError(r.ParseForm())
 		// TODO(sadovsky): Show nice error page on failed login.
 		_, err := doLogin(w, r, c)
 		CheckError(err)
@@ -588,7 +569,6 @@ func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
 		RenderPageOrDie(w, c, "signup", nil)
 	} else if r.Method == "POST" {
 		c.AssertNotLoggedIn()
-		CheckError(r.ParseForm())
 		_, err := doSignup(w, r, c)
 		CheckError(err)
 		http.Redirect(w, r, "/payments?new", http.StatusFound)
@@ -613,7 +593,7 @@ func renderDate(date time.Time) string {
 }
 
 func renderAmount(amount float32) string {
-	return strconv.FormatFloat(float64(amount), 'f', 2, 32)
+	return fmt.Sprintf("$%.2f", amount)
 }
 
 func getRecentPayRequestsOrDie(userId int64, c *Context) []RenderablePayRequest {
@@ -647,7 +627,7 @@ func getRecentPayRequestsOrDie(userId int64, c *Context) []RenderablePayRequest 
 		rpr.ReqCode = reqKeys[i].Encode()
 		rpr.PayUrl = makePayUrl(rpr.ReqCode, c)
 		rpr.PayerEmail = pr.PayerEmail
-		rpr.Amount = fmt.Sprintf("$%.2f", pr.Amount)
+		rpr.Amount = renderAmount(pr.Amount)
 		rpr.Description = pr.Description
 		rpr.IsPaid = pr.IsPaid
 		// TODO(sadovsky): Get user's time zone during signup.
@@ -669,7 +649,6 @@ func getRecentPayRequestsOrDie(userId int64, c *Context) []RenderablePayRequest 
 
 func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
-	CheckError(r.ParseForm())
 	isNew := r.Form["new"] != nil
 
 	user := GetUserFromSessionOrDie(c)
@@ -700,7 +679,6 @@ func handleMarkAsPaid(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 	c.AssertLoggedIn()
-	CheckError(r.ParseForm())
 	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
 	undo := r.Form["undo"] != nil
 	updateFn := func(reqCode string, req *PayRequest) bool {
@@ -728,7 +706,6 @@ func handleSendReminder(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 	c.AssertLoggedIn()
-	CheckError(r.ParseForm())
 	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
 	// TODO(sadovsky): Show error if user is not verified.
 	// TODO(sadovsky): Show error if user exceeds email rate limit.
@@ -744,7 +721,6 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 	c.AssertLoggedIn()
-	CheckError(r.ParseForm())
 	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
 	undo := r.Form["undo"] != nil
 	updateFn := func(reqCode string, req *PayRequest) bool {
@@ -777,12 +753,11 @@ func handleUpdateInfo(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 	c.AssertLoggedIn()
-	CheckError(r.ParseForm())
 
 	// For now, we don't allow a user to change his email, because then we'd need
 	// to verify the new email before actually making the change.
-	fullName := r.FormValue("name")
-	payPalEmail := r.FormValue("paypal-email")
+	fullName := ParseFullName(r.FormValue("name"))
+	payPalEmail := ParseEmail(r.FormValue("paypal-email"))
 
 	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
 		userKey := ToUserKey(c.Aec(), c.Session().UserId)
@@ -821,7 +796,6 @@ func handleUpdateInfo(w http.ResponseWriter, r *http.Request, c *Context) {
 
 // Handles both changes and resets.
 func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
-	CheckError(r.ParseForm())
 	encodedKey := r.FormValue("key")
 	isPasswordResetRequest := encodedKey != ""
 	if !isPasswordResetRequest {
@@ -867,8 +841,7 @@ func handleResetPassword(w http.ResponseWriter, r *http.Request, c *Context) {
 	if r.Method == "GET" {
 		RenderPageOrDie(w, c, "reset-password", nil)
 	} else if r.Method == "POST" {
-		CheckError(r.ParseForm())
-		email := r.FormValue("email")
+		email := ParseEmail(r.FormValue("email"))
 		CheckError(doInitiateResetPassword(email, c))
 		RenderPageOrDie(w, c, "text", makeSentLinkMessage("Password reset", email))
 	} else {
@@ -899,7 +872,6 @@ func handleDebugVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleVerif(w http.ResponseWriter, r *http.Request, c *Context) {
-	CheckError(r.ParseForm())
 	encodedKey := r.FormValue("key")
 	Assert(encodedKey != "", "No key")
 	userId, err := useVerifyEmail(encodedKey, c)
@@ -916,7 +888,6 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 		Serve404(w)
 		return
 	}
-	CheckError(r.ParseForm())
 	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
 	Assert(len(reqCodes) > 0, "No reqCodes")
 
@@ -1084,7 +1055,7 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func init() {
 	http.HandleFunc("/", WrapHandler(handleHome))
-	http.HandleFunc("/ipn", WrapHandler(handleIpn))
+	http.HandleFunc("/ipn", WrapHandlerNoParseForm(handleIpn))
 	// Account-related handlers.
 	http.HandleFunc("/settings", WrapHandler(handleSettings))
 	http.HandleFunc("/settings/update-info", WrapHandler(handleUpdateInfo))

@@ -140,7 +140,7 @@ func ServeError(w http.ResponseWriter, data interface{}) {
 type AppHandlerFunc func(http.ResponseWriter, *http.Request, *Context)
 
 // Wraps other http handlers. Creates context object, recovers from panics, etc.
-func WrapHandler(fn AppHandlerFunc) http.HandlerFunc {
+func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := &Context{}
 		c.SetAec(appengine.NewContext(r))
@@ -154,8 +154,19 @@ func WrapHandler(fn AppHandlerFunc) http.HandlerFunc {
 		}()
 
 		ReadSession(r, c)
+		if parseForm {
+			CheckError(r.ParseForm())
+		}
 		fn(w, r, c)
 	}
+}
+
+func WrapHandler(fn AppHandlerFunc) http.HandlerFunc {
+	return WrapHandlerImpl(fn, true)
+}
+
+func WrapHandlerNoParseForm(fn AppHandlerFunc) http.HandlerFunc {
+	return WrapHandlerImpl(fn, false)
 }
 
 func PlaceholderHandler(name string) http.HandlerFunc {

@@ -4,7 +4,7 @@
 
 var emailRegExp = /^\S+@\S+\.\S+$/;
 var floatRegExp = /^\$?[0-9]+(?:\.[0-9][0-9])?$/;
-var fullNameRegExp = /^(\S+ )+\S+$/;
+var fullNameRegExp = /^(?:\S+ )+\S+$/;
 
 var getNode = function (nodeId) {
   return $('#' + nodeId);

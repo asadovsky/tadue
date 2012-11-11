@@ -40,3 +40,7 @@ http://code.google.com/p/googleappengine/issues/detail?id=7885
 Replace all 2** with 2L** as follows:
 cd /usr/local/google_appengine_go
 find ./ -type f -name '*.py' | xargs sed -i '' -e 's/2\*\*/2L**/g'
+
+To avoid having email marked as spam, I had to set up SPF and DKIM.
+ - To verify SPF: nslookup -q=txt tadue.com
+ - To verify DKIM, check email headers

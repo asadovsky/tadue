@@ -52,7 +52,7 @@ func getResponseBody(resp *http.Response, err error) (string, error) {
 }
 
 func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount float32,
-	c *Context) (*PayPalPayResponse, error) {
+	c *Context) (*PayPalPayResponse, string, error) {
 	c.Aec().Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
 
 	baseUrl := fmt.Sprintf("http://%s", AppHostnameForPayPal(c))
@@ -80,29 +80,35 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 	// http://golang.org/src/pkg/net/http/client.go.
 	request, err := http.NewRequest("POST", kPayEndpoint, strings.NewReader(v.Encode()))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	setHeaders(request)
 
 	c.Aec().Debugf("Pay request: %v", request)
 	respStr, err := getResponseBody(urlfetch.Client(c.Aec()).Do(request))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	values, err := url.ParseQuery(respStr)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	c.Aec().Debugf("Pay response: %v", values)
 
+	ack := values.Get("responseEnvelope.ack")
+	if ack != "Success" {
+		return nil, "", errors.New(ack)
+	}
+
 	res := &PayPalPayResponse{
-		Ack:           values.Get("responseEnvelope.ack"),
+		Ack:           ack,
 		Build:         values.Get("responseEnvelope.build"),
 		CorrelationId: values.Get("responseEnvelope.correlationId"),
 		Timestamp:     values.Get("responseEnvelope.timestamp"),
 		PayKey:        values.Get("payKey"),
 	}
-	return res, nil
+	payUrl := fmt.Sprintf("%s&paykey=%s", kPayBaseUrl, res.PayKey)
+	return res, payUrl, nil
 }
 
 // IPN handler references: http://goo.gl/bIX2Q and http://goo.gl/F1uej
@@ -129,17 +135,18 @@ func PayPalValidateIpn(requestBody string, c *Context) (*PayPalIpnMessage, error
 	}
 	c.Aec().Debugf("IPN message: %v", values)
 
+	amountStr := values.Get("transaction[0].amount")
+	currencyAndAmount := strings.Split(amountStr, " ")
+	Assert(len(currencyAndAmount) == 2, "Invalid amountStr: %q", amountStr)
+	// TODO(sadovsky): Support other currencies.
+	Assert(currencyAndAmount[0] == "USD", "Invalid currency in amountStr: %q", amountStr)
+
 	res := &PayPalIpnMessage{
 		Status:     values.Get("status"),
-		PayerEmail: values.Get("sender_email"),
-		PayeeEmail: values.Get("transaction[0].receiver"),
-		Amount:     values.Get("transaction[0].amount"),
+		PayerEmail: ParseEmail(values.Get("sender_email")),
+		PayeeEmail: ParseEmail(values.Get("transaction[0].receiver")),
+		Amount:     ParseAmount(currencyAndAmount[1]),
 		PayKey:     values.Get("pay_key"),
 	}
 	return res, nil
-}
-
-func PayPalMakePayUrl(payKey string) string {
-	// TODO(sadovsky): Make this more robust.
-	return fmt.Sprintf("%s&paykey=%s", kPayBaseUrl, payKey)
 }

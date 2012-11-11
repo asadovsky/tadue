@@ -4,6 +4,9 @@ package tadue
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"appengine"
@@ -40,18 +43,6 @@ const (
 	PTGoods
 	PTServices
 )
-
-var paymentTypeMap = map[string]int{
-	"personal": PTPersonal,
-	"goods":    PTGoods,
-	"services": PTServices,
-}
-
-func GetPaymentTypeOrDie(paymentTypeStr string) int {
-	res := paymentTypeMap[paymentTypeStr]
-	Assert(res != 0, fmt.Sprintf("Unknown paymentTypeStr: %q", paymentTypeStr))
-	return res
-}
 
 // Keyed by int (NewIncompleteKey), with payee User as parent.
 // TODO(sadovsky):
@@ -100,11 +91,11 @@ type PayPalPayResponse struct {
 //  - Maybe store more fields, e.g. status_for_sender_txn.
 //  - Store array of txns so we can support chained payments?
 type PayPalIpnMessage struct {
-	Status     string // status
-	PayerEmail string // sender_email
-	PayeeEmail string // transaction[0].receiver
-	Amount     string // transaction[0].amount
-	PayKey     string // pay_key
+	Status     string  // status
+	PayerEmail string  // sender_email
+	PayeeEmail string  // transaction[0].receiver
+	Amount     float32 // extracted from transaction[0].amount
+	PayKey     string  // pay_key
 }
 
 //////////////////////////////
@@ -200,4 +191,43 @@ func GetPayeeUserKey(reqCode string) *datastore.Key {
 	reqKey, err := datastore.DecodeKey(reqCode)
 	CheckError(err)
 	return reqKey.Parent()
+}
+
+//////////////////////////////
+// String parsing functions
+
+// Typically used for parsing form values.
+// All "Parse" functions assert on error.
+
+var paymentTypeMap = map[string]int{
+	"personal": PTPersonal,
+	"goods":    PTGoods,
+	"services": PTServices,
+}
+
+func ParsePaymentType(paymentTypeStr string) int {
+	res := paymentTypeMap[paymentTypeStr]
+	Assert(res != 0, fmt.Sprintf("Invalid paymentTypeStr: %q", paymentTypeStr))
+	return res
+}
+
+var emailRegexp = regexp.MustCompile(`^\S+@\S+\.\S+$`)
+
+func ParseEmail(email string) string {
+	Assert(emailRegexp.MatchString(email), "Invalid email: %q", email)
+	// Canonicalize the email address.
+	return strings.ToLower(email)
+}
+
+func ParseAmount(amount string) float32 {
+	amount64, err := strconv.ParseFloat(strings.TrimLeft(amount, "$"), 32)
+	CheckError(err)
+	return float32(amount64)
+}
+
+var fullNameRegexp = regexp.MustCompile(`^(?:\S+ )+\S+$`)
+
+func ParseFullName(fullName string) string {
+	Assert(fullNameRegexp.MatchString(fullName), "Invalid fullName: %q", fullName)
+	return fullName
 }
