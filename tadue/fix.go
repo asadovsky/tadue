@@ -87,7 +87,7 @@ func fixUserIdRecordsOrDie(c *Context) {
 	for _, key := range keys {
 		oldEmail := key.StringID()
 		newEmail := ParseEmail(oldEmail)
-		if (oldEmail == newEmail) {
+		if oldEmail == newEmail {
 			continue
 		}
 
