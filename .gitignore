@@ -1,1 +1,4 @@
-tadue/secrets.go
+tadue/config.go
+tadue/config_dev.go.txt
+tadue/config_prod.go.txt
+misc/update_prod.sh
