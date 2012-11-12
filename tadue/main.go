@@ -62,8 +62,9 @@ func updatePayRequests(
 	}
 
 	// NOTE(sadovsky): Multi-row, single entity group transaction.
-	updatedReqCodes := []string{}
+	var updatedReqCodes []string
 	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		updatedReqCodes = []string{} // ensure transaction is idempotent
 		for _, reqCode := range reqCodes {
 			reqKey, err := datastore.DecodeKey(reqCode)
 			CheckError(err)
@@ -182,8 +183,9 @@ func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error)
 
 	// Check whether user already exists. If so, report error; if not, create new
 	// account.
-	var userId int64 = 0
+	var userId int64
 	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		userId = 0 // ensure transaction is idempotent
 		userIdKey := ToUserIdKey(c.Aec(), newUser.Email)
 		userIdStruct := &UserId{}
 		err := datastore.Get(aec, userIdKey, userIdStruct)
@@ -1096,5 +1098,5 @@ func init() {
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
 	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }
