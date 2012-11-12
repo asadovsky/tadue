@@ -1,5 +1,4 @@
 p0
-- From "got paid" email, payments link gives "not logged in" error
 
 p1 features
 - Request multiple payments at once

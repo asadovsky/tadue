@@ -34,6 +34,7 @@
 
 {{define "login-body"}}
 <form action="/login" method="post" onsubmit="return checkLoginForm();">
+  <input type="hidden" name="target" value="{{.Data.target}}">
   <table class="form">
     {{template "login-table"}}
     <tr>

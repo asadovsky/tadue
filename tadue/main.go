@@ -19,9 +19,13 @@ import (
 	"appengine/taskqueue"
 )
 
-func makePayUrl(reqCode string, c *Context) string {
+func makeAppUrl(path string, c *Context) string {
 	// TODO(sadovsky): Use https?
-	return fmt.Sprintf("http://%s/pay?reqCode=%s", AppHostname(c), reqCode)
+	return fmt.Sprintf("http://%s/%s", AppHostname(c), path)
+}
+
+func makePayUrl(reqCode string, c *Context) string {
+	return makeAppUrl(fmt.Sprintf("pay?reqCode=%s", reqCode), c)
 }
 
 func makeWrongPasswordError(email string) error {
@@ -48,6 +52,23 @@ func makeXG() *datastore.TransactionOptions {
 	return &datastore.TransactionOptions{
 		XG: true,
 	}
+}
+
+// Steers user through login page if they aren't already logged in.
+// Returns true if request has been handled, false otherwise.
+// If user is not logged in, request must be a GET request.
+func steerThroughLogin(w http.ResponseWriter, r *http.Request, c *Context) bool {
+	if c.LoggedIn() {
+		return false
+	}
+	if r.Method != "GET" {
+		Serve404(w)
+		return true
+	}
+	escapedTarget := url.QueryEscape(r.URL.String())
+	http.Redirect(
+		w, r, makeAppUrl(fmt.Sprintf("login?target=%s", escapedTarget), c), http.StatusFound)
+	return true
 }
 
 // Applies updateFn to each PayRequest specified in reqCodes.
@@ -547,14 +568,20 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
+	escapedTarget := r.FormValue("target") // may be empty
 	if r.Method == "GET" {
-		RenderPageOrDie(w, c, "login", nil)
+		RenderPageOrDie(w, c, "login", map[string]interface{}{"target": escapedTarget})
 	} else if r.Method == "POST" {
 		c.AssertNotLoggedIn()
 		// TODO(sadovsky): Show nice error page on failed login.
 		_, err := doLogin(w, r, c)
 		CheckError(err)
-		http.Redirect(w, r, "/payments", http.StatusFound)
+		target := makeAppUrl("payments", c)
+		if escapedTarget != "" {
+			target, err = url.QueryUnescape(escapedTarget)
+			CheckError(err)
+		}
+		http.Redirect(w, r, target, http.StatusFound)
 	} else {
 		Serve404(w)
 	}
@@ -563,7 +590,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 func handleLogout(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
 	CheckError(DeleteSession(w, c))
-	RenderPageOrDie(w, c, "home", nil)
+	http.Redirect(w, r, makeAppUrl("", c), http.StatusFound)
 }
 
 func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -573,7 +600,7 @@ func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
 		c.AssertNotLoggedIn()
 		_, err := doSignup(w, r, c)
 		CheckError(err)
-		http.Redirect(w, r, "/payments?new", http.StatusFound)
+		http.Redirect(w, r, makeAppUrl("payments?new", c), http.StatusFound)
 	} else {
 		Serve404(w)
 	}
@@ -650,7 +677,9 @@ func getRecentPayRequestsOrDie(userId int64, c *Context) []RenderablePayRequest 
 }
 
 func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
-	c.AssertLoggedIn()
+	if steerThroughLogin(w, r, c) {
+		return
+	}
 	isNew := r.Form["new"] != nil
 
 	user := GetUserFromSessionOrDie(c)
@@ -739,7 +768,9 @@ func handleDelete(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
-	c.AssertLoggedIn()
+	if steerThroughLogin(w, r, c) {
+		return
+	}
 	user := GetUserFromSessionOrDie(c)
 	data := map[string]interface{}{
 		"email":       user.Email,
@@ -801,8 +832,9 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 	encodedKey := r.FormValue("key")
 	isPasswordResetRequest := encodedKey != ""
 	if !isPasswordResetRequest {
-		// TODO(sadovsky): Instead of asserting, redirect to login page.
-		c.AssertLoggedIn()
+		if steerThroughLogin(w, r, c) {
+			return
+		}
 	}
 	if r.Method == "GET" {
 		if !isPasswordResetRequest {
@@ -945,6 +977,8 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 			HTMLBody: string(body),
 		}
 		CheckError(mail.Send(c.Aec(), msg))
+		c.Aec().Infof("Sent PayRequest email: payee=%q, payer=%q, amount=%q",
+			req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
 
 		req.ReminderSentDate = time.Now()
 		return true
