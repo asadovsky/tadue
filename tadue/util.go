@@ -129,6 +129,11 @@ func ServeEmpty200(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func ServeInfo(w http.ResponseWriter, info string) {
+	setContentTypeUtf8(w)
+	w.Write([]byte(info))
+}
+
 func Serve404(w http.ResponseWriter) {
 	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 }

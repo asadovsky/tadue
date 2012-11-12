@@ -1012,8 +1012,12 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	var res interface{}
 	if typeName == "PayRequest" {
 		res = &PayRequest{}
+	} else if typeName == "Session" {
+		res = &Session{}
 	} else if typeName == "User" {
 		res = &User{}
+	} else if typeName == "UserId" {
+		res = &UserId{}
 	} else {
 		Assert(false, "Cannot handle typeName: %q", typeName)
 	}
@@ -1091,5 +1095,6 @@ func init() {
 	// TODO(sadovsky): Disable in prod.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
-	http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
+	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
+	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }
