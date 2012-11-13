@@ -5,7 +5,6 @@ p1 features
 - Let payer say "already paid"
 
 p1 other
-- Switch settings page from ajax to normal POST
 - If ajax request is slow, show "loading" message
 - Handle ajax errors
 - Require current password for updating info

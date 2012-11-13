@@ -11,18 +11,18 @@
 {{define "payments-body"}}
 <div id="top-msg">
   {{if .Data.isNew}}
-  <p>Thanks for signing up!</p>
-  <p>
-    Before you can send payment requests, you'll need to verify your email address.
+  <div class="note-info">
+    Thanks for signing up!
+    <br>Before you can send payment requests, you'll need to verify your email address.
     <br>A verification link has been sent to {{.Data.user.Email}}.
-  </p>
+  </div>
   {{else}}
   {{if not .Data.user.EmailOk}}
-  <div class="warning">
+  <div class="note-warning">
     Your email address ({{.Data.user.Email}}) has not been verified.
-    <br>
-    If you have not received an email containing a verification link, <a href="/account/sendverif">click here</a> to request a new one.
+    <br>If you have not received an email containing a verification link, <a href="/account/sendverif">click here</a> to request a new one.
   </div>
+  {{end}}
   {{end}}
 </div>
 <div id="action-button-row">
@@ -32,7 +32,6 @@
   <span id="undo">Undo</span>
 </div>
 {{template "payments-data" .Data}}
-{{end}}
 {{end}}
 
 {{define "payments-data"}}

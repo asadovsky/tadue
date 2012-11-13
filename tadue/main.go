@@ -67,7 +67,7 @@ func steerThroughLogin(w http.ResponseWriter, r *http.Request, c *Context) bool 
 	}
 	escapedTarget := url.QueryEscape(r.URL.String())
 	http.Redirect(
-		w, r, makeAppUrl(fmt.Sprintf("login?target=%s", escapedTarget), c), http.StatusFound)
+		w, r, makeAppUrl(fmt.Sprintf("login?target=%s", escapedTarget), c), http.StatusSeeOther)
 	return true
 }
 
@@ -496,7 +496,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 			reqCode, payee.PayPalEmail, req.Description, req.Amount, c)
 		CheckError(err)
 		// TODO(sadovsky): Maybe store the PayPalPayResponse inside the PayRequest.
-		http.Redirect(w, r, payUrl, http.StatusFound)
+		http.Redirect(w, r, payUrl, http.StatusSeeOther)
 	}
 }
 
@@ -581,7 +581,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 			target, err = url.QueryUnescape(escapedTarget)
 			CheckError(err)
 		}
-		http.Redirect(w, r, target, http.StatusFound)
+		http.Redirect(w, r, target, http.StatusSeeOther)
 	} else {
 		Serve404(w)
 	}
@@ -590,7 +590,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 func handleLogout(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
 	CheckError(DeleteSession(w, c))
-	http.Redirect(w, r, makeAppUrl("", c), http.StatusFound)
+	http.Redirect(w, r, makeAppUrl("", c), http.StatusSeeOther)
 }
 
 func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -600,7 +600,7 @@ func handleSignup(w http.ResponseWriter, r *http.Request, c *Context) {
 		c.AssertNotLoggedIn()
 		_, err := doSignup(w, r, c)
 		CheckError(err)
-		http.Redirect(w, r, makeAppUrl("payments?new", c), http.StatusFound)
+		http.Redirect(w, r, makeAppUrl("payments?new", c), http.StatusSeeOther)
 	} else {
 		Serve404(w)
 	}
@@ -680,14 +680,10 @@ func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 	if steerThroughLogin(w, r, c) {
 		return
 	}
-	isNew := r.Form["new"] != nil
-
-	user := GetUserFromSessionOrDie(c)
-	rendReqs := getRecentPayRequestsOrDie(c.Session().UserId, c)
 	data := map[string]interface{}{
-		"user":             user,
-		"isNew":            isNew,
-		"rendReqs":         rendReqs,
+		"user":             GetUserFromSessionOrDie(c),
+		"isNew":            r.Form["new"] != nil,
+		"rendReqs":         getRecentPayRequestsOrDie(c.Session().UserId, c),
 		"undoableReqCodes": "",
 	}
 	RenderPageOrDie(w, c, "payments", data)
@@ -771,60 +767,57 @@ func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
 	if steerThroughLogin(w, r, c) {
 		return
 	}
-	user := GetUserFromSessionOrDie(c)
-	data := map[string]interface{}{
-		"email":       user.Email,
-		"fullName":    user.FullName,
-		"payPalEmail": user.PayPalEmail,
-	}
-	RenderPageOrDie(w, c, "settings", data)
-}
-
-func handleUpdateInfo(w http.ResponseWriter, r *http.Request, c *Context) {
-	if r.Method != "POST" {
-		Serve404(w)
-		return
-	}
-	c.AssertLoggedIn()
-
-	// For now, we don't allow a user to change his email, because then we'd need
-	// to verify the new email before actually making the change.
-	fullName := ParseFullName(r.FormValue("name"))
-	payPalEmail := ParseEmail(r.FormValue("paypal-email"))
-
-	err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
-		userKey := ToUserKey(c.Aec(), c.Session().UserId)
-		user := &User{}
-		if err := datastore.Get(aec, userKey, user); err != nil {
-			return err
+	if r.Method == "GET" {
+		user := GetUserFromSessionOrDie(c)
+		data := map[string]interface{}{
+			"email":       user.Email,
+			"fullName":    user.FullName,
+			"payPalEmail": user.PayPalEmail,
 		}
-		if user.FullName == fullName && user.PayPalEmail == payPalEmail {
-			// Nothing changed, so just return.
+		RenderPageOrDie(w, c, "settings", data)
+	} else if r.Method == "POST" {
+		// For now, we don't allow a user to change his email, because then we'd need
+		// to verify the new email before actually making the change.
+		fullName := ParseFullName(r.FormValue("name"))
+		payPalEmail := ParseEmail(r.FormValue("paypal-email"))
+
+		err := datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+			userKey := ToUserKey(c.Aec(), c.Session().UserId)
+			user := &User{}
+			if err := datastore.Get(aec, userKey, user); err != nil {
+				return err
+			}
+			if user.FullName == fullName && user.PayPalEmail == payPalEmail {
+				// Nothing changed, so just return.
+				return nil
+			}
+			if user.FullName != fullName {
+				// Update Session record.
+				// TODO(sadovsky): Move this to session.go?
+				session := &Session{}
+				if err := datastore.Get(aec, c.SessionKey(), session); err != nil {
+					return err
+				}
+				session.FullName = fullName
+				if _, err := datastore.Put(aec, c.SessionKey(), session); err != nil {
+					return err
+				}
+			}
+			// Update User record.
+			user.FullName = fullName
+			user.PayPalEmail = payPalEmail
+			if _, err := datastore.Put(aec, userKey, user); err != nil {
+				return err
+			}
 			return nil
-		}
-		if user.FullName != fullName {
-			// Update Session record.
-			// TODO(sadovsky): Move this to session.go?
-			session := &Session{}
-			if err := datastore.Get(aec, c.SessionKey(), session); err != nil {
-				return err
-			}
-			session.FullName = fullName
-			if _, err := datastore.Put(aec, c.SessionKey(), session); err != nil {
-				return err
-			}
-		}
-		// Update User record.
-		user.FullName = fullName
-		user.PayPalEmail = payPalEmail
-		if _, err := datastore.Put(aec, userKey, user); err != nil {
-			return err
-		}
-		return nil
-	}, makeXG())
+		}, makeXG())
 
-	CheckError(err)
-	ServeEmpty200(w)
+		CheckError(err)
+		// http://en.wikipedia.org/wiki/Post/Redirect/Get
+		http.Redirect(w, r, makeAppUrl("settings", c), http.StatusSeeOther)
+	} else {
+		Serve404(w)
+	}
 }
 
 // Handles both changes and resets.
@@ -1098,7 +1091,6 @@ func init() {
 	http.HandleFunc("/ipn", WrapHandlerNoParseForm(handleIpn))
 	// Account-related handlers.
 	http.HandleFunc("/settings", WrapHandler(handleSettings))
-	http.HandleFunc("/settings/update-info", WrapHandler(handleUpdateInfo))
 	http.HandleFunc("/account/change-password", WrapHandler(handleChangePassword))
 	http.HandleFunc("/account/reset-password", WrapHandler(handleResetPassword))
 	http.HandleFunc("/account/sendverif", WrapHandler(handleSendVerif))

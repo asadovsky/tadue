@@ -47,8 +47,20 @@ var checkSignupForm = function () {
 var updateSignupPayPalEmail = function () {
   var doCopy = $('#signup-copy-email').is(':checked');
   $('#signup-paypal-email').get(0).disabled = doCopy;
+  if (doCopy) {
+    $('#signup-paypal-email').val($('#signup-email').val());
+  }
+};
+
+var maybeCopyEmail = function () {
+  var doCopy = $('#signup-copy-email').is(':checked');
+  if (doCopy) {
+    $('#signup-paypal-email').val($('#signup-email').val());
+  }
 };
 
 // Initialize the view. Handles the case where user clicked the back button.
 $('#signup-copy-email').click(updateSignupPayPalEmail);
 updateSignupPayPalEmail();
+
+$('#signup-email').get(0).addEventListener('input', maybeCopyEmail, false);

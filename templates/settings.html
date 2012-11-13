@@ -10,7 +10,7 @@
 {{end}}
 
 {{define "settings-body"}}
-<form action="javascript:void(0)">
+<form action="/settings" method="post" onsubmit="return checkForm();">
   <table class="form">
     <tr>
       <td class="field-name">Email</td>
@@ -41,6 +41,8 @@
       <td></td>
       <td>
         <input type="submit" class="main-button" id="save" value="Save" disabled="disabled">
+        <input type="button" class="main-button-gray" id="cancel" value="Cancel"
+               disabled="disabled">
       </td>
     </tr>
   </table>
