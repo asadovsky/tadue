@@ -8,12 +8,12 @@
 #undo{color:#66c;cursor:pointer;display:none;font-weight:bold;text-decoration:none;}
 #undo:hover{text-decoration:underline;}
 #payments-table{width:100%;}
-.highlight{background:#ffc !important;}
+.highlight{background-color:#ffc !important;}
 #payments-table td,#payments-table th{font-size:0.9em;height:2em;padding-left:1.4em;vertical-align:middle;}
 #payments-table th{text-align:left;}
 #payments-table td{border-top:1px solid #ddd;border-bottom:1px solid #ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #payments-table #no-requests-msg{font-size:1em;height:5em;padding-left:0;text-align:center;}
-#payments-table .is-paid{background:#eee;}
+#payments-table .is-paid{background-color:#eee;}
 #payments-table .cell-checkbox{padding-left:0.5em;width:4%;}
 #payments-table .cell-email{padding-left:0;width:22%;}
 #payments-table .cell-amount{text-align:right;width:12%;}

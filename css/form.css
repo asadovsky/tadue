@@ -16,5 +16,5 @@ table.form{width:100%;}
 .field-value{width:20em;}
 .field-input{border:1px solid #bbb;border-radius:3px;width:100%;}
 .field-input:focus{border:1px solid #66c;}
-.field-input:disabled{background:#eee;}
+.field-input:disabled{background-color:#eee;}
 .error-msg{color:#f44;font-size:0.9em;font-weight:bold;}
