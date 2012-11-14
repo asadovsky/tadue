@@ -2,21 +2,19 @@ p0
 
 p1 features
 - Request multiple payments at once
+- Get email addresses from Google Contacts API
 - Let payer say "already paid"
 
 p1 other
 - If ajax request is slow, show "loading" message
-- Handle ajax errors
 - Require current password for updating info
 - For emails, change sender name from "noreply" to "Tadue"
 - In handleSendReminder, optimistically show requests as sent
 - After someone pays, redirect them to homepage, with highlighted note
 - Time zone
-- Shorten password reset link lifespan to 30 minutes
 - Maybe move session state into cookie
 
 p2 features
-- Get emails from Google Contacts API
 - Fill in "about" page
 - Allow user to change email
 - Allow user to update payment request description
@@ -24,8 +22,10 @@ p2 features
 
 p2 other
 - Handle bounced emails
-- Protect against CSRF
 - Memcached
+- Handle ajax errors
+- Shorten password reset link lifespan to 30 minutes
+- Protect against CSRF
 - Write unit tests, e.g. for payments page
 - For templates, use structs, or use FindOrDie map
 - Add GetFormValueOrDie function
