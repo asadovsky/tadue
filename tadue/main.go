@@ -417,11 +417,12 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	// If the transaction is not completed, we don't care.
 	// TODO(sadovsky): Should we care? Probably.
 	if msg.Status != "COMPLETED" {
-		ServeEmpty200(w)
 		return
 	}
 
+	var sendEmail bool
 	err = datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
+		sendEmail = false // ensure transaction is idempotent
 		req := &PayRequest{}
 		err := datastore.Get(aec, reqKey, req)
 		if err != nil {
@@ -437,8 +438,13 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 			return errors.New(fmt.Sprintf("Wrong amount: %v != %v", msg.Amount, req.Amount))
 		}
 
-		// If already marked as paid, do nothing.
+		// If already marked as paid, return without sending an email.
+		// It's important not to send an email here because PayPal sometimes sends
+		// multiple IPNs for a successful payment. In at least one such case, the
+		// only difference between the two IPNs was that the second included
+		// "reason_code:CLEARED".
 		if req.PaymentDate != time.Unix(0, 0) {
+			sendEmail = false
 			return nil
 		}
 		req.IsPaid = true
@@ -450,8 +456,9 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	}, nil)
 	CheckError(err)
 
-	CheckError(doEnqueueGotPaidEmail(reqCode, c))
-	ServeEmpty200(w)
+	if sendEmail {
+		CheckError(doEnqueueGotPaidEmail(reqCode, c))
+	}
 }
 
 func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {

@@ -24,7 +24,7 @@ a:hover{text-decoration:underline;}
 #top-nav-links li .menu a{color:#333;padding:0.7em;}
 #note,#title,#body{clear:both;margin:0 auto 0;width:800px;}
 #note{background-color:#fe7;font-size:1.2em;margin-bottom:30px;padding:1em;text-align:center;}
-#title{font-size:1.9em;margin-bottom:1em;}
+#title{font-size:1.9em;margin-bottom:20px;}
 .header{font-weight:bold;margin-top:1.5em;margin-bottom:1em;}
 #bottom-nav-begin{clear:both;}
 #bottom-nav{height:4em;margin-top:40px;position:relative;width:100%;}

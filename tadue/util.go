@@ -125,10 +125,6 @@ func ExecuteTemplate(name string, data interface{}) (template.HTML, error) {
 	return template.HTML(buf.String()), nil
 }
 
-func ServeEmpty200(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusOK)
-}
-
 func ServeInfo(w http.ResponseWriter, info string) {
 	setContentTypeUtf8(w)
 	w.Write([]byte(info))
