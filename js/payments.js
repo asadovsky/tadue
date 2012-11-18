@@ -24,6 +24,8 @@ var getSelectedReqCodes = function () {
   return $('.checkbox:checked').parents().siblings('.row-req-code').map(getValue).get().join(',');
 };
 
+var timeoutID = null;  // stores most recent window.setTimeout() return value
+
 var applyActionToReqCodes = function (url, reqCodes, undo) {
   var data = {'reqCodes': reqCodes};
   if (undo) {
@@ -36,14 +38,21 @@ var applyActionToReqCodes = function (url, reqCodes, undo) {
     dataType: 'html'
   });
   request.done(function (data) {
+    if (timeoutID !== null) {
+      window.clearTimeout(timeoutID);
+    }
     $('#payments-data').html(data);
     var undoableReqCodes = $('#undoable-req-codes').val();
     if (!undo && undoableReqCodes !== '') {
-      $('#undo').css('display', 'inline');
       $('#undo').off('click');  // remove all existing click handlers
       $('#undo').on('click', function () {
         applyActionToReqCodes(url, undoableReqCodes, true);
       });
+      $('#undo').css('display', 'inline');
+      var removeUndo = function () {
+        $('#undo').css('display', 'none');
+      };
+      timeoutID = window.setTimeout(removeUndo, 30000);  // 30 seconds
     } else {
       $('#undo').css('display', 'none');
     }

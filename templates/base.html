@@ -31,6 +31,7 @@
         </ul>
       </div>
     </div>
+    {{if .Data.Note}}<div id="note">{{.Data.Note}}</div>{{end}}
     {{if .Data.Title}}<div id="title">{{.Data.Title}}</div>{{end}}
     <div id="body">
       {{.Data.Body}}

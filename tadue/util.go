@@ -26,6 +26,7 @@ type RenderData struct {
 }
 
 type PageData struct {
+	Note  string
 	Title template.HTML
 	Css   template.HTML
 	Body  template.HTML
@@ -88,7 +89,16 @@ func setContentTypeUtf8(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
+func RenderNoteOrDie(w http.ResponseWriter, c *Context, note string) {
+	renderPageOrDieInternal(w, c, "home", note, nil)
+}
+
 func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interface{}) {
+	renderPageOrDieInternal(w, c, name, "", data)
+}
+
+func renderPageOrDieInternal(
+	w http.ResponseWriter, c *Context, name, note string, data interface{}) {
 	fullName := ""
 	if c.LoggedIn() {
 		fullName = c.Session().FullName
@@ -100,6 +110,7 @@ func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interf
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	pd.Note = note
 	rd.Data = pd
 
 	setContentTypeUtf8(w)
@@ -251,4 +262,13 @@ func AppHostnameForPayPal(c *Context) string {
 		return kAppHostnameForPayPal
 	}
 	return AppHostname(c)
+}
+
+func ContainsString(slice []string, str string) bool {
+	for _, v := range slice {
+		if str == v {
+			return true
+		}
+	}
+	return false
 }
