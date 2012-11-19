@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1068,6 +1069,11 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		Assert(false, "Cannot handle typeName: %q", typeName)
 	}
 
+	renderValue := func(value interface{}) string {
+		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
+		return res[1 : len(res)-1] // strip quotes
+	}
+
 	// Table headers.
 	headers := []string{"Key", "EncodedKey"}
 	s := reflect.ValueOf(res).Elem()
@@ -1087,9 +1093,9 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		CheckError(err)
 
 		s := reflect.ValueOf(res).Elem()
-		row := []string{key.String(), key.Encode()}
+		row := []string{renderValue(key.String()), renderValue(key.Encode())}
 		for i := 0; i < s.NumField(); i++ {
-			row = append(row, fmt.Sprintf("%v", s.Field(i).Interface()))
+			row = append(row, renderValue(s.Field(i).Interface()))
 		}
 		rows = append(rows, row)
 	}
