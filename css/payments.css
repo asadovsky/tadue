@@ -8,7 +8,7 @@
 #undo{color:#66c;cursor:pointer;display:none;font-weight:bold;text-decoration:none;}
 #undo:hover{text-decoration:underline;}
 #payments-table{width:100%;}
-.highlight{background-color:#ffc !important;}
+#payments-table .highlight{background-color:#ffc !important;}
 #payments-table td,#payments-table th{font-size:0.9em;height:2em;padding-left:1.4em;vertical-align:middle;}
 #payments-table th{text-align:left;}
 #payments-table td{border-top:1px solid #ddd;border-bottom:1px solid #ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

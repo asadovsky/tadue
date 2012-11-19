@@ -1051,6 +1051,8 @@ func handleLogo(w http.ResponseWriter, r *http.Request, c *Context) {
 	RenderTemplateOrDie(w, "logo.html", nil)
 }
 
+// Uses reflection to print records from datastore.
+// Reference: http://golang.org/doc/articles/laws_of_reflection.html
 func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeName := r.FormValue("t")
 	var res interface{}
@@ -1065,28 +1067,37 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	} else {
 		Assert(false, "Cannot handle typeName: %q", typeName)
 	}
+
+	// Table headers.
+	headers := []string{"Key", "EncodedKey"}
+	s := reflect.ValueOf(res).Elem()
+	t := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		headers = append(headers, t.Field(i).Name)
+	}
+
+	// Table rows.
+	rows := [][]string{}
 	q := datastore.NewQuery(typeName)
-	results := []template.HTML{}
 	for it := q.Run(c.Aec()); ; {
 		key, err := it.Next(res)
 		if err == datastore.Done {
 			break
 		}
 		CheckError(err)
-		// Reference: http://golang.org/doc/articles/laws_of_reflection.html
+
 		s := reflect.ValueOf(res).Elem()
-		t := s.Type()
-		// TODO(sadovsky): Use templates for everything.
-		out := "<table>"
-		out += fmt.Sprintf("<tr><td>Key<td>%v</tr>", key)
-		out += fmt.Sprintf("<tr><td>EncodedKey<td>%v</tr>", key.Encode())
+		row := []string{key.String(), key.Encode()}
 		for i := 0; i < s.NumField(); i++ {
-			out += fmt.Sprintf("<tr><td>%s<td>%v</tr>", t.Field(i).Name, s.Field(i).Interface())
+			row = append(row, fmt.Sprintf("%v", s.Field(i).Interface()))
 		}
-		out += "</table>"
-		results = append(results, template.HTML(out))
+		rows = append(rows, row)
 	}
-	RenderTemplateOrDie(w, "dump.html", results)
+	data := map[string]interface{}{
+		"headers": headers,
+		"rows":    rows,
+	}
+	RenderTemplateOrDie(w, "dump.html", data)
 }
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
