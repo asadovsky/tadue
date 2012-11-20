@@ -2,7 +2,8 @@ p0
 
 p1 features
 - Request multiple payments at once
-- Get email addresses from Google Contacts API
+- Autocomplete emails from Google Contacts API
+- Autocomplete emails I've requested money from before
 - Let payer say "already paid"
 
 p1 other

@@ -1046,6 +1046,8 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 		HTMLBody: string(body),
 	}
 	CheckError(mail.Send(c.Aec(), msg))
+	c.Aec().Infof("Sent GotPaid email: payee=%q, payer=%q, amount=%q",
+		req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
 }
 
 func handleLogo(w http.ResponseWriter, r *http.Request, c *Context) {
