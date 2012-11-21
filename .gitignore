@@ -1,4 +1,5 @@
 tadue/config.go
 tadue/config_dev.go.txt
+tadue/config_local.go.txt
 tadue/config_prod.go.txt
-misc/update_prod.sh
+misc/appcfg_update.sh
