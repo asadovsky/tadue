@@ -38,6 +38,4 @@ var checkForm = function () {
   return maybeRunAllChecks();
 };
 
-$('input').each(function (index, el) {
-  el.addEventListener('input', maybeRunAllChecks, false);
-});
+$('input').on('input', maybeRunAllChecks);

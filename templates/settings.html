@@ -13,25 +13,25 @@
 <form action="/settings" method="post" onsubmit="return checkForm();">
   <table class="form">
     <tr>
-      <td class="column-label">Email</td>
-      <td class="column-input">{{.Data.email}}</td>
+      <td class="col-label">Email</td>
+      <td class="col-input">{{.Data.email}}</td>
     </tr>
     <tr>
-      <td class="column-label">Password</td>
-      <td class="column-input">
+      <td class="col-label">Password</td>
+      <td class="col-input">
         <a href="/account/change-password">Change password</a>
       </td>
     </tr>
     <tr>
-      <td class="column-label">Full name</td>
-      <td class="column-input">
+      <td class="col-label">Full name</td>
+      <td class="col-input">
         <input type="text" class="field" name="name" id="name" value="{{.Data.fullName}}">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>
     <tr>
-      <td class="column-label">PayPal email</td>
-      <td class="column-input">
+      <td class="col-label">PayPal email</td>
+      <td class="col-input">
         <input type="text" class="field" name="paypal-email" id="paypal-email"
                value="{{.Data.payPalEmail}}">
       </td>

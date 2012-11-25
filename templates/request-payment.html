@@ -18,20 +18,20 @@
   <table class="form">
     <tr>
       <td colspan="10">
-        <table id="payers">
+        <table class="form" id="payers">
           <tr>
             <td></td>
             <td>Payer's email</td>
             <td>Amount (USD)</td>
           </tr>
           <tr class="row-payer">
-            <td class="column-add-remove">
+            <td class="col-add-remove">
               <div class="icon" id="add-payer" title="Add another payer"></div>
             </td>
-            <td class="column-payer-email">
+            <td class="col-payer-email">
               <input type="text" class="field payer-email-field" name="payer-email-0">
             </td>
-            <td class="column-amount">
+            <td class="col-amount">
               <input type="text" class="field amount-field" name="amount-0">
             </td>
             <td><span class="error-msg"></span></td>
@@ -39,7 +39,7 @@
           <tr id="row-total">
             <td></td>
             <td id="total-label">Total</td>
-            <td class="column-amount">
+            <td class="col-amount">
               <input type="text" class="field" id="total-field" disabled="disabled">
             </td>
           </tr>
@@ -47,7 +47,7 @@
       </td>
     </tr>
     <tr>
-      <td class="column-label">Payment type</td>
+      <td class="col-label">Payment type</td>
       <td>
         <select name="payment-type">
           <option value="personal">Personal</option>
@@ -57,8 +57,8 @@
       </td>
     </tr>
     <tr>
-      <td class="column-label">Description</td>
-      <td class="column-input">
+      <td class="col-label">Description</td>
+      <td class="col-input">
         <input type="text" class="field" name="description" id="description">
       </td>
       <td><span class="error-msg"></span></td>

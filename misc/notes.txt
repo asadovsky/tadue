@@ -13,6 +13,9 @@ Diff with opendiff:
 git difftool -t tkdiff -y
 git difftool -t opendiff -y
 
+Added securecookie submodule:
+git submodule add git://github.com/gorilla/securecookie.git securecookie
+
 Port routing:
  - Figure out internal IP:
      ifconfig | grep 192  ==>  inet addr:192.168.1.113

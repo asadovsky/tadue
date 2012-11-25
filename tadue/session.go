@@ -35,8 +35,9 @@ func MakeSession(userId int64, email, fullName string, w http.ResponseWriter, c 
 // Reads an existing session and updates context.
 func ReadSession(r *http.Request, c *Context) error {
 	cookie, err := r.Cookie(cookieKeyForSessionKey)
-	// TODO(sadovsky): Distinguish between "no cookie" and real errors.
-	if err != nil {
+	if err == http.ErrNoCookie {
+		return nil
+	} else if err != nil {
 		return err
 	}
 	sessionKey, err := datastore.DecodeKey(cookie.Value)
@@ -44,11 +45,15 @@ func ReadSession(r *http.Request, c *Context) error {
 		return err
 	}
 	session := &Session{}
-	if err = datastore.Get(c.Aec(), sessionKey, session); err != nil {
-		return err
+	if err = datastore.Get(c.Aec(), sessionKey, session); err != datastore.ErrNoSuchEntity {
+		if err != nil {
+			return err
+		}
+		if time.Now().Before(session.Timestamp.AddDate(0, 0, COOKIE_LIFESPAN)) {
+			// Session has not expired.
+			c.SetSession(sessionKey, session)
+		}
 	}
-	// TODO(sadovsky): Check whether session has expired.
-	c.SetSession(sessionKey, session)
 	return nil
 }
 

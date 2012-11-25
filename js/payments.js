@@ -16,6 +16,13 @@ var updateVisibleState = function () {
     $('#master-checkbox').prop('checked',
                                $('.checkbox:checked').size() === $('.checkbox').size());
   }
+  // Make unpaid rows link to their associated payment request pages.
+  $('.unpaid').click(function (e) {
+    // Do not navigate if click target is checkbox.
+    if (!$(e.target).is("input")) {
+      window.location = $(this).find('.row-pay-url').text();
+    }
+  });
 };
 
 // Returns a comma-separated list of request codes for selected rows.

@@ -39,12 +39,12 @@
   <input id="undoable-req-codes" type="hidden" value="{{.undoableReqCodes}}">
   <table id="payments-table">
     <tr>
-      <th class="cell-checkbox"><input type="checkbox" id="master-checkbox"></th>
-      <th class="cell-email">Email</th>
-      <th class="cell-amount">Amount</th>
-      <th class="cell-description">Description</th>
-      <th class="cell-status">Status</th>
-      <th class="cell-creation-date">Request date</th>
+      <th class="col-checkbox"><input type="checkbox" id="master-checkbox"></th>
+      <th class="col-email">Email</th>
+      <th class="col-amount">Amount</th>
+      <th class="col-description">Description</th>
+      <th class="col-status">Status</th>
+      <th class="col-creation-date">Request date</th>
     </tr>
     {{if not .rendReqs}}
     <tr>
@@ -54,16 +54,15 @@
     </tr>
     {{end}}
     {{range .rendReqs}}
-    <tr{{if .IsPaid}} class="is-paid"{{end}}>
+    <tr class="{{if .IsPaid}}paid{{else}}unpaid{{end}}">
       <input class="row-req-code" type="hidden" value="{{.ReqCode}}">
-      <td class="cell-checkbox"><input type="checkbox" class="checkbox"></td>
-      <td class="cell-email" title="{{.PayerEmail}}">
-        <a class="pay-url-link" href="{{.PayUrl}}">{{.PayerEmail}}</a>
-      </td>
-      <td class="cell-amount">{{.Amount}}</td>
-      <td class="cell-description" title="{{.Description}}">{{.Description}}</td>
-      <td class="cell-status">{{.Status}}</td>
-      <td class="cell-creation-date">{{.CreationDate}}</td>
+      <td class="row-pay-url display-none">{{.PayUrl}}</span>
+      <td class="col-checkbox"><input type="checkbox" class="checkbox"></td>
+      <td class="col-email" title="{{.PayerEmail}}">{{.PayerEmail}}</td>
+      <td class="col-amount">{{.Amount}}</td>
+      <td class="col-description" title="{{.Description}}">{{.Description}}</td>
+      <td class="col-status">{{.Status}}</td>
+      <td class="col-creation-date">{{.CreationDate}}</td>
     </tr>
     {{end}}
   </table>

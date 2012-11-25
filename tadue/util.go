@@ -165,7 +165,7 @@ func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 			}
 		}()
 
-		ReadSession(r, c)
+		CheckError(ReadSession(r, c))
 		if parseForm {
 			CheckError(r.ParseForm())
 		}
@@ -232,10 +232,10 @@ func SaltAndHash(salt, password string) string {
 	return string(h.Sum(nil))
 }
 
-// Taken from Gorilla GenerateRandomKey().
+// Taken from Gorilla securecookie.GenerateRandomKey().
 func SecureRandom(length int) []byte {
 	k := make([]byte, length)
-	if _, err := rand.Read(k); err != nil {
+	if _, err := io.ReadFull(rand.Reader, k); err != nil {
 		return nil
 	}
 	return k

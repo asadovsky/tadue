@@ -1,24 +1,23 @@
-.note-warning{background-color:#fdc;border:1px solid #dba;padding:0.5em;}
-.note-info{background-color:#dfc;border:1px solid #bda;padding:0.5em;}
-#top-msg{margin-bottom:2em;}
-#action-button-row{margin-bottom:0.5em;}
-.action-button{background:-moz-linear-gradient(#ffffff, #dddddd);background:-ms-linear-gradient(#ffffff, #dddddd);background:-webkit-linear-gradient(#ffffff, #dddddd);background:linear-gradient(#ffffff, #dddddd);border:solid 1px #aaaaaa;color:#333;cursor:pointer;display:inline-block;text-shadow:1px 1px #fff;border-radius:2px;margin-right:0.3em;padding:0.3em 1.2em;}.action-button:hover{border:solid 1px #777777;}
+.note-warning{background-color:#fdc;border:1px solid #dba;padding:7px;}
+.note-info{background-color:#dfc;border:1px solid #bda;padding:7px;}
+#top-msg{margin-bottom:28px;}
+#action-button-row{margin-bottom:7px;}
+.action-button{background:-moz-linear-gradient(#ffffff, #dddddd);background:-ms-linear-gradient(#ffffff, #dddddd);background:-webkit-linear-gradient(#ffffff, #dddddd);background:linear-gradient(#ffffff, #dddddd);border:solid 1px #aaaaaa;color:#333;cursor:pointer;display:inline-block;text-shadow:1px 1px #fff;border-radius:2px;font-size:11px;margin-right:3px;padding:3px 13px;}.action-button:hover{border:solid 1px #777777;}
 .action-button:active{background:#dddddd;border:solid 1px #aaaaaa;text-shadow:none;}
 .action-button[disabled]{background:#eeeeee;border:solid 1px #c4c4c4;color:#888;cursor:auto;text-shadow:none;}
 #undo{color:#66c;cursor:pointer;display:none;font-weight:bold;text-decoration:none;}
 #undo:hover{text-decoration:underline;}
 #payments-table{width:100%;}
-#payments-table .highlight{background-color:#ffc !important;}
-#payments-table td,#payments-table th{font-size:0.9em;height:2em;padding-left:1.4em;vertical-align:middle;}
+#payments-table td,#payments-table th{font-size:13px;height:25px;padding-left:18px;vertical-align:middle;}
 #payments-table th{text-align:left;}
 #payments-table td{border-top:1px solid #ddd;border-bottom:1px solid #ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#payments-table #no-requests-msg{font-size:1em;height:5em;padding-left:0;text-align:center;}
-#payments-table .is-paid{background-color:#eee;}
-#payments-table .cell-checkbox{padding-left:0.5em;width:4%;}
-#payments-table .cell-email{padding-left:0;width:22%;}
-#payments-table .cell-amount{text-align:right;width:12%;}
-#payments-table .cell-description{width:28%;}
-#payments-table .cell-status{width:20%;}
-#payments-table .cell-creation-date{padding-right:0.5em;text-align:right;width:14%;}
-a.pay-url-link{color:#333;font-weight:normal;text-decoration:none;}
-a.pay-url-link:hover{text-decoration:none;}
+#payments-table #no-requests-msg{font-size:14px;height:90px;padding-left:0;text-align:center;}
+#payments-table .paid{background-color:#eee;}
+#payments-table .unpaid{cursor:pointer;}
+#payments-table .highlight{background-color:#ffc !important;}
+#payments-table .col-checkbox{padding-left:6px;width:4%;}
+#payments-table .col-email{padding-left:0;width:22%;}
+#payments-table .col-amount{text-align:right;width:12%;}
+#payments-table .col-description{width:28%;}
+#payments-table .col-status{width:20%;}
+#payments-table .col-creation-date{padding-right:6px;text-align:right;width:14%;}

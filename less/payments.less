@@ -7,28 +7,29 @@
 .note-warning {
   background-color: #fdc;
   border: 1px solid #dba;
-  padding: 0.5em;
+  padding: 7px;
 }
 
 .note-info {
   background-color: #dfc;
   border: 1px solid #bda;
-  padding: 0.5em;
+  padding: 7px;
 }
 
 #top-msg {
-  margin-bottom: 2em;
+  margin-bottom: 28px;
 }
 
 #action-button-row {
-  margin-bottom: 0.5em;
+  margin-bottom: 7px;
 }
 
 .action-button {
   .button(#fff, #ddd);
   border-radius: 2px;
-  margin-right: 0.3em;
-  padding: 0.3em 1.2em;
+  font-size: 11px;
+  margin-right: 3px;
+  padding: 3px 13px;
 }
 
 #undo {
@@ -46,14 +47,10 @@
   width: 100%;
 }
 
-#payments-table .highlight {
-  background-color: #ffc !important;  /* override is-paid background */
-}
-
 #payments-table td, #payments-table th {
-  font-size: 0.9em;
-  height: 2em;
-  padding-left: 1.4em;
+  font-size: 13px;
+  height: 25px;
+  padding-left: 18px;
   vertical-align: middle;
 }
 
@@ -70,51 +67,49 @@
 }
 
 #payments-table #no-requests-msg {
-  font-size: 1em;
-  height: 5em;
+  font-size: 14px;
+  height: 90px;
   padding-left: 0;
   text-align: center;
 }
 
-#payments-table .is-paid {
+#payments-table .paid {
   background-color: #eee;
 }
 
-#payments-table .cell-checkbox {
-  padding-left: 0.5em;
+#payments-table .unpaid {
+  cursor: pointer;
+}
+
+#payments-table .highlight {
+  background-color: #ffc !important;  /* override paid background */
+}
+
+#payments-table .col-checkbox {
+  padding-left: 6px;
   width: 4%;
 }
 
-#payments-table .cell-email {
+#payments-table .col-email {
   padding-left: 0;
   width: 22%;
 }
 
-#payments-table .cell-amount {
+#payments-table .col-amount {
   text-align: right;
   width: 12%;
 }
 
-#payments-table .cell-description {
+#payments-table .col-description {
   width: 28%;
 }
 
-#payments-table .cell-status {
+#payments-table .col-status {
   width: 20%;
 }
 
-#payments-table .cell-creation-date {
-  padding-right: 0.5em;
+#payments-table .col-creation-date {
+  padding-right: 6px;
   text-align: right;
   width: 14%;
-}
-
-/* TODO(sadovsky): Use LESS to revert to standard text style. */
-a.pay-url-link {
-  color: #333;
-  font-weight: normal;
-  text-decoration: none;
-}
-a.pay-url-link:hover {
-  text-decoration: none;
 }

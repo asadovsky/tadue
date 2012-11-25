@@ -1,10 +1,10 @@
-#payers td{padding-top:0.5em;}
+#payers td{padding-top:7px;}
 #payers tr:first-child>td{padding-top:0;}
-.column-add-remove{width:3em;}
-.column-payer-email{width:20em;}
-.column-amount{width:8em;}
+.col-add-remove{width:42px;}
+.col-payer-email{width:280px;}
+.col-amount{width:112px;}
 #total-label{text-align:right;}
-#total-field{background-color:#ddd;border:1px solid #ddd;color:#000;}
+#total-field{background-color:#ddd;border:1px solid #ddd;color:#000;-webkit-text-fill-color:#000;}
 .icon{background-repeat:no-repeat;cursor:pointer;float:right;width:16px;height:16px;}
 #add-payer{background-image:url("/static/plus.png");}
 #add-payer:hover{background-image:url("/static/plus-hover.png");}
@@ -13,11 +13,11 @@
 .row-payer:hover .remove-payer:hover{background-image:url("/static/minus-hover.png");}
 .row-payer:hover .remove-payer:active{background-image:url("/static/minus-click.png");}
 #row-total{display:none;}
-#account-box{padding-top:0.5em;width:100%;}
-#outer-box{border-bottom:1px solid #bbb;border-top:1px solid #bbb;margin-top:-1.2em;}
+#account-box{padding-top:7px;width:100%;}
+#outer-box{border-bottom:1px solid #bbb;border-top:1px solid #bbb;margin-top:-17px;}
 #signup-box,#login-box{background-color:#eee;display:block;padding:1em 1.4em 1em 0;position:relative;z-index:2;}
 #login-box{display:none;}
-#new-user{margin-left:1.5em;}
+#new-user{margin-left:21px;}
 #existing-user{margin-left:-1px;}
-.tab{border:1px solid #bbb;border-radius:5px;color:#66c;cursor:pointer;display:inline-block;padding:0.5em 1em 1.5em 1em;position:relative;text-align:center;-moz-user-select:none;-ms-user-select:none;-webkit-user-select:none;user-select:none;}
+.tab{border:1px solid #bbb;border-radius:5px;color:#66c;cursor:pointer;display:inline-block;padding:7px 14px 21px 14px;position:relative;text-align:center;-moz-user-select:none;-ms-user-select:none;-webkit-user-select:none;user-select:none;}
 .active-tab{background-color:#eee;z-index:1;}

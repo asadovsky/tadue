@@ -27,12 +27,10 @@ var checkForm = function () {
   return maybeRunAllChecks();
 };
 
-$('input').each(function (index, el) {
-  el.addEventListener('input', maybeRunAllChecks, false);
-  el.addEventListener('input', function () {
-    $('#save').prop('disabled', false);
-    $('#cancel').prop('disabled', false);
-  }, false);
+$('input').on('input', function () {
+  maybeRunAllChecks();
+  $('#save').prop('disabled', false);
+  $('#cancel').prop('disabled', false);
 });
 
 $('#cancel').click(function () { window.location.reload(); });

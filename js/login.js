@@ -22,9 +22,7 @@ var runLoginChecksOnEveryInputEvent = false;
 var checkLoginForm = function () {
   if (!runLoginChecksOnEveryInputEvent) {
     runLoginChecksOnEveryInputEvent = true;
-    $('input').each(function (index, el) {
-      el.addEventListener('input', runLoginChecks, false);
-    });
+    $('input').on('input', runLoginChecks);
   }
   return runLoginChecks();
 };

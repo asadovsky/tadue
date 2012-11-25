@@ -36,9 +36,7 @@ var runSignupChecksOnEveryInputEvent = false;
 var checkSignupForm = function () {
   if (!runSignupChecksOnEveryInputEvent) {
     runSignupChecksOnEveryInputEvent = true;
-    $('input').each(function (index, el) {
-      el.addEventListener('input', runSignupChecks, false);
-    });
+    $('input').on('input', runSignupChecks);
     $('#signup-copy-email').click(function () { runSignupChecks(); });
   }
   return runSignupChecks();
@@ -60,4 +58,4 @@ var updateSignupPayPalEmail = function () {
 $('#signup-copy-email').click(updateSignupPayPalEmail);
 updateSignupPayPalEmail();
 
-$('#signup-email').get(0).addEventListener('input', maybeCopyEmail, false);
+$('#signup-email').on('input', maybeCopyEmail);

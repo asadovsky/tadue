@@ -1,28 +1,29 @@
 p0
+- Use cookies for flash messages
+- Move session state into cookie
+- Let payer say "already paid"
 
 p1 features
-- Request multiple payments at once
+- Show indication of when next reminder will be sent
 - Autocomplete emails from Google Contacts API
-- Autocomplete emails I've requested money from before
-- Let payer say "already paid"
+- Autocomplete emails that I've requested money from before
 
 p1 other
 - If ajax request is slow, show "loading" message
-- Require current password for updating info
 - Time zone
-- Maybe move session state into cookie
 
 p2 features
-- Show indication of when next reminder will be sent
 - Fill in "about" page
 - Allow user to change email
 - Allow user to update payment request description
 - New ToS page
 
 p2 other
+- Fix UI in other browsers
 - Handle bounced emails
 - Memcached
 - Show error if user tries to send reminder email too soon
+- Require current password for updating info
 - Handle ajax errors
 - Protect against CSRF
 - Write unit tests, e.g. for payments page

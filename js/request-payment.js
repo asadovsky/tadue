@@ -64,9 +64,7 @@ var runAllChecksOnEveryInputEvent = false;
 var checkRequestPaymentForm = function () {
   if (!runAllChecksOnEveryInputEvent) {
     runAllChecksOnEveryInputEvent = true;
-    $('input').each(function (index, el) {
-      el.addEventListener('input', runAllChecks, false);
-    });
+    $('input').on('input', runAllChecks);
     $('#signup-copy-email').click(function () { runAllChecks(); });
   }
   return runAllChecks();
@@ -99,14 +97,14 @@ var addPayerEventCount = 0;
 // Initialize "add payer" button.
 $('#add-payer').click(function () {
   addPayerEventCount++;
-  var tr = $(this).closest('tr');
-  var clone = tr.clone();
-  clone.find('input').val('');
-  clone.find('.payer-email-field').attr('name', 'payer-email-' + addPayerEventCount);
-  var amount = clone.find('.amount-field');
+  var new_tr = $(this).closest('tr').clone();
+  new_tr.find('input').val('');
+  new_tr.find('.error-msg').text('');
+  new_tr.find('.payer-email-field').attr('name', 'payer-email-' + addPayerEventCount);
+  var amount = new_tr.find('.amount-field');
   amount.attr('name', 'amount-' + addPayerEventCount);
   amount.blur(function () { updateTotal(); });
-  var icon = clone.find('.icon');
+  var icon = new_tr.find('.icon');
   icon.addClass('remove-payer');
   icon.removeAttr('id');
   icon.attr('title', 'Remove payer');
@@ -118,8 +116,13 @@ $('#add-payer').click(function () {
     }
     updateTotal();
   });
-  clone.insertBefore('#row-total');
+  new_tr.insertBefore('#row-total');
   $('#row-total').css('display', 'table-row');
+
+  if (runAllChecksOnEveryInputEvent) {
+    new_tr.find('input').on('input', runAllChecks);
+    runAllChecks();
+  }
 });
 
 $('.amount-field').blur(function () { updateTotal(); });
