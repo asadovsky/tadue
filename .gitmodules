@@ -1,0 +1,3 @@
+[submodule "securecookie"]
+	path = securecookie
+	url = git://github.com/gorilla/securecookie.git
