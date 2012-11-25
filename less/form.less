@@ -37,15 +37,19 @@ table.form {
 }
 
 .form td {
-  padding-right: 0.8em;
+  padding-left: 0.8em;
   padding-top: 0.9em;
 }
 
-.form tr:first-child td {
+.form tr:first-child > td {
   padding-top: 0;
 }
 
-.form td.subfield {
+.form td:first-child {
+  padding-left: 0;
+}
+
+.form td.footnote {
   font-size: 0.9em;
   padding-top: 0.4em;
 
@@ -54,32 +58,35 @@ table.form {
   }
 }
 
-#copy-email-cell {
-  padding-left: 1.2em;
+#cell-copy-email {
   .user-select(none);
 }
 
-.field-name {
+#signup-copy-email {
+  padding-left: 1em;
+}
+
+.column-label {
   text-align: right;
   vertical-align: middle;
   width: 11em;
 }
 
-.field-value {
+.column-input {
   width: 20em;
 }
 
-.field-input {
+.field {
   border: 1px solid #bbb;
   border-radius: 3px;
   width: 100%;
 }
 
-.field-input:focus {
+.field:focus {
   border: 1px solid #66c;
 }
 
-.field-input:disabled {
+.field:disabled {
   background-color: #eee;
 }
 

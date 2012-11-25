@@ -9,8 +9,8 @@ var checkEmailField, checkPasswordField, runChecks;
 // Maps element id to check function.
 var loginChecks = {};
 (function () {
-  loginChecks['login-email'] = checkEmailField;
-  loginChecks['login-password'] = checkPasswordField;
+  loginChecks['#login-email'] = checkEmailField;
+  loginChecks['#login-password'] = checkPasswordField;
 }());
 
 var runLoginChecks = function () {

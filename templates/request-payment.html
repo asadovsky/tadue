@@ -17,21 +17,37 @@
 <form action="/request-payment" method="post" onsubmit="return checkRequestPaymentForm();">
   <table class="form">
     <tr>
-      <td class="field-name">Payer's email</td>
-      <td class="field-value">
-        <input type="text" class="field-input" name="payer-email" id="payer-email">
+      <td colspan="10">
+        <table id="payers">
+          <tr>
+            <td></td>
+            <td>Payer's email</td>
+            <td>Amount (USD)</td>
+          </tr>
+          <tr class="row-payer">
+            <td class="column-add-remove">
+              <div class="icon" id="add-payer" title="Add another payer"></div>
+            </td>
+            <td class="column-payer-email">
+              <input type="text" class="field payer-email-field" name="payer-email-0">
+            </td>
+            <td class="column-amount">
+              <input type="text" class="field amount-field" name="amount-0">
+            </td>
+            <td><span class="error-msg"></span></td>
+          </tr>
+          <tr id="row-total">
+            <td></td>
+            <td id="total-label">Total</td>
+            <td class="column-amount">
+              <input type="text" class="field" id="total-field" disabled="disabled">
+            </td>
+          </tr>
+        </table>
       </td>
-      <td><span class="error-msg"></span></td>
     </tr>
     <tr>
-      <td class="field-name">Amount (USD)</td>
-      <td class="field-value">
-        <input type="text" class="field-input" name="amount" id="amount">
-      </td>
-      <td><span class="error-msg"></span></td>
-    </tr>
-    <tr>
-      <td class="field-name">Payment type</td>
+      <td class="column-label">Payment type</td>
       <td>
         <select name="payment-type">
           <option value="personal">Personal</option>
@@ -41,9 +57,9 @@
       </td>
     </tr>
     <tr>
-      <td class="field-name">Description</td>
-      <td class="field-value">
-        <input type="text" class="field-input" name="description" id="description">
+      <td class="column-label">Description</td>
+      <td class="column-input">
+        <input type="text" class="field" name="description" id="description">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>

@@ -9,22 +9,22 @@ var checkFullNameField, checkEmailField, checkPasswordField, checkConfirmPasswor
 // Maps element id to check function.
 var signupChecks = {};
 (function () {
-  signupChecks['signup-name'] = checkFullNameField;
-  signupChecks['signup-email'] = checkEmailField;
-  signupChecks['signup-password'] = checkPasswordField;
+  signupChecks['#signup-name'] = checkFullNameField;
+  signupChecks['#signup-email'] = checkEmailField;
+  signupChecks['#signup-password'] = checkPasswordField;
 
   var checkPayPalEmailField = function (node) {
     if ($('#signup-copy-email').get(0).checked) {
-      return true;
+      return '';
     }
     return checkEmailField(node);
   };
-  signupChecks['signup-paypal-email'] = checkPayPalEmailField;
+  signupChecks['#signup-paypal-email'] = checkPayPalEmailField;
 
   var checkConfirmPasswordFieldClosure = function (node) {
-    return checkConfirmPasswordField(node, 'signup-password');
+    return checkConfirmPasswordField(node, '#signup-password');
   };
-  signupChecks['signup-confirm-password'] = checkConfirmPasswordFieldClosure;
+  signupChecks['#signup-confirm-password'] = checkConfirmPasswordFieldClosure;
 }());
 
 var runSignupChecks = function () {

@@ -8,13 +8,15 @@ select{font-size:0.9em;}
 .main-button-gray:active{background:#dddddd;border:solid 1px #aaaaaa;text-shadow:none;}
 .main-button-gray[disabled]{background:#eeeeee;border:solid 1px #c4c4c4;color:#888;cursor:auto;text-shadow:none;}
 table.form{width:100%;}
-.form td{padding-right:0.8em;padding-top:0.9em;}
-.form tr:first-child td{padding-top:0;}
-.form td.subfield{font-size:0.9em;padding-top:0.4em;}.form td.subfield a{font-weight:normal;}
-#copy-email-cell{padding-left:1.2em;-moz-user-select:none;-ms-user-select:none;-webkit-user-select:none;user-select:none;}
-.field-name{text-align:right;vertical-align:middle;width:11em;}
-.field-value{width:20em;}
-.field-input{border:1px solid #bbb;border-radius:3px;width:100%;}
-.field-input:focus{border:1px solid #66c;}
-.field-input:disabled{background-color:#eee;}
+.form td{padding-left:0.8em;padding-top:0.9em;}
+.form tr:first-child>td{padding-top:0;}
+.form td:first-child{padding-left:0;}
+.form td.footnote{font-size:0.9em;padding-top:0.4em;}.form td.footnote a{font-weight:normal;}
+#cell-copy-email{-moz-user-select:none;-ms-user-select:none;-webkit-user-select:none;user-select:none;}
+#signup-copy-email{padding-left:1em;}
+.column-label{text-align:right;vertical-align:middle;width:11em;}
+.column-input{width:20em;}
+.field{border:1px solid #bbb;border-radius:3px;width:100%;}
+.field:focus{border:1px solid #66c;}
+.field:disabled{background-color:#eee;}
 .error-msg{color:#f44;font-size:0.9em;font-weight:bold;}

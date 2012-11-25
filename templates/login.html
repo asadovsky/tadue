@@ -11,22 +11,22 @@
 
 {{define "login-table"}}
 <tr>
-  <td class="field-name">Email</td>
-  <td class="field-value">
-    <input type="text" class="field-input" name="login-email" id="login-email">
+  <td class="column-label">Email</td>
+  <td class="column-input">
+    <input type="text" class="field" name="login-email" id="login-email">
   </td>
   <td><span class="error-msg"></span></td>
 </tr>
 <tr>
-  <td class="field-name">Password</td>
-  <td class="field-value">
-    <input type="password" class="field-input" name="login-password" id="login-password">
+  <td class="column-label">Password</td>
+  <td class="column-input">
+    <input type="password" class="field" name="login-password" id="login-password">
   </td>
   <td><span class="error-msg"></span></td>
 </tr>
 <tr>
   <td></td>
-  <td class="subfield">
+  <td class="footnote">
     <a href="/account/reset-password">Forgot your password?</a>
   </td>
 </tr>

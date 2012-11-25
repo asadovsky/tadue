@@ -4,7 +4,7 @@ for f in `ls ~/active/dev/tadue/tadue/*.go`; do gofmt -w $f; done
 
 Run JSLint on everything:
 http://www.jslint.com/lint.html
-for f in `ls ~/active/dev/tadue/js/*.js`; do if [[ "$f" != *jquery* ]]; then jslint --browser --devel --predef "$" --var --nomen --sub --color --indent 2 $f; fi; done
+for f in `ls ~/active/dev/tadue/js/*.js ~/active/dev/tadue/misc/html/*.js`; do if [[ "$f" != *jquery* ]]; then jslint --browser --devel --predef "$" --vars --nomen --sub --color --indent 2 --plusplus $f; fi; done
 
 Run LESS CSS compiler on everything:
 rm ~/active/dev/tadue/css/*.css && for f in `ls ~/active/dev/tadue/less/*.less`; do css=`echo $f | sed 's|.less$|.css|' | sed 's|/less/|/css/|'`; lessc --compress $f > $css; done

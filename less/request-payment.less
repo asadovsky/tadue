@@ -2,6 +2,72 @@
  * Copyright 2012 Adam Sadovsky. All rights reserved.
  */
 
+#payers td {
+  padding-top: 0.5em;
+}
+
+#payers tr:first-child > td {
+  padding-top: 0;
+}
+
+.column-add-remove {
+  width: 3em;
+}
+
+.column-payer-email {
+  width: 20em;
+}
+
+.column-amount {
+  width: 8em;
+}
+
+#total-label {
+  text-align: right;
+}
+
+#total-field {
+  background-color: #ddd;
+  border: 1px solid #ddd;
+  color: #000;
+}
+
+.icon {
+  background-repeat: no-repeat;
+  cursor: pointer;
+  float: right;
+  width: 16px;
+  height: 16px;
+}
+
+#add-payer {
+  background-image: url("/static/plus.png");
+}
+
+#add-payer:hover {
+  background-image: url("/static/plus-hover.png");
+}
+
+#add-payer:active {
+  background-image: url("/static/plus-click.png");
+}
+
+.row-payer:hover .remove-payer {
+  background-image: url("/static/minus.png");
+}
+
+.row-payer:hover .remove-payer:hover {
+  background-image: url("/static/minus-hover.png");
+}
+
+.row-payer:hover .remove-payer:active {
+  background-image: url("/static/minus-click.png");
+}
+
+#row-total {
+  display: none;  /* starts out hidden */
+}
+
 #account-box {
   padding-top: 0.5em;
   width: 100%;

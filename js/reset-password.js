@@ -9,7 +9,7 @@ var checkEmailField, runChecks;
 // Maps element id to check function.
 var checks = {};
 (function () {
-  checks['email'] = checkEmailField;
+  checks['#email'] = checkEmailField;
 }());
 
 var shouldRunAllChecks = false;

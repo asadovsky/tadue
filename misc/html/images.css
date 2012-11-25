@@ -2,19 +2,24 @@
  * Copyright 2012 Adam Sadovsky. All rights reserved.
  */
 
-.logo (@size) {
+* {
+  box-sizing: border-box;
+}
+
+#logo {
   background-color: #448;
   color: #fff;
   display: inline-block;
   font-family: alice, serif;
-  font-size: @size;
+  font-size: 60px;
   line-height: 1em;
 }
 
-#logo {
-  .logo(60px);
-}
-
 #logo_small {
-  .logo(40px);
+  background-color: #448;
+  color: #fff;
+  display: inline-block;
+  font-family: alice, serif;
+  font-size: 40px;
+  line-height: 1em;
 }

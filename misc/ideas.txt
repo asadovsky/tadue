@@ -1,5 +1,4 @@
 - Add option to send payment request to a Facebook friend
 - Add some sort of "tab" feature that gets "squared" every N days or whenever
   anyone is owed more than $X
-- Split a bill
-- Due dates, overdue, recurring, interest
+- Due dates, recurring payments, interest

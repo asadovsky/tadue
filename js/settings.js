@@ -9,8 +9,8 @@ var checkFullNameField, checkEmailField, runChecks;
 // Maps element id to check function.
 var checks = {};
 (function () {
-  checks['name'] = checkFullNameField;
-  checks['paypal-email'] = checkEmailField;
+  checks['#name'] = checkFullNameField;
+  checks['#paypal-email'] = checkEmailField;
 }());
 
 var shouldRunAllChecks = false;

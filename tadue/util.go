@@ -26,11 +26,11 @@ type RenderData struct {
 }
 
 type PageData struct {
-	Note  string
-	Title template.HTML
-	Css   template.HTML
-	Body  template.HTML
-	Js    template.HTML
+	Message string
+	Title   template.HTML
+	Css     template.HTML
+	Body    template.HTML
+	Js      template.HTML
 }
 
 type ErrorWithInfo struct {
@@ -89,8 +89,8 @@ func setContentTypeUtf8(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
-func RenderNoteOrDie(w http.ResponseWriter, c *Context, note string) {
-	renderPageOrDieInternal(w, c, "home", note, nil)
+func RenderMessageOrDie(w http.ResponseWriter, c *Context, msg string) {
+	renderPageOrDieInternal(w, c, "home", msg, nil)
 }
 
 func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interface{}) {
@@ -98,7 +98,7 @@ func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interf
 }
 
 func renderPageOrDieInternal(
-	w http.ResponseWriter, c *Context, name, note string, data interface{}) {
+	w http.ResponseWriter, c *Context, name, msg string, data interface{}) {
 	fullName := ""
 	if c.LoggedIn() {
 		fullName = c.Session().FullName
@@ -110,7 +110,7 @@ func renderPageOrDieInternal(
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pd.Note = note
+	pd.Message = msg
 	rd.Data = pd
 
 	setContentTypeUtf8(w)

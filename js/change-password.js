@@ -14,14 +14,14 @@ var isPasswordResetRequest = $('#key').length === 1;
 var checks = {};
 (function () {
   if (!isPasswordResetRequest) {
-    checks['current-password'] = checkPasswordField;
+    checks['#current-password'] = checkPasswordField;
   }
-  checks['new-password'] = checkPasswordField;
+  checks['#new-password'] = checkPasswordField;
 
   var checkConfirmPasswordFieldClosure = function (node) {
-    return checkConfirmPasswordField(node, 'new-password');
+    return checkConfirmPasswordField(node, '#new-password');
   };
-  checks['confirm-password'] = checkConfirmPasswordFieldClosure;
+  checks['#confirm-password'] = checkConfirmPasswordFieldClosure;
 }());
 
 var shouldRunAllChecks = false;
