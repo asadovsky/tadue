@@ -32,6 +32,7 @@
   <span id="undo">Undo</span>
 </div>
 {{template "payments-data" .Data}}
+<p>Note: Tadue sends reminders automatically every {{.Data.reminderFrequency}} days.</p>
 {{end}}
 
 {{define "payments-data"}}
@@ -56,7 +57,7 @@
     {{range .rendReqs}}
     <tr class="{{if .IsPaid}}paid{{else}}unpaid{{end}}">
       <input class="row-req-code" type="hidden" value="{{.ReqCode}}">
-      <td class="row-pay-url display-none">{{.PayUrl}}</span>
+      <td class="row-pay-url display-none">{{.PayUrl}}</td>
       <td class="col-checkbox"><input type="checkbox" class="checkbox"></td>
       <td class="col-email" title="{{.PayerEmail}}">{{.PayerEmail}}</td>
       <td class="col-amount">{{.Amount}}</td>

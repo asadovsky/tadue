@@ -1,18 +1,11 @@
-Hello {{.payerEmail}},
-<br><br>
+<p>Hello {{.payerEmail}},</p>
 {{if .isReminder}}
-This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested {{.amount}} from you via Tadue.
-<br><br>
-Description: {{.description}}
-<br><br>
-This request was made on {{.creationDate}}.
+<p>This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested {{.amount}} from you via Tadue.</p>
+<p>Description: {{.description}}</p>
+<p>This request was made on {{.creationDate}}.</p>
 {{else}}
-{{.payeeFullName}} ({{.payeeEmail}}) has requested {{.amount}} from you via Tadue.
-<br><br>
-Description: {{.description}}
+<p>{{.payeeFullName}} ({{.payeeEmail}}) has requested {{.amount}} from you via Tadue.</p>
+<p>Description: {{.description}}</p>
 {{end}}
-<br><br>
-To make your payment, click on the link below (or copy and paste it into your browser):
-<br><a href="{{.payUrl}}">{{.payUrl}}</a>
-<br><br>
-Thanks,<br>The Tadue Team
+<p>To make your payment, click on the link below (or copy and paste it into your browser):<br><a href="{{.payUrl}}">{{.payUrl}}</a></p>
+<p>Thanks,<br>The Tadue Team</p>
