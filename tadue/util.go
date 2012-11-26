@@ -4,17 +4,16 @@ package tadue
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/sha1"
 	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
-	"runtime"
-	"time"
+	"runtime/debug"
 
 	"appengine"
+	"securecookie"
 )
 
 // Data passed to Execute() for any template.
@@ -33,14 +32,13 @@ type PageData struct {
 	Js      template.HTML
 }
 
-type ErrorWithInfo struct {
-	File string // from runtime.Caller
-	Line int    // from runtime.Caller
-	Err  error  // underlying error
+type ErrorWithStackTrace struct {
+	Stack []byte // from debug.Stack()
+	Err   error
 }
 
-func (e *ErrorWithInfo) Error() string {
-	return fmt.Sprintf("%s %d: %v", e.File, e.Line, e.Err)
+func (e *ErrorWithStackTrace) Error() string {
+	return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
 }
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))
@@ -48,14 +46,13 @@ var tmpl = template.Must(template.ParseGlob("templates/*.html"))
 func makePageData(name string, data *RenderData) (*PageData, error) {
 	pd := &PageData{}
 
-	// Unlike title, css, and js, body is required.
+	// Body is required, unlike title, css, and js.
 	html, err := ExecuteTemplate(name+"-body", data)
 	if err != nil {
 		return nil, err
 	}
 	pd.Body = html
 
-	// TODO(sadovsky): Check if 'field' can be a reference.
 	maybeExecuteSubTemplate := func(subTemplateName string, field *template.HTML) error {
 		fullName := name + "-" + subTemplateName
 		if tmpl.Lookup(fullName) == nil {
@@ -89,16 +86,12 @@ func setContentTypeUtf8(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 }
 
-func RenderMessageOrDie(w http.ResponseWriter, c *Context, msg string) {
-	renderPageOrDieInternal(w, c, "home", msg, nil)
+func RedirectWithMessage(w http.ResponseWriter, r *http.Request, url, msg string) {
+	SetFlash(msg, w)
+	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interface{}) {
-	renderPageOrDieInternal(w, c, name, "", data)
-}
-
-func renderPageOrDieInternal(
-	w http.ResponseWriter, c *Context, name, msg string, data interface{}) {
 	fullName := ""
 	if c.LoggedIn() {
 		fullName = c.Session().FullName
@@ -107,15 +100,15 @@ func renderPageOrDieInternal(
 	rd := &RenderData{FullName: fullName, Data: data}
 	pd, err := makePageData(name, rd)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ServeError(w, err)
 		return
 	}
-	pd.Message = msg
+	pd.Message = c.Flash()
 	rd.Data = pd
 
 	setContentTypeUtf8(w)
 	if err = tmpl.ExecuteTemplate(w, "base.html", rd); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ServeError(w, err)
 	}
 }
 
@@ -155,7 +148,6 @@ type AppHandlerFunc func(http.ResponseWriter, *http.Request, *Context)
 func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := &Context{}
-		c.SetAec(appengine.NewContext(r))
 
 		// See http://blog.golang.org/2010/08/defer-panic-and-recover.html.
 		defer func() {
@@ -165,7 +157,16 @@ func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 			}
 		}()
 
+		// Initialize the request context object.
+		c.SetAec(appengine.NewContext(r))
 		CheckError(ReadSession(r, c))
+		if msg, err := ConsumeFlash(w, r); err != nil && err != http.ErrNoCookie {
+			ServeError(w, err)
+			return
+		} else {
+			c.SetFlash(msg)
+		}
+
 		if parseForm {
 			CheckError(r.ParseForm())
 		}
@@ -205,24 +206,26 @@ func DefaultHandler(name string) http.HandlerFunc {
 
 func CheckError(err error) {
 	if err != nil {
-		e := &ErrorWithInfo{}
-		_, e.File, e.Line, _ = runtime.Caller(1)
-		e.Err = err
+		e := &ErrorWithStackTrace{
+			Stack: debug.Stack(),
+			Err:   err,
+		}
 		panic(e)
 	}
 }
 
 func Assert(condition bool, format string, v ...interface{}) {
 	if !condition {
-		e := &ErrorWithInfo{}
-		_, e.File, e.Line, _ = runtime.Caller(1)
-		e.Err = errors.New(fmt.Sprintf(format, v...))
+		e := &ErrorWithStackTrace{
+			Stack: debug.Stack(),
+			Err:   errors.New(fmt.Sprintf(format, v...)),
+		}
 		panic(e)
 	}
 }
 
-func NewSalt() string {
-	return string(SecureRandom(32))
+func GenerateSecureRandomString() string {
+	return string(securecookie.GenerateRandomKey(32))
 }
 
 func SaltAndHash(salt, password string) string {
@@ -230,24 +233,6 @@ func SaltAndHash(salt, password string) string {
 	io.WriteString(h, salt)
 	io.WriteString(h, password)
 	return string(h.Sum(nil))
-}
-
-// Taken from Gorilla securecookie.GenerateRandomKey().
-func SecureRandom(length int) []byte {
-	k := make([]byte, length)
-	if _, err := io.ReadFull(rand.Reader, k); err != nil {
-		return nil
-	}
-	return k
-}
-
-func NewCookie(name, value string, expirationInDays int) *http.Cookie {
-	cookie := &http.Cookie{
-		Name:    name,
-		Value:   value,
-		Expires: time.Now().AddDate(0, 0, expirationInDays),
-	}
-	return cookie
 }
 
 func AppHostname(c *Context) string {

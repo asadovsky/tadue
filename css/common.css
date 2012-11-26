@@ -24,7 +24,8 @@ a:hover{text-decoration:underline;}
 #top-nav-links .menu li:hover{background-color:#def;}
 #top-nav-links li .menu a{color:#333;padding:10px;}
 #message,#title,#body{clear:both;margin:0 auto 0;width:800px;}
-#message{background-color:#fe7;font-size:17px;margin-bottom:30px;padding:17px;text-align:center;}
+#message{background-color:#fe7;font-size:17px;margin-bottom:30px;padding:17px;position:relative;text-align:center;}
+#close-message{background-image:url("/static/close.png");background-repeat:no-repeat;cursor:pointer;position:absolute;right:4px;top:4px;width:9px;height:9px;}
 #title{font-size:27px;margin-bottom:20px;}
 .header{font-weight:bold;margin-top:21px;margin-bottom:14px;}
 #bottom-nav-begin{clear:both;}

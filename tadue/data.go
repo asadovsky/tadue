@@ -13,14 +13,6 @@ import (
 	"appengine/datastore"
 )
 
-// Keyed by secure random number (NewSessionKey).
-type Session struct {
-	UserId    int64
-	Timestamp time.Time // when this session was created
-	Email     string    // email of user, stored here for convenience
-	FullName  string    // full name of user, stored here for convenience
-}
-
 // Keyed by email address string.
 type UserId struct {
 	UserId int64
@@ -73,45 +65,12 @@ type ResetPassword struct {
 	Timestamp time.Time // when this request was made
 }
 
-// Stores paypal response to one "Pay" request.
-// Pay API reference: http://goo.gl/D6dUR
-// TODO(sadovsky):
-//  - Convert timestamp to time.Time?
-type PayPalPayResponse struct {
-	Ack           string // responseEnvelope.ack
-	Build         string // responseEnvelope.build
-	CorrelationId string // responseEnvelope.correlationId
-	Timestamp     string // responseEnvelope.timestamp
-	PayKey        string // payKey
-}
-
-// Stores the useful fields from a single paypal IPN message.
-// IPN reference: http://goo.gl/bIX2Q
-// TODO(sadovsky):
-//  - Maybe store more fields, e.g. status_for_sender_txn.
-//  - Store array of txns so we can support chained payments?
-type PayPalIpnMessage struct {
-	Status     string  // status
-	PayerEmail string  // sender_email
-	PayeeEmail string  // transaction[0].receiver
-	Amount     float32 // extracted from transaction[0].amount
-	PayKey     string  // pay_key
-}
-
 //////////////////////////////
 // Key factories
 
 func NewEphemeralKey(c appengine.Context, kind string) *datastore.Key {
-	key := fmt.Sprintf("%v-%s", time.Now().Unix(), string(SecureRandom(32)))
+	key := fmt.Sprintf("%v-%s", time.Now().Unix(), GenerateSecureRandomString())
 	return datastore.NewKey(c, kind, key, 0, nil)
-}
-
-func NewSessionKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "Session", string(SecureRandom(32)), 0, nil)
-}
-
-func ToSessionKey(c appengine.Context, randomKey string) *datastore.Key {
-	return datastore.NewKey(c, "Session", randomKey, 0, nil)
 }
 
 func ToUserKey(c appengine.Context, userId int64) *datastore.Key {

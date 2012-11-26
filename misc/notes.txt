@@ -1,6 +1,6 @@
 Run gofmt on everything:
-for f in `ls ~/active/dev/tadue/tadue/*.go`; do echo "  $f" && gofmt $f > a && diff $f a && rm a; done
-for f in `ls ~/active/dev/tadue/tadue/*.go`; do gofmt -w $f; done
+for f in `ls ~/active/dev/tadue/tadue/*\.go*`; do echo "  $f" && gofmt $f > a && diff $f a && rm a; done
+for f in `ls ~/active/dev/tadue/tadue/*\.go*`; do gofmt -w $f; done
 
 Run JSLint on everything:
 http://www.jslint.com/lint.html

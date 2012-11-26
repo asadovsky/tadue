@@ -183,7 +183,7 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 
 // FIXME(sadovsky): Differentiate between user error and app error.
 func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
-	salt := NewSalt()
+	salt := GenerateSecureRandomString()
 	newUser := &User{
 		Email:    ParseEmail(r.FormValue("signup-email")),
 		Salt:     salt,
@@ -474,7 +474,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 	// If request has already been paid, show an error.
 	// TODO(sadovsky): Make error message more friendly.
 	if req.PaymentDate != time.Unix(0, 0) {
-		RenderMessageOrDie(w, c, "Already paid.")
+		RedirectWithMessage(w, r, "/", "Already paid.")
 		return
 	}
 
@@ -503,7 +503,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handlePayDone(w http.ResponseWriter, r *http.Request, c *Context) {
-	RenderMessageOrDie(w, c, "Payment processed successfully. Thanks for using Tadue!")
+	RedirectWithMessage(w, r, "/", "Payment processed successfully. Thanks for using Tadue!")
 }
 
 func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -589,7 +589,7 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 	if isNewUser {
 		target = "/payments?new"
 	}
-	http.Redirect(w, r, target, http.StatusSeeOther)
+	RedirectWithMessage(w, r, target, "Payment request made.")
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -654,7 +654,7 @@ func renderAmount(amount float32) string {
 }
 
 func getRecentPayRequestsOrDie(
-	userId int64, sentReminderReqCodes []string, c *Context) []RenderablePayRequest {
+	userId int64, emailOk bool, sentReminderReqCodes []string, c *Context) []RenderablePayRequest {
 	userKey := ToUserKey(c.Aec(), userId)
 	reqs := []PayRequest{}
 
@@ -695,16 +695,21 @@ func getRecentPayRequestsOrDie(
 			rpr.Status = "Paid on " + renderDate(pr.PaymentDate)
 		} else if pr.ReminderSentDate != time.Unix(0, 0) {
 			// If this function was called via handleSendReminder, the reminder emails
-			// have been enqueued, but may not have been sent yet. Here, we
-			// optimistically show them as sent.
+			// have been enqueued, but may not have been sent yet. Optimistically show
+			// them as sent.
+			// TODO(sadovsky): Handle the case where reminder email was blocked by
+			// cooldown.
 			reminderSentDate := pr.ReminderSentDate
 			if ContainsString(sentReminderReqCodes, rpr.ReqCode) {
 				reminderSentDate = time.Now()
 			}
 			rpr.Status = "Emailed on " + renderDate(reminderSentDate)
+		} else if emailOk {
+			// This function was called by handlePayments. User is verified, so emails
+			// must have been enqueued, but apparently they have not been sent yet.
+			// Optimistically show them as sent.
+			rpr.Status = "Emailed on " + renderDate(time.Now())
 		} else {
-			// TODO(sadovsky): Show different status if user is verified but email
-			// hasn't been sent.
 			rpr.Status = "Pending verification"
 		}
 		rpr.CreationDate = renderDate(pr.CreationDate)
@@ -716,10 +721,11 @@ func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 	if steerThroughLogin(w, r, c) {
 		return
 	}
+	user := GetUserFromSessionOrDie(c)
 	data := map[string]interface{}{
-		"user":             GetUserFromSessionOrDie(c),
+		"user":             user,
 		"isNew":            r.Form["new"] != nil,
-		"rendReqs":         getRecentPayRequestsOrDie(c.Session().UserId, []string{}, c),
+		"rendReqs":         getRecentPayRequestsOrDie(c.Session().UserId, user.EmailOk, []string{}, c),
 		"undoableReqCodes": "",
 	}
 	RenderPageOrDie(w, c, "payments", data)
@@ -728,7 +734,7 @@ func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 func renderRecentRequests(
 	w http.ResponseWriter, undoableReqCodes, sentReminderReqCodes []string, c *Context) {
 	c.AssertLoggedIn()
-	rendReqs := getRecentPayRequestsOrDie(c.Session().UserId, sentReminderReqCodes, c)
+	rendReqs := getRecentPayRequestsOrDie(c.Session().UserId, false, sentReminderReqCodes, c)
 	data := map[string]interface{}{
 		"rendReqs":         rendReqs,
 		"undoableReqCodes": strings.Join(undoableReqCodes, ","),
@@ -834,15 +840,9 @@ func handleSettings(w http.ResponseWriter, r *http.Request, c *Context) {
 		}
 		if user.FullName != fullName {
 			// Update Session record.
-			// TODO(sadovsky): Move this to session.go?
-			session := &Session{}
-			if err := datastore.Get(aec, c.SessionKey(), session); err != nil {
-				return err
-			}
-			session.FullName = fullName
-			if _, err := datastore.Put(aec, c.SessionKey(), session); err != nil {
-				return err
-			}
+			session := c.Session()
+			session.FullName = fullName // mutates c.Session()
+			CheckError(UpdateSession(session, w, c))
 		}
 		// Update User record.
 		user.FullName = fullName
@@ -874,7 +874,7 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 		} else { // password reset request
 			_, err := useResetPassword(encodedKey, c)
 			if err != nil {
-				RenderMessageOrDie(w, c, err.Error())
+				RedirectWithMessage(w, r, "/", err.Error())
 				return
 			}
 			RenderPageOrDie(w, c, "change-password", map[string]interface{}{"key": encodedKey})
@@ -887,7 +887,7 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 
 	var err error = nil
 	updateFn := func(user *User) bool {
-		salt := NewSalt()
+		salt := GenerateSecureRandomString()
 		user.Salt = salt
 		user.PassHash = SaltAndHash(salt, r.FormValue("new-password"))
 		return true
@@ -902,7 +902,7 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 	}
 	// FIXME(sadovsky): Differentiate between user error and app error.
 	CheckError(err)
-	RenderMessageOrDie(w, c, "Password changed successfully.")
+	RedirectWithMessage(w, r, "/", "Password changed successfully.")
 }
 
 func handleResetPassword(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -915,21 +915,22 @@ func handleResetPassword(w http.ResponseWriter, r *http.Request, c *Context) {
 	}
 	email := ParseEmail(r.FormValue("email"))
 	CheckError(doInitiateResetPassword(email, c))
-	RenderMessageOrDie(w, c, makeSentLinkMessage("Password reset", email))
+	RedirectWithMessage(w, r, "/", makeSentLinkMessage("Password reset", email))
 }
 
 func handleSendVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
 	CheckError(doInitiateVerifyEmail(c))
-	RenderMessageOrDie(w, c, makeSentLinkMessage("Email verification", c.Session().Email))
+	RedirectWithMessage(w, r, "/", makeSentLinkMessage("Email verification", c.Session().Email))
 }
 
-func doRenderVerifMsg(email string, sentPayRequestEmails bool, w http.ResponseWriter, c *Context) {
+func doRenderVerifMsg(
+	email string, sentPayRequestEmails bool, w http.ResponseWriter, r *http.Request, c *Context) {
 	msg := fmt.Sprintf("Email address %s has been verified.", email)
 	if sentPayRequestEmails {
 		msg += " All pending payment requests have been sent."
 	}
-	RenderMessageOrDie(w, c, msg)
+	RedirectWithMessage(w, r, "/", msg)
 }
 
 func handleDebugVerif(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -937,7 +938,7 @@ func handleDebugVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	email, sentPayRequestEmails, err := doSetEmailOk(c.Session().UserId, c)
 	Assert(email == c.Session().Email, "")
 	CheckError(err)
-	doRenderVerifMsg(email, sentPayRequestEmails, w, c)
+	doRenderVerifMsg(email, sentPayRequestEmails, w, r, c)
 }
 
 func handleVerif(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -945,11 +946,11 @@ func handleVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	Assert(encodedKey != "", "No key")
 	userId, err := useVerifyEmail(encodedKey, c)
 	if err != nil {
-		RenderMessageOrDie(w, c, err.Error())
+		RedirectWithMessage(w, r, "/", err.Error())
 	}
 	email, sentPayRequestEmails, err := doSetEmailOk(userId, c)
 	CheckError(err)
-	doRenderVerifMsg(email, sentPayRequestEmails, w, c)
+	doRenderVerifMsg(email, sentPayRequestEmails, w, r, c)
 }
 
 func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -1142,7 +1143,7 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 		CheckError(datastore.DeleteMulti(c.Aec(), keys))
 	}
 	c.DeleteSession()
-	RenderMessageOrDie(w, c, "Datastore has been wiped.")
+	RedirectWithMessage(w, r, "/", "Datastore has been wiped.")
 }
 
 func init() {

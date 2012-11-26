@@ -1,6 +1,5 @@
 p0
-- Use cookies for flash messages
-- Move session state into cookie
+- Wipe Session datastore records
 - Let payer say "already paid"
 
 p1 features

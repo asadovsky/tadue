@@ -7,14 +7,13 @@ package tadue
 
 import (
 	"appengine"
-	"appengine/datastore"
 )
 
 type Context struct {
-	m          map[interface{}]interface{}
-	aec        appengine.Context
-	sessionKey *datastore.Key
-	session    *Session
+	m       map[interface{}]interface{}
+	aec     appengine.Context
+	session *Session
+	flash   string
 }
 
 func (c *Context) Get(key interface{}) interface{} {
@@ -60,16 +59,18 @@ func (c *Context) Session() *Session {
 	return c.session
 }
 
-func (c *Context) SessionKey() *datastore.Key {
-	return c.sessionKey
-}
-
-func (c *Context) SetSession(sessionKey *datastore.Key, s *Session) {
-	c.sessionKey = sessionKey
+func (c *Context) SetSession(s *Session) {
 	c.session = s
 }
 
 func (c *Context) DeleteSession() {
-	c.sessionKey = nil
 	c.session = nil
+}
+
+func (c *Context) Flash() string {
+	return c.flash
+}
+
+func (c *Context) SetFlash(flash string) {
+	c.flash = flash
 }

@@ -16,6 +16,26 @@ import (
 	"appengine/urlfetch"
 )
 
+// Stores paypal response to one "Pay" request.
+// Pay API reference: http://goo.gl/D6dUR
+type PayPalPayResponse struct {
+	Ack           string // responseEnvelope.ack
+	Build         string // responseEnvelope.build
+	CorrelationId string // responseEnvelope.correlationId
+	Timestamp     string // responseEnvelope.timestamp
+	PayKey        string // payKey
+}
+
+// Stores the useful fields from a single paypal IPN message.
+// IPN reference: http://goo.gl/bIX2Q
+type PayPalIpnMessage struct {
+	Status     string  // status
+	PayerEmail string  // sender_email
+	PayeeEmail string  // transaction[0].receiver
+	Amount     float32 // extracted from transaction[0].amount
+	PayKey     string  // pay_key
+}
+
 var headers = map[string]string{
 	"X-PAYPAL-SECURITY-USERID":      kUserId,
 	"X-PAYPAL-SECURITY-PASSWORD":    kPassword,

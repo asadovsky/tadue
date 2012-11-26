@@ -3,7 +3,7 @@
 package tadue
 
 const (
-	COOKIE_LIFESPAN                  = 7  // lifespan of cookie in days
+	SESSION_COOKIE_LIFESPAN          = 14 // lifespan of session cookie in days
 	VERIFY_EMAIL_LIFESPAN            = 2  // lifespan of VerifyEmail request in days
 	RESET_PASSWORD_LIFESPAN_MINUTES  = 15 // lifespan of ResetPassword request in minutes
 	MAX_PAYMENTS_TO_SHOW             = 20 // max number of payments to show in list

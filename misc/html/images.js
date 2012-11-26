@@ -46,11 +46,15 @@ var RADIUS = 8;
 var BORDER_WIDTH = 1;
 var LINE_LENGTH = 10;
 
-var initCanvas = function (canvasSelector) {
+var initCanvas = function (canvasSelector, width, height) {
   var canvas = $(canvasSelector).get(0);
-  canvas.width = 2 * RADIUS;
-  canvas.height = 2 * RADIUS;
+  canvas.width = width;
+  canvas.height = height;
   return canvas.getContext('2d');
+};
+
+var initCircleCanvas = function (canvasSelector) {
+  return initCanvas(canvasSelector, 2 * RADIUS, 2 * RADIUS);
 };
 
 var makeCircle = function (ctx, color, alpha) {
@@ -91,38 +95,57 @@ var makePlus = function (ctx, color) {
   makeLine(ctx, color, true);
 };
 
+var X_SIZE = 9;
+var X_LINE_WIDTH = 2;
+var X_COLOR = '#555';
+
+var makeX = function (ctx) {
+  ctx.strokeStyle = X_COLOR;
+  ctx.lineWidth = X_LINE_WIDTH;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(X_SIZE, X_SIZE);
+  ctx.moveTo(0, X_SIZE);
+  ctx.lineTo(X_SIZE, 0);
+  ctx.stroke();
+};
+
 var FONT_COLOR = '#66c';
-var GRAY = '#ddd';
+var LIGHT_GRAY = '#ddd';
 var BLACK = '#000';
 
 var drawIcons = function () {
-  var ctx = initCanvas('#plus');
+  var ctx = initCircleCanvas('#plus');
   makePlus(ctx, FONT_COLOR);
   makeImage('#plus', '#iplus');
 
-  ctx = initCanvas('#plus-hover');
-  makeCircle(ctx, GRAY, 0);
+  ctx = initCircleCanvas('#plus-hover');
+  makeCircle(ctx, LIGHT_GRAY, 0);
   makePlus(ctx, FONT_COLOR);
   makeImage('#plus-hover', '#iplus-hover');
 
-  ctx = initCanvas('#plus-click');
-  makeCircle(ctx, GRAY, 0);
+  ctx = initCircleCanvas('#plus-click');
+  makeCircle(ctx, LIGHT_GRAY, 0);
   makePlus(ctx, BLACK);
   makeImage('#plus-click', '#iplus-click');
 
-  ctx = initCanvas('#minus');
+  ctx = initCircleCanvas('#minus');
   makeMinus(ctx, FONT_COLOR);
   makeImage('#minus', '#iminus');
 
-  ctx = initCanvas('#minus-hover');
-  makeCircle(ctx, GRAY, 0);
+  ctx = initCircleCanvas('#minus-hover');
+  makeCircle(ctx, LIGHT_GRAY, 0);
   makeMinus(ctx, FONT_COLOR);
   makeImage('#minus-hover', '#iminus-hover');
 
-  ctx = initCanvas('#minus-click');
-  makeCircle(ctx, GRAY, 0);
+  ctx = initCircleCanvas('#minus-click');
+  makeCircle(ctx, LIGHT_GRAY, 0);
   makeMinus(ctx, BLACK);
   makeImage('#minus-click', '#iminus-click');
+
+  ctx = initCanvas('#close', X_SIZE, X_SIZE);
+  makeX(ctx);
+  makeImage('#close', '#iclose');
 };
 
 drawIcons();
