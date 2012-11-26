@@ -124,10 +124,20 @@ func fixUserIdRecordsOrDie(c *Context) {
 	}
 }
 
+func wipeSessionRecords(c *Context) {
+	q := datastore.NewQuery("Session").KeysOnly()
+	keys, err := q.GetAll(c.Aec(), nil)
+	CheckError(err)
+	CheckError(datastore.DeleteMulti(c.Aec(), keys))
+}
+
 func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
-	fixPayRequestRecordsOrDie(c)
-	fixSessionRecordsOrDie(c)
-	fixUserRecordsOrDie(c)
-	fixUserIdRecordsOrDie(c)
+	if false {
+		fixPayRequestRecordsOrDie(c)
+		fixSessionRecordsOrDie(c)
+		fixUserRecordsOrDie(c)
+		fixUserIdRecordsOrDie(c)
+	}
+	wipeSessionRecords(c)
 	ServeInfo(w, "Done")
 }

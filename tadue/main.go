@@ -1135,7 +1135,8 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
-	typeNames := [...]string{"PayRequest", "Session", "User", "UserId", "VerifyEmail"}
+	typeNames := [...]string{
+		"PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
 	for _, typeName := range typeNames {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)
@@ -1184,5 +1185,5 @@ func init() {
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
 	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }
