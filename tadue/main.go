@@ -20,6 +20,11 @@ import (
 	"appengine/taskqueue"
 )
 
+func prependHost(url string, c *Context) string {
+	Assert(strings.Index(url, "/") == 0, url)
+	return fmt.Sprintf("http://%s%s", AppHostname(c), url)
+}
+
 func makePayUrl(reqCode string) string {
 	return fmt.Sprintf("/pay?reqCode=%s", reqCode)
 }
@@ -256,8 +261,7 @@ func doInitiateResetPassword(email string, c *Context) error {
 	}
 
 	// Send the email.
-	resetUrl := fmt.Sprintf("http://%s/account/change-password?key=%s",
-		AppHostname(c), key.Encode())
+	resetUrl := prependHost(fmt.Sprintf("/account/change-password?key=%s", key.Encode()), c)
 	data := map[string]interface{}{
 		"fullName": user.FullName,
 		"email":    user.Email,
@@ -290,7 +294,7 @@ func doInitiateVerifyEmail(c *Context) error {
 	}
 
 	// Send the email.
-	verifUrl := fmt.Sprintf("http://%s/account/verif?key=%s", AppHostname(c), key.Encode())
+	verifUrl := prependHost(fmt.Sprintf("/account/verif?key=%s", key.Encode()), c)
 	data := map[string]interface{}{
 		"fullName": c.Session().FullName,
 		"verifUrl": verifUrl,
@@ -992,7 +996,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 			"payeeFullName": payee.FullName,
 			"amount":        renderAmount(req.Amount),
 			"description":   req.Description,
-			"payUrl":        makePayUrl(reqCode),
+			"payUrl":        prependHost(makePayUrl(reqCode), c),
 			"isReminder":    isReminder,
 			"creationDate":  renderDate(req.CreationDate),
 		}
