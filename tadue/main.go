@@ -1077,10 +1077,6 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 		req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
 }
 
-func handleLogo(w http.ResponseWriter, r *http.Request, c *Context) {
-	RenderTemplateOrDie(w, "logo.html", nil)
-}
-
 // Uses reflection to print records from datastore.
 // Reference: http://golang.org/doc/articles/laws_of_reflection.html
 func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -1181,9 +1177,7 @@ func init() {
 	// Admin links.
 	http.HandleFunc("/admin/dump", WrapHandler(handleDump))
 	// Development links.
-	// TODO(sadovsky): Disable in prod.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
-	http.HandleFunc("/dev/logo", WrapHandler(handleLogo))
 	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }
