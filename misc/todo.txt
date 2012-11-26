@@ -1,6 +1,5 @@
 p0
 - Let payer say "already paid"
-- Preload icons or use data urls for them
 
 p1 features
 - Show indication of when next reminder will be sent

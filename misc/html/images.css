@@ -6,7 +6,7 @@
   box-sizing: border-box;
 }
 
-#logo {
+#css_logo {
   background-color: #448;
   color: #fff;
   display: inline-block;
@@ -15,7 +15,7 @@
   line-height: 1em;
 }
 
-#logo_small {
+#css_logo_small {
   background-color: #448;
   color: #fff;
   display: inline-block;
