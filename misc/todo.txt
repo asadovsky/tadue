@@ -1,5 +1,6 @@
 p0
 - Let payer say "already paid"
+- Switch to HTTPS
 
 p1 features
 - Autocomplete emails from Google Contacts API

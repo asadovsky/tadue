@@ -30,10 +30,11 @@ func SetCookie(
 	// NOTE(sadovsky): If path is not "/", Chrome will not set cookies on a 302
 	// redirect.
 	cookie := &http.Cookie{
-		Name:   name,
-		Value:  encoded,
-		Path:   "/",
-		MaxAge: options.MaxAge,
+		Name:     name,
+		Value:    encoded,
+		Path:     "/",
+		MaxAge:   options.MaxAge,
+		HttpOnly: true, // see http://goo.gl/n4Bui
 	}
 	if options.MaxAge > 0 {
 		cookie.Expires = time.Now().Add(time.Duration(options.MaxAge) * time.Second)
