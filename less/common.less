@@ -2,6 +2,8 @@
  * Copyright 2012 Adam Sadovsky. All rights reserved.
  */
 
+@import "mixins.less";
+
 * {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -68,11 +70,11 @@ a:hover {
 }
 
 .menu .menu {
+  .box-shadow(0 1px 2px #bbb);
   display: none;
   background-color: #fff;
   border: 1px solid #999;
   border-top: 0;
-  box-shadow: 0 1px 2px #bbb;
   position: absolute;
   right: 0;
   width: 160px;

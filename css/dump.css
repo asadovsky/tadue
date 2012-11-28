@@ -1,6 +1,1 @@
-*{box-sizing:border-box;}
-table{border-collapse:collapse;border-spacing:0;}
-th{text-align:left;}
-th,td{max-width:150px;padding-right:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-tr:nth-child(even){background-color:#eee;}
-tr:hover{background-color:#ffc;}
+*{box-sizing:border-box}table{border-collapse:collapse;border-spacing:0}th{text-align:left}th,td{max-width:150px;padding-right:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}tr:nth-child(even){background-color:#eee}tr:hover{background-color:#ffc}

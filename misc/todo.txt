@@ -3,6 +3,7 @@ p0
 - Switch to HTTPS
 
 p1 features
+- Add "remember me" option to login
 - Autocomplete emails from Google Contacts API
 - Autocomplete emails that I've requested money from before
 

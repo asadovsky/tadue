@@ -42,10 +42,10 @@ setTimeout(drawLogos, 200);
 //////////////////////////////
 // Icons
 
-var RADIUS = 8;
+var RADIUS = 10;
 var DIAMETER = 2 * RADIUS;
 var BORDER_WIDTH = 1;
-var LINE_LENGTH = 10;
+var LINE_LENGTH = 12;
 
 var initCanvas = function (canvasSelector, width, height) {
   var canvas = $(canvasSelector).get(0);

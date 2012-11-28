@@ -8,11 +8,10 @@
   border-radius: @radius;
 }
 
-.background-linear-gradient (@top, @bottom) {
-  background: -moz-linear-gradient(@top, @bottom);
-  background: -ms-linear-gradient(@top, @bottom);
-  background: -webkit-linear-gradient(@top, @bottom);
-  background: linear-gradient(@top, @bottom);
+.box-shadow (@value) {
+  -moz-box-shadow: @value;
+  -webkit-box-shadow: @value;
+  box-shadow: @value;
 }
 
 .user-select (@value) {
@@ -20,6 +19,13 @@
   -ms-user-select: @value;
   -webkit-user-select: @value;
   user-select: @value;
+}
+
+.background-linear-gradient (@top, @bottom) {
+  background: -moz-linear-gradient(@top, @bottom);
+  background: -ms-linear-gradient(@top, @bottom);
+  background: -webkit-linear-gradient(@top, @bottom);
+  background: linear-gradient(@top, @bottom);
 }
 
 .button (@top, @bottom) {

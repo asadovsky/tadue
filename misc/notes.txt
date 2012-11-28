@@ -1,3 +1,9 @@
+Run Python SMTP debug server:
+python -m smtpd -n -c DebuggingServer localhost:1025
+
+Run dev_appserver:
+/usr/local/google_appengine_go/dev_appserver.py tadue --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025
+
 Run gofmt on everything:
 for f in `ls ~/active/dev/tadue/tadue/*\.go*`; do echo "  $f" && gofmt $f > a && diff $f a && rm a; done
 for f in `ls ~/active/dev/tadue/tadue/*\.go*`; do gofmt -w $f; done
@@ -7,13 +13,13 @@ http://www.jslint.com/lint.html
 for f in `ls ~/active/dev/tadue/js/*.js ~/active/dev/tadue/misc/html/*.js`; do if [[ "$f" != *jquery* ]]; then jslint --browser --devel --predef "$" --vars --nomen --sub --color --indent 2 --plusplus $f; fi; done
 
 Run LESS CSS compiler on everything:
-rm ~/active/dev/tadue/css/*.css && for f in `ls ~/active/dev/tadue/less/*.less`; do css=`echo $f | sed 's|.less$|.css|' | sed 's|/less/|/css/|'`; lessc --compress $f > $css; done
+rm ~/active/dev/tadue/css/*.css && for f in `ls ~/active/dev/tadue/less/*.less`; do css=`echo $f | sed 's|.less$|.css|' | sed 's|/less/|/css/|'`; lessc --yui-compress $f > $css; done
 
-Diff with opendiff:
+Diff:
 git difftool -t tkdiff -y
 git difftool -t opendiff -y
 
-Added securecookie submodule:
+Add securecookie submodule:
 git submodule add git://github.com/gorilla/securecookie.git securecookie
 
 Port routing:
@@ -29,12 +35,6 @@ Port routing:
      http://98.248.42.191:8080
 
 Favicon generator: http://www.degraeve.com/favicon/
-
-Run Python SMTP debug server:
-python -m smtpd -n -c DebuggingServer localhost:1025
-
-Run dev_appserver:
-/usr/local/google_appengine_go/dev_appserver.py tadue --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025
 
 Bugs in dev_appserver admin:
 http://code.google.com/p/googleappengine/issues/detail?id=7948
