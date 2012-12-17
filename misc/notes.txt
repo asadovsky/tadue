@@ -7,6 +7,7 @@ Run dev_appserver:
 Tools:
 /Users/asadovsky/active/dev/tadue/tools/lint.sh
 /Users/asadovsky/active/dev/tadue/tools/compile.sh local
+/Users/asadovsky/active/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
 
 Closure references:
 https://developers.google.com/closure/library/docs/closurebuilder
