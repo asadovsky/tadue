@@ -31,6 +31,8 @@ cd code.google.com/p/goauth2
 find . -name .hg -print0 | xargs -0 rm -rf
 find . -name .hgtags -print0 | xargs -0 rm -rf
 
+GoDoc: http://godoc.org/github.com/asadovsky/tadue/tadue
+
 Port routing:
  - Figure out internal IP:
      ifconfig | grep 192  ==>  inet addr:192.168.1.113
