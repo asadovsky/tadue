@@ -2,6 +2,12 @@
  * Copyright 2012 Adam Sadovsky. All rights reserved.
  */
 
+@import "mixins.less";
+@import "form.less";
+
+@input-add-remove-width: 42px;
+@input-amount-width: 112px;
+
 #payers td {
   padding-top: 7px;
 }
@@ -11,15 +17,15 @@
 }
 
 .col-add-remove {
-  width: 42px;
+  width: @input-add-remove-width;
 }
 
 .col-payer-email {
-  width: 280px;
+  width: @input-width;
 }
 
 .col-amount {
-  width: 112px;
+  width: @input-amount-width;
 }
 
 #total-label {
@@ -46,29 +52,19 @@
   background-position: 0 0;
 }
 
-#add-payer:hover {
+#add-payer:active {
   background-image: url("/static/plus.png");
   background-position: -20px 0;
 }
 
-#add-payer:active {
-  background-image: url("/static/plus.png");
-  background-position: -40px 0;
-}
-
-.row-payer:hover .remove-payer {
+.remove-payer {
   background-image: url("/static/minus.png");
   background-position: 0 0;
 }
 
-.row-payer:hover .remove-payer:hover {
+.remove-payer:active {
   background-image: url("/static/minus.png");
   background-position: -20px 0;
-}
-
-.row-payer:hover .remove-payer:active {
-  background-image: url("/static/minus.png");
-  background-position: -40px 0;
 }
 
 #row-total {
@@ -107,6 +103,7 @@
 }
 
 .tab {
+  .user-select(none);
   border: 1px solid #bbb;
   border-radius: 5px;
   color: #66c;  /* same as anchor color */
@@ -115,13 +112,34 @@
   padding: 7px 14px 21px 14px;
   position: relative;
   text-align: center;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 .active-tab {
   background-color: #eee;
   z-index: 1;
+}
+
+/* Closure autocomplete styling. */
+.ac-renderer {
+  .box-shadow(0 1px 2px #bbb);
+  background-color: #fff;
+  border: 1px solid #999;
+  position: absolute;
+  width: (@input-width - @input-padding-left);
+  z-index: 3;
+}
+
+.ac-row {
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px;
+}
+
+.ac-highlighted {
+  font-weight: bold;
+}
+
+.ac-active {
+  background-color: #def;
 }

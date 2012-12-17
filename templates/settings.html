@@ -1,16 +1,16 @@
 {{define "settings-title"}}Settings{{end}}
 
 {{define "settings-css"}}
-<link type="text/css" rel="stylesheet" href="/css/form.css">
+<link type="text/css" rel="stylesheet/less" href="/less/form.less">
 {{end}}
 
 {{define "settings-js"}}
-<script type="text/javascript" src="/js/form.js"></script>
 <script type="text/javascript" src="/js/settings.js"></script>
+<script type="text/javascript">tadue.settings.init();</script>
 {{end}}
 
 {{define "settings-body"}}
-<form action="/settings" method="post" onsubmit="return checkForm();">
+<form action="/settings" method="post" onsubmit="return tadue.settings.checkForm();">
   <table class="form">
     <tr>
       <td class="col-label">Email</td>

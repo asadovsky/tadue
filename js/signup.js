@@ -2,47 +2,45 @@
 
 'use strict';
 
-// Trick JSLint. These vars are defined elsewhere.
-// TODO(sadovsky): Refactor to more cleanly share common components.
-var checkFullNameField, checkEmailField, checkPasswordField, checkConfirmPasswordField, runChecks;
+goog.provide('tadue.signup');
 
-// Maps element id to check function.
-var signupChecks = {};
-(function () {
-  signupChecks['#signup-name'] = checkFullNameField;
-  signupChecks['#signup-email'] = checkEmailField;
-  signupChecks['#signup-password'] = checkPasswordField;
+goog.require('tadue.form');
 
-  var checkPayPalEmailField = function (node) {
+tadue.signup.runChecks = function() {
+  var checks = {};
+  checks['#signup-name'] = tadue.form.checkFullNameField;
+  checks['#signup-email'] = tadue.form.checkEmailField;
+  checks['#signup-password'] = tadue.form.checkPasswordField;
+
+  var checkPayPalEmailField = function(node) {
     if ($('#signup-copy-email').get(0).checked) {
       return '';
     }
-    return checkEmailField(node);
+    return tadue.form.checkEmailField(node);
   };
-  signupChecks['#signup-paypal-email'] = checkPayPalEmailField;
+  checks['#signup-paypal-email'] = checkPayPalEmailField;
 
-  var checkConfirmPasswordFieldClosure = function (node) {
-    return checkConfirmPasswordField(node, '#signup-password');
+  var checkConfirmPasswordFieldClosure = function(node) {
+    return tadue.form.checkConfirmPasswordField(node, '#signup-password');
   };
-  signupChecks['#signup-confirm-password'] = checkConfirmPasswordFieldClosure;
-}());
-
-var runSignupChecks = function () {
-  return runChecks(signupChecks);
+  checks['#signup-confirm-password'] = checkConfirmPasswordFieldClosure;
+  return tadue.form.runChecks(checks);
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-var runSignupChecksOnEveryInputEvent = false;
-var checkSignupForm = function () {
-  if (!runSignupChecksOnEveryInputEvent) {
-    runSignupChecksOnEveryInputEvent = true;
-    $('input').on('input', runSignupChecks);
-    $('#signup-copy-email').click(function () { runSignupChecks(); });
+tadue.signup.runChecksOnEveryInputEvent = false;
+tadue.signup.checkForm = function() {
+  if (!tadue.signup.runChecksOnEveryInputEvent) {
+    tadue.signup.runChecksOnEveryInputEvent = true;
+    $('input').on('input', tadue.signup.runChecks);
+    $('#signup-copy-email').click(function() {
+      tadue.signup.runChecks();
+    });
   }
-  return runSignupChecks();
+  return tadue.signup.runChecks();
 };
 
-var maybeCopyEmail = function () {
+tadue.signup.maybeCopyEmail = function() {
   var doCopy = $('#signup-copy-email').is(':checked');
   if (doCopy) {
     $('#signup-paypal-email').val($('#signup-email').val());
@@ -50,12 +48,14 @@ var maybeCopyEmail = function () {
   return doCopy;
 };
 
-var updateSignupPayPalEmail = function () {
-  $('#signup-paypal-email').get(0).disabled = maybeCopyEmail();
+tadue.signup.updateSignupPayPalEmail = function() {
+  $('#signup-paypal-email').get(0).disabled = tadue.signup.maybeCopyEmail();
 };
 
-// Initialize the view. Handles the case where user clicked the back button.
-$('#signup-copy-email').click(updateSignupPayPalEmail);
-updateSignupPayPalEmail();
+tadue.signup.init = function() {
+  // Handles the case where user clicked the back button.
+  $('#signup-copy-email').click(tadue.signup.updateSignupPayPalEmail);
+  tadue.signup.updateSignupPayPalEmail();
 
-$('#signup-email').on('input', maybeCopyEmail);
+  $('#signup-email').on('input', tadue.signup.maybeCopyEmail);
+};

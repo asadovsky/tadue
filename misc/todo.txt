@@ -1,13 +1,15 @@
 p0
 - Let payer say "already paid"
-- Switch to HTTPS
+- Switch to HTTPS (https://developers.google.com/appengine/docs/ssl)
 
 p1 features
 - Add "remember me" option to login
-- Autocomplete emails from Google Contacts API
 - Autocomplete emails that I've requested money from before
+- Allow "John Doe <email>" format
 
 p1 other
+- Store Google contacts
+- Switch from securecookie submodule to copy
 - If ajax request is slow, show "loading" message
 - Time zone
 

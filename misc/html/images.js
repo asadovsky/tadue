@@ -2,7 +2,7 @@
 
 'use strict';
 
-var makeImage = function (canvasSelector, imgSelector) {
+var makeImage = function(canvasSelector, imgSelector) {
   var imgSrc = $(canvasSelector).get(0).toDataURL('image/png');
   $(imgSelector).attr('src', imgSrc);
 };
@@ -10,7 +10,7 @@ var makeImage = function (canvasSelector, imgSelector) {
 //////////////////////////////
 // Logo
 
-var drawOneLogo = function (canvasSelector, spanSelector, font) {
+var drawOneLogo = function(canvasSelector, spanSelector, font) {
   var canvas = $(canvasSelector).get(0);
   canvas.width = $(spanSelector).width();
   canvas.height = $(spanSelector).height();
@@ -28,7 +28,7 @@ var drawOneLogo = function (canvasSelector, spanSelector, font) {
   ctx.fillText('tadue', 0, canvas.height - 1);
 };
 
-var drawLogos = function () {
+var drawLogos = function() {
   drawOneLogo('#logo', '#css_logo', '60px Alice');
   makeImage('#logo', '#ilogo');
 
@@ -47,14 +47,14 @@ var DIAMETER = 2 * RADIUS;
 var BORDER_WIDTH = 1;
 var LINE_LENGTH = 12;
 
-var initCanvas = function (canvasSelector, width, height) {
+var initCanvas = function(canvasSelector, width, height) {
   var canvas = $(canvasSelector).get(0);
   canvas.width = width;
   canvas.height = height;
   return canvas.getContext('2d');
 };
 
-var makeCircle = function (ctx, startX, color, alpha) {
+var makeCircle = function(ctx, startX, color, alpha) {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(startX + RADIUS, RADIUS, RADIUS, 0, Math.PI * 2, true);
@@ -69,7 +69,7 @@ var makeCircle = function (ctx, startX, color, alpha) {
   ctx.globalAlpha = oldAlpha;
 };
 
-var makeLine = function (ctx, startX, color, vertical) {
+var makeLine = function(ctx, startX, color, vertical) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -83,20 +83,20 @@ var makeLine = function (ctx, startX, color, vertical) {
   ctx.stroke();
 };
 
-var makeMinus = function (ctx, startX, color) {
+var makeMinus = function(ctx, startX, color) {
   makeLine(ctx, startX, color, false);
 };
 
-var makePlus = function (ctx, startX, color) {
+var makePlus = function(ctx, startX, color) {
   makeLine(ctx, startX, color, false);
   makeLine(ctx, startX, color, true);
 };
 
 var X_WIDTH = 9;
 var X_LINE_WIDTH = 2;
-var X_COLOR = '#555';
+var X_COLOR = '#888';
 
-var makeX = function (ctx) {
+var makeX = function(ctx) {
   ctx.strokeStyle = X_COLOR;
   ctx.lineWidth = X_LINE_WIDTH;
   ctx.beginPath();
@@ -111,21 +111,27 @@ var PURPLE = '#66c';
 var LIGHT_GRAY = '#ddd';
 var BLACK = '#000';
 
-var drawIcons = function () {
-  var ctx = initCanvas('#plus', 3 * DIAMETER, DIAMETER);
+var drawIcons = function() {
+  var ctx = initCanvas('#plus', 2 * DIAMETER, DIAMETER);
   makePlus(ctx, 0, PURPLE);
-  makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
-  makePlus(ctx, DIAMETER, PURPLE);
-  makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
-  makePlus(ctx, 2 * DIAMETER, BLACK);
+  makePlus(ctx, DIAMETER, BLACK);
+  /*
+    makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
+    makePlus(ctx, DIAMETER, PURPLE);
+    makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
+    makePlus(ctx, 2 * DIAMETER, BLACK);
+  */
   makeImage('#plus', '#iplus');
 
-  ctx = initCanvas('#minus', 3 * DIAMETER, DIAMETER);
+  ctx = initCanvas('#minus', 2 * DIAMETER, DIAMETER);
   makeMinus(ctx, 0, PURPLE);
-  makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
-  makeMinus(ctx, DIAMETER, PURPLE);
-  makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
-  makeMinus(ctx, 2 * DIAMETER, BLACK);
+  makeMinus(ctx, DIAMETER, BLACK);
+  /*
+    makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
+    makeMinus(ctx, DIAMETER, PURPLE);
+    makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
+    makeMinus(ctx, 2 * DIAMETER, BLACK);
+  */
   makeImage('#minus', '#iminus');
 
   ctx = initCanvas('#close', X_WIDTH, X_WIDTH);

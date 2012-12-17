@@ -2,35 +2,32 @@
 
 'use strict';
 
-// Trick JSLint. These vars are defined elsewhere.
-// TODO(sadovsky): Refactor to more cleanly share common components.
-var checkFullNameField, checkEmailField, runChecks;
+goog.provide('tadue.settings');
 
-// Maps element id to check function.
-var checks = {};
-(function () {
-  checks['#name'] = checkFullNameField;
-  checks['#paypal-email'] = checkEmailField;
-}());
+goog.require('tadue.form');
 
-var shouldRunAllChecks = false;
-var maybeRunAllChecks = function () {
-  if (shouldRunAllChecks) {
-    return runChecks(checks);
-  }
-  return true;
+tadue.settings.runChecks = function() {
+  var checks = {};
+  checks['#name'] = tadue.form.checkFullNameField;
+  checks['#paypal-email'] = tadue.form.checkEmailField;
+  return tadue.form.runChecks(checks);
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-var checkForm = function () {
-  shouldRunAllChecks = true;
-  return maybeRunAllChecks();
+tadue.settings.runChecksOnEveryInputEvent = false
+tadue.settings.checkForm = function() {
+  if (!tadue.settings.runChecksOnEveryInputEvent) {
+    tadue.settings.runChecksOnEveryInputEvent = true;
+    $('input').on('input', tadue.settings.runChecks);
+  }
+  return tadue.settings.runChecks();
 };
 
-$('input').on('input', function () {
-  maybeRunAllChecks();
-  $('#save').prop('disabled', false);
-  $('#cancel').prop('disabled', false);
-});
+tadue.settings.init = function() {
+  $('input').on('input', function() {
+    $('#save').prop('disabled', false);
+    $('#cancel').prop('disabled', false);
+  });
 
-$('#cancel').click(function () { window.location.reload(); });
+  $('#cancel').click(function() { window.location.reload(); });
+};

@@ -38,7 +38,10 @@ type ErrorWithStackTrace struct {
 }
 
 func (e *ErrorWithStackTrace) Error() string {
-	return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
+	if kPrintStackTrace {
+		return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
+	}
+	return fmt.Sprint(e.Err)
 }
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))

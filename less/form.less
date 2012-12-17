@@ -4,9 +4,8 @@
 
 @import "mixins.less";
 
-input, select {
-  padding: 3px;
-}
+@input-padding-left: 11px;
+@input-width: 280px;
 
 input {
   font-size: 15px;
@@ -33,7 +32,7 @@ table.form {
 }
 
 .form td {
-  padding-left: 11px;
+  padding-left: @input-padding-left;
   padding-top: 13px;
 }
 
@@ -65,7 +64,7 @@ table.form {
 }
 
 .col-input {
-  width: 280px;
+  width: @input-width;
 }
 
 .field {

@@ -1,11 +1,12 @@
 {{define "payments-title"}}Payments{{end}}
 
 {{define "payments-css"}}
-<link type="text/css" rel="stylesheet" href="/css/payments.css">
+<link type="text/css" rel="stylesheet/less" href="/less/payments.less">
 {{end}}
 
 {{define "payments-js"}}
 <script type="text/javascript" src="/js/payments.js"></script>
+<script type="text/javascript">tadue.payments.init();</script>
 {{end}}
 
 {{define "payments-body"}}

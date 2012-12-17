@@ -12,12 +12,14 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	text_template "text/template"
 	"time"
 
 	"appengine"
 	"appengine/datastore"
 	"appengine/mail"
 	"appengine/taskqueue"
+	"code.google.com/p/goauth2/oauth"
 )
 
 func prependHost(url string, c *Context) string {
@@ -165,7 +167,7 @@ func useVerifyEmail(encodedKey string, c *Context) (int64, error) {
 	return v.UserId, nil
 }
 
-// FIXME(sadovsky): Differentiate between user error and app error.
+// TODO(sadovsky): Differentiate between user error and app error.
 func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	email := ParseEmail(r.FormValue("login-email"))
 	password := r.FormValue("login-password")
@@ -186,7 +188,7 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 	return user, nil
 }
 
-// FIXME(sadovsky): Differentiate between user error and app error.
+// TODO(sadovsky): Differentiate between user error and app error.
 func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	salt := GenerateSecureRandomString()
 	newUser := &User{
@@ -366,7 +368,33 @@ func doSetEmailOk(userId int64, c *Context) (email string, sentPayRequestEmails 
 	return user.Email, len(reqCodes) > 0, nil
 }
 
-//////////////////////////////
+////////////////////////////////////////
+// DatastoreOAuthTokenCache
+
+// Implements oauth.Cache.
+type DatastoreOAuthTokenCache struct {
+	UserId  int64
+	Context *Context
+	Service string
+}
+
+func (tc *DatastoreOAuthTokenCache) Token() (*oauth.Token, error) {
+	token, err := GetOAuthTokenFromUserId(tc.UserId, tc.Service, tc.Context)
+	if err != nil {
+		return nil, err
+	}
+	return (*oauth.Token)(token), nil
+}
+
+func (tc *DatastoreOAuthTokenCache) PutToken(t *oauth.Token) error {
+	tokenKey := ToOAuthTokenKey(tc.Context.Aec(), tc.UserId, tc.Service)
+	if _, err := datastore.Put(tc.Context.Aec(), tokenKey, (*OAuthToken)(t)); err != nil {
+		return err
+	}
+	return nil
+}
+
+////////////////////////////////////////
 // Handlers
 
 func handleHome(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -512,7 +540,25 @@ func handlePayDone(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 	if r.Method == "GET" {
-		RenderPageOrDie(w, c, "request-payment", nil)
+		authCodeUrl := ""
+		doInitAutoComplete := false
+		if c.LoggedIn() && strings.HasSuffix(c.Session().Email, "gmail.com") {
+			// Check whether user has done the OAuth dance.
+			if _, err := GetOAuthTokenFromUserId(c.Session().UserId, "google", c); err != nil {
+				if err != datastore.ErrNoSuchEntity {
+					CheckError(err)
+				}
+				// User has not done the OAuth dance.
+				authCodeUrl = GoogleAuthCodeURL("")
+			} else {
+				doInitAutoComplete = true
+			}
+		}
+		data := map[string]interface{}{
+			"authCodeUrl":        authCodeUrl,
+			"doInitAutoComplete": doInitAutoComplete,
+		}
+		RenderPageOrDie(w, c, "request-payment", data)
 		return
 	} else if r.Method != "POST" {
 		Serve404(w)
@@ -596,6 +642,47 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 	RedirectWithMessage(w, r, target, "Payment request made.")
 }
 
+// Url should be one of:
+// https://localhost/oauth2callback?error=access_denied
+// https://localhost/oauth2callback?code=[code]
+func handleOAuthCallback(w http.ResponseWriter, r *http.Request, c *Context) {
+	c.AssertLoggedIn()
+	code, error := r.FormValue("code"), r.FormValue("error")
+	if code == "" || error != "" {
+		RenderTemplateOrDie(w, "close-oauth.html", map[string]interface{}{"ok": false})
+		return
+	}
+	tc := &DatastoreOAuthTokenCache{
+		UserId:  c.Session().UserId,
+		Context: c,
+		Service: "google",
+	}
+	err := GoogleExchange(code, tc)
+	CheckError(err)
+	RenderTemplateOrDie(w, "close-oauth.html", map[string]interface{}{"ok": true})
+}
+
+func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
+	if r.Method != "POST" {
+		Serve404(w)
+		return
+	}
+	c.AssertLoggedIn()
+	tc := &DatastoreOAuthTokenCache{
+		UserId:  c.Session().UserId,
+		Context: c,
+		Service: "google",
+	}
+	// TODO(sadovsky): Handle OAuth error.
+	contacts, err := GoogleRequestContacts(tc)
+	CheckError(err)
+	c.Aec().Debugf("Parsed %d contacts", len(contacts))
+	w.Header().Set("Content-Type", "application/json")
+	t := text_template.Must(text_template.New("").Parse(
+		`[{{range $i, $v := .}}{{if $i}}, {{end}}"{{js $v.Name}} <{{js $v.Email}}>"{{end}}]`))
+	t.Execute(w, contacts)
+}
+
 func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
 	escapedTarget := r.FormValue("target") // may be empty
 	if r.Method == "GET" {
@@ -649,8 +736,11 @@ type RenderablePayRequest struct {
 }
 
 func renderDate(date time.Time) string {
-	// return date.Format("Jan 2 15:04:05")
-	return date.Format("Jan 2")
+	// TODO(sadovsky): For now, we always use Pacific time.
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	CheckError(err)
+	// return date.In(loc).Format("Jan 2 15:04:05")
+	return date.In(loc).Format("Jan 2")
 }
 
 func renderAmount(amount float32) string {
@@ -906,7 +996,7 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 		CheckError(err)
 		err = updateUser(userId, nil, updateFn, c)
 	}
-	// FIXME(sadovsky): Differentiate between user error and app error.
+	// TODO(sadovsky): Differentiate between user error and app error.
 	CheckError(err)
 	RedirectWithMessage(w, r, "/", "Password changed successfully.")
 }
@@ -1068,6 +1158,7 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 		"payerEmail":    req.PayerEmail,
 		"amount":        renderAmount(req.Amount),
 		"description":   req.Description,
+		"paymentsUrl":   prependHost("/payments", c),
 	}
 	body, err := ExecuteTemplate("email-got-paid.html", data)
 	CheckError(err)
@@ -1088,7 +1179,9 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeName := r.FormValue("t")
 	var res interface{}
-	if typeName == "PayRequest" {
+	if typeName == "OAuthToken" {
+		res = &OAuthToken{}
+	} else if typeName == "PayRequest" {
 		res = &PayRequest{}
 	} else if typeName == "Session" {
 		res = &Session{}
@@ -1102,6 +1195,12 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 
 	renderValue := func(value interface{}) string {
 		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
+		// If value is a time, render it in Pacific time.
+		if t, ok := value.(time.Time); ok {
+			loc, err := time.LoadLocation("America/Los_Angeles")
+			CheckError(err)
+			res = fmt.Sprintf("%v", t.In(loc))
+		}
 		return res[1 : len(res)-1] // strip quotes
 	}
 
@@ -1152,22 +1251,25 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 func init() {
 	http.HandleFunc("/", WrapHandler(handleHome))
 	http.HandleFunc("/ipn", WrapHandlerNoParseForm(handleIpn))
-	// Account-related handlers.
+	// Account.
 	http.HandleFunc("/settings", WrapHandler(handleSettings))
 	http.HandleFunc("/account/change-password", WrapHandler(handleChangePassword))
 	http.HandleFunc("/account/reset-password", WrapHandler(handleResetPassword))
 	http.HandleFunc("/account/sendverif", WrapHandler(handleSendVerif))
 	http.HandleFunc("/account/verif", WrapHandler(handleVerif))
-	// Payments page and its ajax handlers.
+	// Payments page.
 	http.HandleFunc("/payments", WrapHandler(handlePayments))
 	http.HandleFunc("/payments/mark-as-paid", WrapHandler(handleMarkAsPaid))
 	http.HandleFunc("/payments/send-reminder", WrapHandler(handleSendReminder))
 	http.HandleFunc("/payments/delete", WrapHandler(handleDelete))
-	// Request and pay.
+	// Request payment.
+	http.HandleFunc("/request-payment", WrapHandler(handleRequestPayment))
+	http.HandleFunc("/oauth2callback", WrapHandler(handleOAuthCallback))
+	http.HandleFunc("/get-contacts", WrapHandler(handleGetContacts))
+	// Pay.
 	http.HandleFunc("/pay", WrapHandler(handlePay))
 	http.HandleFunc("/pay/done", WrapHandler(handlePayDone))
-	http.HandleFunc("/request-payment", WrapHandler(handleRequestPayment))
-	// Signup, login, logout.
+	// Login, logout, signup.
 	http.HandleFunc("/login", WrapHandler(handleLogin))
 	http.HandleFunc("/logout", WrapHandler(handleLogout))
 	http.HandleFunc("/signup", WrapHandler(handleSignup))

@@ -2,38 +2,41 @@
 
 'use strict';
 
+goog.provide('tadue.payments');
+
 // Called when user clicks a checkbox or performs an action (e.g. delete), and
 // at initialization time.
-var updateVisibleState = function () {
-  var toggleHighlight = function () {
+tadue.payments.updateVisibleState = function() {
+  $('.checkbox').each(function() {
     $(this).closest('tr').toggleClass('highlight', $(this).is(':checked'));
-  };
-  $('.checkbox').each(toggleHighlight);
+  });
   $('.action-button').prop('disabled', $('.checkbox:checked').size() === 0);
   if ($('.checkbox').size() === 0) {
     $('#master-checkbox').prop('disabled', true);
   } else {
-    $('#master-checkbox').prop('checked',
-                               $('.checkbox:checked').size() === $('.checkbox').size());
+    $('#master-checkbox').prop(
+      'checked', $('.checkbox:checked').size() === $('.checkbox').size());
   }
   // Make unpaid rows link to their associated payment request pages.
-  $('.unpaid').click(function (e) {
+  $('.unpaid').click(function(e) {
     // Do not navigate if click target is checkbox.
-    if (!$(e.target).is("input")) {
+    if (!$(e.target).is('input')) {
       window.location = $(this).find('.row-pay-url').text();
     }
   });
 };
 
 // Returns a comma-separated list of request codes for selected rows.
-var getSelectedReqCodes = function () {
-  var getValue = function () { return $(this).val(); };
-  return $('.checkbox:checked').parents().siblings('.row-req-code').map(getValue).get().join(',');
+tadue.payments.getSelectedReqCodes = function() {
+  var getValue = function() { return $(this).val(); };
+  return $('.checkbox:checked').parents().siblings('.row-req-code').
+    map(getValue).get().join(',');
 };
 
-var timeoutID = null;  // stores most recent window.setTimeout() return value
+// Stores most recent window.setTimeout() return value.
+tadue.payments.timeoutID = null;
 
-var applyActionToReqCodes = function (url, reqCodes, undo) {
+tadue.payments.applyActionToReqCodes = function(url, reqCodes, undo) {
   var data = {'reqCodes': reqCodes};
   if (undo) {
     data.undo = null;
@@ -44,65 +47,70 @@ var applyActionToReqCodes = function (url, reqCodes, undo) {
     data: data,
     dataType: 'html'
   });
-  request.done(function (data) {
-    if (timeoutID !== null) {
-      window.clearTimeout(timeoutID);
+  request.done(function(data) {
+    if (tadue.payments.timeoutID !== null) {
+      window.clearTimeout(tadue.payments.timeoutID);
     }
     $('#payments-data').html(data);
     var undoableReqCodes = $('#undoable-req-codes').val();
     if (!undo && undoableReqCodes !== '') {
       $('#undo').off('click');  // remove all existing click handlers
-      $('#undo').on('click', function () {
-        applyActionToReqCodes(url, undoableReqCodes, true);
+      $('#undo').on('click', function() {
+        tadue.payments.applyActionToReqCodes(url, undoableReqCodes, true);
       });
       $('#undo').css('display', 'inline');
-      var removeUndo = function () {
+      var removeUndo = function() {
         $('#undo').css('display', 'none');
       };
-      timeoutID = window.setTimeout(removeUndo, 30000);  // 30 seconds
+      // Hide undo link after 30 seconds.
+      tadue.payments.timeoutID = window.setTimeout(removeUndo, 30000);
     } else {
       $('#undo').css('display', 'none');
     }
-    updateVisibleState();
+    tadue.payments.updateVisibleState();
   });
   // TODO(sadovsky): Handle ajax failure.
-  request.fail(function (jqXHR, textStatus) {
+  request.fail(function(jqXHR, textStatus) {
   });
 };
 
-var applyAction = function (url) {
-  applyActionToReqCodes(url, getSelectedReqCodes(), false);
+tadue.payments.applyAction = function(url) {
+  tadue.payments.applyActionToReqCodes(
+    url, tadue.payments.getSelectedReqCodes(), false);
 };
 
 // Called when user clicks "mark as paid" button.
-var markAsPaid = function () {
-  applyAction('/payments/mark-as-paid');
+tadue.payments.markAsPaid = function() {
+  tadue.payments.applyAction('/payments/mark-as-paid');
 };
 
 // Called when user clicks "send reminder" button.
-var sendReminder = function () {
-  applyAction('/payments/send-reminder');
+tadue.payments.sendReminder = function() {
+  tadue.payments.applyAction('/payments/send-reminder');
 };
 
 // Called when user clicks "delete" button.
-var doDelete = function () {
-  applyAction('/payments/delete');
+tadue.payments.doDelete = function() {
+  tadue.payments.applyAction('/payments/delete');
 };
 
 // Note: We use a global click handler instead of targeting checkbox elements
 // because after an action (e.g. delete) is taken, new checkboxes are created,
 // and we don't want to bind new event handlers at that point.
-var handleClick = function (e) {
+tadue.payments.handleClick = function(e) {
   if (!$(e.target).is('input:checkbox')) { return; }
   if ($(e.target).is('#master-checkbox')) {
     $('.checkbox').prop('checked', $('#master-checkbox').is(':checked'));
   }
-  updateVisibleState();
+  tadue.payments.updateVisibleState();
 };
-$(document).click(handleClick);
 
-$('#mark-as-paid').click(markAsPaid);
-$('#send-reminder').click(sendReminder);
-$('#delete').click(doDelete);
+tadue.payments.init = function() {
+  $(document).click(tadue.payments.handleClick);
 
-updateVisibleState();
+  $('#mark-as-paid').click(tadue.payments.markAsPaid);
+  $('#send-reminder').click(tadue.payments.sendReminder);
+  $('#delete').click(tadue.payments.doDelete);
+
+  tadue.payments.updateVisibleState();
+};

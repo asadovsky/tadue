@@ -11,6 +11,7 @@ import (
 
 	"appengine"
 	"appengine/datastore"
+	"code.google.com/p/goauth2/oauth"
 )
 
 // Keyed by email address string.
@@ -27,6 +28,9 @@ type User struct {
 	PayPalEmail string // paypal account email
 	EmailOk     bool   // true if user has verified their primary email
 }
+
+// Keyed by service name (e.g. "google"), with User as parent.
+type OAuthToken oauth.Token
 
 // Payment types.
 const (
@@ -65,7 +69,7 @@ type ResetPassword struct {
 	Timestamp time.Time // when this request was made
 }
 
-//////////////////////////////
+////////////////////////////////////////
 // Key factories
 
 func NewEphemeralKey(c appengine.Context, kind string) *datastore.Key {
@@ -81,7 +85,12 @@ func ToUserIdKey(c appengine.Context, email string) *datastore.Key {
 	return datastore.NewKey(c, "UserId", email, 0, nil)
 }
 
-//////////////////////////////
+func ToOAuthTokenKey(c appengine.Context, userId int64, service string) *datastore.Key {
+	userKey := ToUserKey(c, userId)
+	return datastore.NewKey(c, "OAuthToken", service, 0, userKey)
+}
+
+////////////////////////////////////////
 // Simple data getters
 
 func GetUserOrDie(key *datastore.Key, c *Context) *User {
@@ -141,6 +150,15 @@ func GetUserFromEmailOrDie(email string, c *Context) (int64, *User) {
 	userId, user, err := GetUserFromEmail(email, c)
 	CheckError(err)
 	return userId, user
+}
+
+func GetOAuthTokenFromUserId(userId int64, service string, c *Context) (*OAuthToken, error) {
+	tokenKey := ToOAuthTokenKey(c.Aec(), userId, service)
+	token := &OAuthToken{}
+	if err := datastore.Get(c.Aec(), tokenKey, token); err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 //////////////////////////////

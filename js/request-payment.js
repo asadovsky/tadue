@@ -2,16 +2,21 @@
 
 'use strict';
 
-// Trick JSLint. These vars are defined elsewhere.
-// TODO(sadovsky): Refactor to more cleanly share common components.
-var checkEmailField, checkAmountField, checkDescriptionField, runChecks;
-var runSignupChecks, runLoginChecks;
+goog.provide('tadue.requestPayment');
+
+goog.require('goog.ui.ac.ArrayMatcher');
+goog.require('goog.ui.ac.AutoComplete');
+goog.require('goog.ui.ac.InputHandler');
+goog.require('goog.ui.ac.Renderer');
+goog.require('tadue.form');
+goog.require('tadue.login');
+goog.require('tadue.signup');
 
 // If true, the signup/login part of the form will be hidden and should not be
 // checked.
-var LOGGED_IN = $('#logged-in').length === 1;
+tadue.requestPayment.LOGGED_IN = null;
 
-var showSignup = function () {
+tadue.requestPayment.showSignup = function() {
   $('#signup-box').css('display', 'block');
   $('#login-box').css('display', 'none');
   $('#new-user').addClass('active-tab');
@@ -19,7 +24,7 @@ var showSignup = function () {
   $('#do-signup').val('true');
 };
 
-var showLogin = function () {
+tadue.requestPayment.showLogin = function() {
   $('#signup-box').css('display', 'none');
   $('#login-box').css('display', 'block');
   $('#new-user').removeClass('active-tab');
@@ -27,29 +32,29 @@ var showLogin = function () {
   $('#do-signup').val('false');
 };
 
-var checkEmailAndAmountFields = function (node) {
-  var errorMsg = checkEmailField(node);
+tadue.requestPayment.checkEmailAndAmountFields = function(node) {
+  var errorMsg = tadue.form.checkEmailField(node);
   if (errorMsg === '') {
     var amountNode = node.parent().next().children().first();
-    errorMsg = checkAmountField(amountNode);
+    errorMsg = tadue.form.checkAmountField(amountNode);
   }
   return errorMsg;
 };
 
-var runAllChecks = function () {
-  // Maps element id to check function.
+tadue.requestPayment.runChecks = function() {
   var checks = {};
-  $('.payer-email-field').each(function () {
-    checks['input[name="' + $(this).attr('name') + '"]'] = checkEmailAndAmountFields;
+  $('.payer-email-field').each(function() {
+    checks['input[name="' + $(this).attr('name') + '"]'] =
+      tadue.requestPayment.checkEmailAndAmountFields;
   });
-  checks['#description'] = checkDescriptionField;
+  checks['#description'] = tadue.form.checkDescriptionField;
 
-  var valid = runChecks(checks);
+  var valid = tadue.form.runChecks(checks);
   // Always run the signup and login checks to ensure that all error messages
   // stay up to date.
-  var signupChecksValid = runSignupChecks();
-  var loginChecksValid = runLoginChecks();
-  if (!LOGGED_IN) {
+  var signupChecksValid = tadue.signup.runChecks();
+  var loginChecksValid = tadue.login.runChecks();
+  if (!tadue.requestPayment.LOGGED_IN) {
     if ($('#do-signup').val() === 'true') {
       valid = signupChecksValid && valid;
     } else {
@@ -60,28 +65,21 @@ var runAllChecks = function () {
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-var runAllChecksOnEveryInputEvent = false;
-var checkRequestPaymentForm = function () {
-  if (!runAllChecksOnEveryInputEvent) {
-    runAllChecksOnEveryInputEvent = true;
-    $('input').on('input', runAllChecks);
-    $('#signup-copy-email').click(function () { runAllChecks(); });
+tadue.requestPayment.runChecksOnEveryInputEvent = false;
+tadue.requestPayment.checkForm = function() {
+  if (!tadue.requestPayment.runChecksOnEveryInputEvent) {
+    tadue.requestPayment.runChecksOnEveryInputEvent = true;
+    $('input').on('input', tadue.requestPayment.runChecks);
+    $('#signup-copy-email').click(function() {
+      tadue.requestPayment.runChecks();
+    });
   }
-  return runAllChecks();
+  return tadue.requestPayment.runChecks();
 };
 
-// Initialize the view. Handles the case where user clicked the back button.
-$('#new-user').click(showSignup);
-$('#existing-user').click(showLogin);
-if ($('#do-signup').val() === 'true') {
-  showSignup();
-} else {
-  showLogin();
-}
-
-var updateTotal = function () {
+tadue.requestPayment.updateTotal = function() {
   var total = 0;
-  $('.amount-field').each(function () {
+  $('.amount-field').each(function() {
     var val = $(this).val();
     if (val.indexOf('$') === 0) {
       val = val.substr(1);
@@ -92,38 +90,110 @@ var updateTotal = function () {
 };
 
 // Event counter, used for assigning field names.
-var addPayerEventCount = 0;
+tadue.requestPayment.addPayerEventCount = 0;
 
-// Initialize "add payer" button.
-$('#add-payer').click(function () {
-  addPayerEventCount++;
-  var new_tr = $(this).closest('tr').clone();
-  new_tr.find('input').val('');
-  new_tr.find('.error-msg').text('');
-  new_tr.find('.payer-email-field').attr('name', 'payer-email-' + addPayerEventCount);
-  var amount = new_tr.find('.amount-field');
-  amount.attr('name', 'amount-' + addPayerEventCount);
-  amount.blur(function () { updateTotal(); });
-  var icon = new_tr.find('.icon');
-  icon.addClass('remove-payer');
-  icon.removeAttr('id');
-  icon.attr('title', 'Remove payer');
-  icon.click(function () {
-    $(this).closest('tr').remove();
-    // Hide the total if there's now only one payer.
-    if ($('.icon').length === 1) {
-      $('#row-total').css('display', 'none');
-    }
-    updateTotal();
-  });
-  new_tr.insertBefore('#row-total');
-  $('#row-total').css('display', 'table-row');
+// AutoComplete input handler. Global so that we can attach inputs on demand.
+tadue.requestPayment.inputHandler = null;
 
-  if (runAllChecksOnEveryInputEvent) {
-    new_tr.find('input').on('input', runAllChecks);
-    runAllChecks();
+tadue.requestPayment.init = function() {
+  tadue.requestPayment.LOGGED_IN = document.getElementById('logged-in') !== null;
+
+  tadue.signup.init();
+  tadue.login.init();
+
+  // Handles the case where user clicked the back button.
+  $('#new-user').click(tadue.requestPayment.showSignup);
+  $('#existing-user').click(tadue.requestPayment.showLogin);
+  if ($('#do-signup').val() === 'true') {
+    tadue.requestPayment.showSignup();
+  } else {
+    tadue.requestPayment.showLogin();
   }
-});
 
-$('.amount-field').blur(function () { updateTotal(); });
-updateTotal();
+  // Initialize "add payer" button.
+  $('#add-payer').click(function() {
+    tadue.requestPayment.addPayerEventCount++;
+    var new_tr = $(this).closest('tr').clone();
+    new_tr.find('input').val('');
+    new_tr.find('.error-msg').text('');
+    var email = new_tr.find('.payer-email-field');
+    email.attr('name',
+               'payer-email-' + tadue.requestPayment.addPayerEventCount);
+    if (tadue.requestPayment.inputHandler !== null) {
+      tadue.requestPayment.inputHandler.attachInput(email.get(0));
+    }
+    var amount = new_tr.find('.amount-field');
+    amount.attr('name', 'amount-' + tadue.requestPayment.addPayerEventCount);
+    amount.blur(function() { tadue.requestPayment.updateTotal(); });
+    var icon = new_tr.find('.icon');
+    icon.addClass('remove-payer');
+    icon.removeAttr('id');
+    icon.attr('title', 'Remove this payer');
+    icon.click(function() {
+      $(this).closest('tr').remove();
+      // Hide the total if there's now only one payer.
+      if ($('.icon').length === 1) {
+        $('#row-total').css('display', 'none');
+      }
+      tadue.requestPayment.updateTotal();
+    });
+    new_tr.insertBefore('#row-total');
+    $('#row-total').css('display', 'table-row');
+
+    if (tadue.requestPayment.runChecksOnEveryInputEvent) {
+      new_tr.find('input').on('input', tadue.requestPayment.runChecks);
+      tadue.requestPayment.runChecks();
+    }
+  });
+
+  $('.amount-field').blur(function() { tadue.requestPayment.updateTotal(); });
+  tadue.requestPayment.updateTotal();
+};
+
+tadue.requestPayment.initAutoComplete = function() {
+  var request = $.ajax({
+    url: '/get-contacts',
+    type: 'POST',
+    dataType: 'json'
+  });
+  request.done(function(contacts) {
+    // Modeled after goog.ui.ac.createSimpleAutoComplete.
+    var matcher = new goog.ui.ac.ArrayMatcher(contacts, true);
+    var renderer = new goog.ui.ac.Renderer();
+    tadue.requestPayment.inputHandler =
+      new goog.ui.ac.InputHandler(null, null, false);
+    var ac = new goog.ui.ac.AutoComplete(
+      matcher, renderer, tadue.requestPayment.inputHandler);
+    tadue.requestPayment.inputHandler.attachAutoComplete(ac);
+
+    // Attach all existing email inputs.
+    $.each($('.payer-email-field').get(), function(i, v) {
+      tadue.requestPayment.inputHandler.attachInput(v);
+    });
+
+    // FIXME(sadovsky): Allow "John Doe <email>" format and eliminate this hack.
+    ac.selectionHandler_.setValue = function(value) {
+      var email = value.substring(value.indexOf('<') + 1, value.length - 1);
+      this.activeElement_.value = email;
+    };
+  });
+  request.fail(function(jqXHR, textStatus) {
+  });
+};
+
+tadue.requestPayment.openAuthCodeUrl = function() {
+  var url = $('#auth-code-url').attr('href');
+  var popup = window.open(url, '', 'width=600,height=450');
+  if (window.focus) {
+    popup.focus();
+  }
+};
+
+tadue.requestPayment.authDone = function(ok) {
+  console.log('authDone, ok=' + ok);
+  if (!ok) {
+    return;
+  }
+  $('#auth-code-url').addClass('display-none');
+  tadue.requestPayment.initAutoComplete();
+};

@@ -22,6 +22,12 @@ handlers:
 - url: /js
   static_dir: js
 
+- url: /less
+  static_dir: less
+
+- url: /third_party
+  static_dir: third_party
+
 - url: /static
   static_dir: static
 

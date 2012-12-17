@@ -14,6 +14,12 @@
   box-shadow: @value;
 }
 
+.box-sizing (@value) {
+  -moz-box-sizing: @value;
+  -webkit-box-sizing: @value;
+  box-sizing: @value;
+}
+
 .user-select (@value) {
   -moz-user-select: @value;
   -ms-user-select: @value;
@@ -37,7 +43,7 @@
   text-shadow: 1px 1px #fff;
 
   &:hover {
-    border: solid 1px darken(@bottom, 40%);
+    border: solid 1px darken(@bottom, 30%);
   }
 
   &:active {

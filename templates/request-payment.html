@@ -1,20 +1,26 @@
 {{define "request-payment-title"}}Request Payment{{end}}
 
 {{define "request-payment-css"}}
-<link type="text/css" rel="stylesheet" href="/css/form.css">
-<link type="text/css" rel="stylesheet" href="/css/request-payment.css">
+<link type="text/css" rel="stylesheet/less" href="/less/request-payment.less">
 {{end}}
 
 {{define "request-payment-js"}}
-<script type="text/javascript" src="/js/form.js"></script>
-<script type="text/javascript" src="/js/signup.js"></script>
-<script type="text/javascript" src="/js/login.js"></script>
 <script type="text/javascript" src="/js/request-payment.js"></script>
+<script type="text/javascript">tadue.requestPayment.init();</script>
+{{if .Data.doInitAutoComplete}}
+<script type="text/javascript">tadue.requestPayment.initAutoComplete();</script>
+{{end}}
 {{end}}
 
 {{define "request-payment-body"}}
 {{if .FullName}}<div id="logged-in" class="display-none"></div>{{end}}
-<form action="/request-payment" method="post" onsubmit="return checkRequestPaymentForm();">
+{{if .Data.authCodeUrl}}
+<p>
+  <a href="{{.Data.authCodeUrl}}" id="auth-code-url"
+     onclick="tadue.requestPayment.openAuthCodeUrl(); return false;">Login with Google to enable autocomplete</a>
+</p>
+{{end}}
+<form action="/request-payment" method="post" onsubmit="return tadue.requestPayment.checkForm();">
   <table class="form">
     <tr>
       <td colspan="10">

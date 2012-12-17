@@ -2,27 +2,26 @@
 
 'use strict';
 
-// Trick JSLint. These vars are defined elsewhere.
-// TODO(sadovsky): Refactor to more cleanly share common components.
-var checkEmailField, checkPasswordField, runChecks;
+goog.provide('tadue.login');
 
-// Maps element id to check function.
-var loginChecks = {};
-(function () {
-  loginChecks['#login-email'] = checkEmailField;
-  loginChecks['#login-password'] = checkPasswordField;
-}());
+goog.require('tadue.form');
 
-var runLoginChecks = function () {
-  return runChecks(loginChecks);
+tadue.login.runChecks = function() {
+  var checks = {};
+  checks['#login-email'] = tadue.form.checkEmailField;
+  checks['#login-password'] = tadue.form.checkPasswordField;
+  return tadue.form.runChecks(checks);
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-var runLoginChecksOnEveryInputEvent = false;
-var checkLoginForm = function () {
-  if (!runLoginChecksOnEveryInputEvent) {
-    runLoginChecksOnEveryInputEvent = true;
-    $('input').on('input', runLoginChecks);
+tadue.login.runChecksOnEveryInputEvent = false;
+tadue.login.checkForm = function() {
+  if (!tadue.login.runChecksOnEveryInputEvent) {
+    tadue.login.runChecksOnEveryInputEvent = true;
+    $('input').on('input', tadue.login.runChecks);
   }
-  return runLoginChecks();
+  return tadue.login.runChecks();
+};
+
+tadue.login.init = function() {
 };

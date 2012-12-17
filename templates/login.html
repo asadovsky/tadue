@@ -1,12 +1,12 @@
 {{define "login-title"}}Log In{{end}}
 
 {{define "login-css"}}
-<link type="text/css" rel="stylesheet" href="/css/form.css">
+<link type="text/css" rel="stylesheet/less" href="/less/form.less">
 {{end}}
 
 {{define "login-js"}}
-<script type="text/javascript" src="/js/form.js"></script>
 <script type="text/javascript" src="/js/login.js"></script>
+<script type="text/javascript">tadue.login.init();</script>
 {{end}}
 
 {{define "login-table"}}
@@ -33,7 +33,7 @@
 {{end}}
 
 {{define "login-body"}}
-<form action="/login" method="post" onsubmit="return checkLoginForm();">
+<form action="/login" method="post" onsubmit="return tadue.login.checkForm();">
   <input type="hidden" name="target" value="{{.Data.target}}">
   <table class="form">
     {{template "login-table"}}

@@ -1,5 +1,8 @@
+misc/config_dev.go.txt
+misc/config_local.go.txt
+misc/config_prod.go.txt
 tadue/config.go
-tadue/config_dev.go.txt
-tadue/config_local.go.txt
-tadue/config_prod.go.txt
-misc/appcfg_update.sh
+tools/appcfg_update.sh
+
+code.google.com/p/goauth2/
+third_party/closure-library/

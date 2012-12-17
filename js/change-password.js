@@ -2,40 +2,34 @@
 
 'use strict';
 
-// Trick JSLint. These vars are defined elsewhere.
-// TODO(sadovsky): Refactor to more cleanly share common components.
-var checkPasswordField, checkConfirmPasswordField, runChecks;
+goog.provide('tadue.changePassword');
 
-// If true, the current-password field will be missing and should not be
-// checked.
-var isPasswordResetRequest = $('#key').length === 1;
+goog.require('tadue.form');
 
-// Maps element id to check function.
-var checks = {};
-(function () {
-  if (!isPasswordResetRequest) {
-    checks['#current-password'] = checkPasswordField;
+tadue.changePassword.runChecks = function() {
+  var checks = {};
+  if (document.getElementById('current-password') !== null) {
+    checks['#current-password'] = tadue.form.checkPasswordField;
   }
-  checks['#new-password'] = checkPasswordField;
+  checks['#new-password'] = tadue.form.checkPasswordField;
 
-  var checkConfirmPasswordFieldClosure = function (node) {
-    return checkConfirmPasswordField(node, '#new-password');
+  var checkConfirmPasswordFieldClosure = function(node) {
+    return tadue.form.checkConfirmPasswordField(node, '#new-password');
   };
   checks['#confirm-password'] = checkConfirmPasswordFieldClosure;
-}());
 
-var shouldRunAllChecks = false;
-var maybeRunAllChecks = function () {
-  if (shouldRunAllChecks) {
-    return runChecks(checks);
-  }
-  return true;
+  return tadue.form.runChecks(checks);
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-var checkForm = function () {
-  shouldRunAllChecks = true;
-  return maybeRunAllChecks();
+tadue.changePassword.runChecksOnEveryInputEvent = false;
+tadue.changePassword.checkForm = function() {
+  if (!tadue.changePassword.runChecksOnEveryInputEvent) {
+    tadue.changePassword.runChecksOnEveryInputEvent = true;
+    $('input').on('input', tadue.changePassword.runChecks);
+  }
+  return tadue.changePassword.runChecks();
 };
 
-$('input').on('input', maybeRunAllChecks);
+tadue.changePassword.init = function() {
+};

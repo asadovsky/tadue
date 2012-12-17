@@ -1,12 +1,12 @@
 {{define "signup-title"}}Sign Up{{end}}
 
 {{define "signup-css"}}
-<link type="text/css" rel="stylesheet" href="/css/form.css">
+<link type="text/css" rel="stylesheet/less" href="/less/form.less">
 {{end}}
 
 {{define "signup-js"}}
-<script type="text/javascript" src="/js/form.js"></script>
 <script type="text/javascript" src="/js/signup.js"></script>
+<script type="text/javascript">tadue.signup.init();</script>
 {{end}}
 
 {{define "signup-table"}}
@@ -55,7 +55,7 @@
 {{end}}
 
 {{define "signup-body"}}
-<form action="#" method="post" onsubmit="return checkSignupForm();">
+<form action="#" method="post" onsubmit="return tadue.signup.checkForm();">
   <table class="form">
     {{template "signup-table"}}
     <tr>
