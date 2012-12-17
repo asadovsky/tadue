@@ -19,6 +19,7 @@ import (
 	"appengine/datastore"
 	"appengine/mail"
 	"appengine/taskqueue"
+	"appengine/urlfetch"
 	"code.google.com/p/goauth2/oauth"
 )
 
@@ -549,13 +550,11 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 					CheckError(err)
 				}
 				// User has not done the OAuth dance.
-				authCodeUrl = GoogleAuthCodeURL("")
+				authCodeUrl = GoogleMakeConfig(nil).AuthCodeURL("")
 			} else {
 				doInitAutoComplete = true
 			}
 		}
-		// FIXME(sadovsky): Remove this once the "permission denied" bug is fixed.
-		authCodeUrl = ""
 		data := map[string]interface{}{
 			"authCodeUrl":        authCodeUrl,
 			"doInitAutoComplete": doInitAutoComplete,
@@ -659,7 +658,12 @@ func handleOAuthCallback(w http.ResponseWriter, r *http.Request, c *Context) {
 		Context: c,
 		Service: "google",
 	}
-	err := GoogleExchange(code, tc)
+	// NOTE(sadovsky): GAE requires us to set Transport below.
+	transport := &oauth.Transport{
+		Config:    GoogleMakeConfig(tc),
+		Transport: &urlfetch.Transport{Context: c.Aec()},
+	}
+	_, err := transport.Exchange(code)
 	CheckError(err)
 	RenderTemplateOrDie(w, "close-oauth.html", map[string]interface{}{"ok": true})
 }
@@ -675,9 +679,18 @@ func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
 		Context: c,
 		Service: "google",
 	}
+	// NOTE(sadovsky): GAE requires us to set Transport below.
+	transport := &oauth.Transport{
+		Config:    GoogleMakeConfig(tc),
+		Transport: &urlfetch.Transport{Context: c.Aec()},
+	}
+	apiResponse, err := transport.Client().Get(GOOGLE_API_REQUEST)
 	// TODO(sadovsky): Handle OAuth error.
-	contacts, err := GoogleRequestContacts(tc)
 	CheckError(err)
+	defer apiResponse.Body.Close()
+	contacts, err := GoogleParseContacts(apiResponse.Body)
+	CheckError(err)
+
 	c.Aec().Debugf("Parsed %d contacts", len(contacts))
 	w.Header().Set("Content-Type", "application/json")
 	t := text_template.Must(text_template.New("").Parse(
@@ -1267,7 +1280,8 @@ func init() {
 	// Request payment.
 	http.HandleFunc("/request-payment", WrapHandler(handleRequestPayment))
 	http.HandleFunc("/oauth2callback", WrapHandler(handleOAuthCallback))
-	http.HandleFunc("/get-contacts", WrapHandler(handleGetContacts))
+	// NOTE(sadovsky): ParseForm fails with error "mime: no media type".
+	http.HandleFunc("/get-contacts", WrapHandlerNoParseForm(handleGetContacts))
 	// Pay.
 	http.HandleFunc("/pay", WrapHandler(handlePay))
 	http.HandleFunc("/pay/done", WrapHandler(handlePayDone))

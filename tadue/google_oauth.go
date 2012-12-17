@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	SCOPE       = "https://www.googleapis.com/auth/userinfo.profile https://www.google.com/m8/feeds"
-	AUTH_URL    = "https://accounts.google.com/o/oauth2/auth"
-	TOKEN_URL   = "https://accounts.google.com/o/oauth2/token"
-	API_REQUEST = "https://www.google.com/m8/feeds/contacts/default/full?max-results=10000&alt=json"
+	SCOPE     = "https://www.googleapis.com/auth/userinfo.profile https://www.google.com/m8/feeds"
+	AUTH_URL  = "https://accounts.google.com/o/oauth2/auth"
+	TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
+
+	GOOGLE_API_REQUEST = "https://www.google.com/m8/feeds/contacts/default/full?max-results=10000&alt=json"
 )
 
-////////////////////////////////////////
-// Contact parsing
+// TODO(sadovsky): Make these structs private.
 
 type IdType struct {
 	Email string `json:"$t"`
@@ -48,12 +48,15 @@ type ResponseType struct {
 	Feed FeedType
 }
 
+////////////////////////////////////////
+// Interface
+
 type Contact struct {
 	Name  string
 	Email string
 }
 
-func parseContacts(r io.Reader) ([]*Contact, error) {
+func GoogleParseContacts(r io.Reader) ([]*Contact, error) {
 	var response ResponseType
 	d := json.NewDecoder(r)
 	if err := d.Decode(&response); err != nil {
@@ -81,7 +84,7 @@ func parseContacts(r io.Reader) ([]*Contact, error) {
 
 // NOTE(sadovsky): We set ApprovalPrompt to "force" so that we can easily
 // recover from losing a refresh token.
-func makeConfig(tokenCache oauth.Cache) *oauth.Config {
+func GoogleMakeConfig(tokenCache oauth.Cache) *oauth.Config {
 	return &oauth.Config{
 		ClientId:       kGoogleClientId,
 		ClientSecret:   kGoogleClientSecret,
@@ -93,27 +96,4 @@ func makeConfig(tokenCache oauth.Cache) *oauth.Config {
 		AccessType:     "offline",
 		ApprovalPrompt: "force",
 	}
-}
-
-////////////////////////////////////////
-// Interface
-
-func GoogleAuthCodeURL(state string) string {
-	return makeConfig(nil).AuthCodeURL(state)
-}
-
-func GoogleExchange(code string, tokenCache oauth.Cache) error {
-	t := &oauth.Transport{Config: makeConfig(tokenCache)}
-	_, err := t.Exchange(code)
-	return err
-}
-
-func GoogleRequestContacts(tokenCache oauth.Cache) ([]*Contact, error) {
-	t := &oauth.Transport{Config: makeConfig(tokenCache)}
-	apiResponse, err := t.Client().Get(API_REQUEST)
-	if err != nil {
-		return nil, err
-	}
-	defer apiResponse.Body.Close()
-	return parseContacts(apiResponse.Body)
 }
