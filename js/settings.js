@@ -14,7 +14,7 @@ tadue.settings.runChecks = function() {
 };
 
 // Run checks when button is pressed, and on every input event thereafter.
-tadue.settings.runChecksOnEveryInputEvent = false
+tadue.settings.runChecksOnEveryInputEvent = false;
 tadue.settings.checkForm = function() {
   if (!tadue.settings.runChecksOnEveryInputEvent) {
     tadue.settings.runChecksOnEveryInputEvent = true;

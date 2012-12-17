@@ -12,10 +12,6 @@ goog.require('tadue.form');
 goog.require('tadue.login');
 goog.require('tadue.signup');
 
-// If true, the signup/login part of the form will be hidden and should not be
-// checked.
-tadue.requestPayment.LOGGED_IN = null;
-
 tadue.requestPayment.showSignup = function() {
   $('#signup-box').css('display', 'block');
   $('#login-box').css('display', 'none');
@@ -54,7 +50,8 @@ tadue.requestPayment.runChecks = function() {
   // stay up to date.
   var signupChecksValid = tadue.signup.runChecks();
   var loginChecksValid = tadue.login.runChecks();
-  if (!tadue.requestPayment.LOGGED_IN) {
+  // If not logged in, check signup/login part of the form.
+  if (document.getElementById('logged-in') === null) {
     if ($('#do-signup').val() === 'true') {
       valid = signupChecksValid && valid;
     } else {
@@ -96,8 +93,6 @@ tadue.requestPayment.addPayerEventCount = 0;
 tadue.requestPayment.inputHandler = null;
 
 tadue.requestPayment.init = function() {
-  tadue.requestPayment.LOGGED_IN = document.getElementById('logged-in') !== null;
-
   tadue.signup.init();
   tadue.login.init();
 
