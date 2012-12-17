@@ -554,6 +554,8 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 				doInitAutoComplete = true
 			}
 		}
+		// FIXME(sadovsky): Remove this once the "permission denied" bug is fixed.
+		authCodeUrl = ""
 		data := map[string]interface{}{
 			"authCodeUrl":        authCodeUrl,
 			"doInitAutoComplete": doInitAutoComplete,

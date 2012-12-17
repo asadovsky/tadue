@@ -185,7 +185,6 @@ tadue.requestPayment.openAuthCodeUrl = function() {
 };
 
 tadue.requestPayment.authDone = function(ok) {
-  console.log('authDone, ok=' + ok);
   if (!ok) {
     return;
   }
