@@ -94,7 +94,7 @@ var makePlus = function(ctx, startX, color) {
 
 var X_WIDTH = 9;
 var X_LINE_WIDTH = 2;
-var X_COLOR = '#888';
+var X_COLOR = '#777';
 
 var makeX = function(ctx) {
   ctx.strokeStyle = X_COLOR;
@@ -112,27 +112,21 @@ var LIGHT_GRAY = '#ddd';
 var BLACK = '#000';
 
 var drawIcons = function() {
-  var ctx = initCanvas('#plus', 2 * DIAMETER, DIAMETER);
+  var ctx = initCanvas('#plus', DIAMETER, DIAMETER);
   makePlus(ctx, 0, PURPLE);
-  makePlus(ctx, DIAMETER, BLACK);
-  /*
-    makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
-    makePlus(ctx, DIAMETER, PURPLE);
-    makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
-    makePlus(ctx, 2 * DIAMETER, BLACK);
-  */
   makeImage('#plus', '#iplus');
 
-  ctx = initCanvas('#minus', 2 * DIAMETER, DIAMETER);
+  ctx = initCanvas('#plus-active', DIAMETER, DIAMETER);
+  makePlus(ctx, 0, BLACK);
+  makeImage('#plus-active', '#iplus-active');
+
+  ctx = initCanvas('#minus', DIAMETER, DIAMETER);
   makeMinus(ctx, 0, PURPLE);
-  makeMinus(ctx, DIAMETER, BLACK);
-  /*
-    makeCircle(ctx, DIAMETER, LIGHT_GRAY, 0);
-    makeMinus(ctx, DIAMETER, PURPLE);
-    makeCircle(ctx, 2 * DIAMETER, LIGHT_GRAY, 0);
-    makeMinus(ctx, 2 * DIAMETER, BLACK);
-  */
   makeImage('#minus', '#iminus');
+
+  ctx = initCanvas('#minus-active', DIAMETER, DIAMETER);
+  makeMinus(ctx, 0, BLACK);
+  makeImage('#minus-active', '#iminus-active');
 
   ctx = initCanvas('#close', X_WIDTH, X_WIDTH);
   makeX(ctx);

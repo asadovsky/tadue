@@ -12,7 +12,6 @@ p1 other
 - Switch from securecookie submodule to copy
 - If ajax request is slow, show "loading" message
 - Time zone
-- Switch to data url for add/remove images
 
 p2 features
 - Fill in "about" page

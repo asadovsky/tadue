@@ -750,12 +750,15 @@ type RenderablePayRequest struct {
 	CreationDate string
 }
 
-func renderDate(date time.Time) string {
+func renderDate(t time.Time) string {
 	// TODO(sadovsky): For now, we always use Pacific time.
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	CheckError(err)
-	// return date.In(loc).Format("Jan 2 15:04:05")
-	return date.In(loc).Format("Jan 2")
+	if t.Equal(time.Unix(0, 0)) {
+		loc = time.UTC
+	}
+	// return t.In(loc).Format("Jan 2 15:04:05")
+	return t.In(loc).Format("Jan 2")
 }
 
 func renderAmount(amount float32) string {
@@ -1209,13 +1212,17 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	}
 
 	renderValue := func(value interface{}) string {
-		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
-		// If value is a time, render it in Pacific time.
+		// If value is a timestamp and it's not the Unix epoch, render it in Pacific
+		// time.
 		if t, ok := value.(time.Time); ok {
 			loc, err := time.LoadLocation("America/Los_Angeles")
 			CheckError(err)
-			res = fmt.Sprintf("%v", t.In(loc))
+			if t.Equal(time.Unix(0, 0)) {
+				loc = time.UTC
+			}
+			return fmt.Sprintf("%v", t.In(loc))
 		}
+		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
 		return res[1 : len(res)-1] // strip quotes
 	}
 
