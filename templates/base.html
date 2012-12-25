@@ -31,11 +31,11 @@
         </ul>
       </div>
     </div>
-    {{if .Data.Message}}
-    <div id="message"><div id="close-message"></div>{{.Data.Message}}</div>
-    {{end}}
-    {{if .Data.Title}}<div id="title">{{.Data.Title}}</div>{{end}}
     <div id="body">
+      {{if .Data.Message}}
+      <div id="message"><div id="close-message"></div>{{.Data.Message}}</div>
+      {{end}}
+      {{if .Data.Title}}<div id="title">{{.Data.Title}}</div>{{end}}
       {{.Data.Body}}
     </div>
     <div id="bottom-nav-begin"></div>

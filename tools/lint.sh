@@ -6,6 +6,7 @@ set -e
 set -u
 
 SRC="/Users/asadovsky/active/dev/tadue"
+cd $SRC
 
 # Update deps.
 $SRC/third_party/closure-library/closure/bin/build/depswriter.py --root_with_prefix='js ../../../../js' > $SRC/js/deps.js

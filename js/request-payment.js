@@ -116,6 +116,7 @@ tadue.requestPayment.init = function() {
                'payer-email-' + tadue.requestPayment.addPayerEventCount);
     if (tadue.requestPayment.inputHandler !== null) {
       tadue.requestPayment.inputHandler.attachInput(email.get(0));
+      email.attr('autocomplete', 'off');
     }
     var amount = new_tr.find('.amount-field');
     amount.attr('name', 'amount-' + tadue.requestPayment.addPayerEventCount);
@@ -164,6 +165,7 @@ tadue.requestPayment.initAutoComplete = function() {
     // Attach all existing email inputs.
     $.each($('.payer-email-field').get(), function(i, v) {
       tadue.requestPayment.inputHandler.attachInput(v);
+      $(this).attr('autocomplete', 'off');
     });
 
     // FIXME(sadovsky): Allow "John Doe <email>" format and eliminate this hack.
