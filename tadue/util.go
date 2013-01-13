@@ -17,44 +17,23 @@ import (
 	"securecookie"
 )
 
-// Data passed to Execute() for any template.
-// For "base.html", Data will be a *PageData. In all other cases, it will be
-// handler-supplied data.
-type RenderData struct {
-	FullName string // if non-empty, user is logged in
-	Data     interface{}
-}
-
 type PageData struct {
-	Message string
-	Title   template.HTML
-	Css     template.HTML
-	Body    template.HTML
-	Js      template.HTML
-}
-
-type ErrorWithStackTrace struct {
-	Stack []byte // from debug.Stack()
-	Err   error
-}
-
-func (e *ErrorWithStackTrace) Error() string {
-	if kPrintStackTrace {
-		return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
-	}
-	return fmt.Sprint(e.Err)
+	FullName string
+	Message  string
+	Title    template.HTML
+	Css      template.HTML
+	Body     template.HTML
+	Js       template.HTML
 }
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))
 var text_tmpl = text_template.Must(text_template.ParseGlob("templates/*.txt"))
 
-func makePageData(name string, data *RenderData) (*PageData, error) {
-	pd := &PageData{}
-
+func fillPageData(name string, data interface{}, pd *PageData) error {
 	// Body is required, unlike title, css, and js.
 	html, err := ExecuteTemplate(name+"-body", data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	pd.Body = html
 
@@ -63,28 +42,24 @@ func makePageData(name string, data *RenderData) (*PageData, error) {
 		if tmpl.Lookup(fullName) == nil {
 			return nil
 		}
-		html, err = ExecuteTemplate(fullName, data)
-		if err != nil {
+		if html, err = ExecuteTemplate(fullName, data); err != nil {
 			return err
 		}
 		*field = html
 		return nil
 	}
 
-	err = maybeExecuteSubTemplate("title", &pd.Title)
-	if err != nil {
-		return nil, err
+	if err = maybeExecuteSubTemplate("title", &pd.Title); err != nil {
+		return err
 	}
-	err = maybeExecuteSubTemplate("css", &pd.Css)
-	if err != nil {
-		return nil, err
+	if err = maybeExecuteSubTemplate("css", &pd.Css); err != nil {
+		return err
 	}
-	err = maybeExecuteSubTemplate("js", &pd.Js)
-	if err != nil {
-		return nil, err
+	if err = maybeExecuteSubTemplate("js", &pd.Js); err != nil {
+		return err
 	}
 
-	return pd, nil
+	return nil
 }
 
 func setContentTypeUtf8(w http.ResponseWriter) {
@@ -102,17 +77,16 @@ func RenderPageOrDie(w http.ResponseWriter, c *Context, name string, data interf
 		fullName = c.Session().FullName
 	}
 
-	rd := &RenderData{FullName: fullName, Data: data}
-	pd, err := makePageData(name, rd)
-	if err != nil {
+	pd := &PageData{}
+	if err := fillPageData(name, data, pd); err != nil {
 		ServeError(w, err)
 		return
 	}
+	pd.FullName = fullName
 	pd.Message = c.Flash()
-	rd.Data = pd
 
 	setContentTypeUtf8(w)
-	if err = tmpl.ExecuteTemplate(w, "base.html", rd); err != nil {
+	if err := tmpl.ExecuteTemplate(w, "base.html", pd); err != nil {
 		ServeError(w, err)
 	}
 }
@@ -195,26 +169,16 @@ func WrapHandlerNoParseForm(fn AppHandlerFunc) http.HandlerFunc {
 	return WrapHandlerImpl(fn, false)
 }
 
-func PlaceholderHandler(name string) http.HandlerFunc {
-	handler := func(w http.ResponseWriter, r *http.Request, c *Context) {
-		if r.Method != "GET" {
-			Serve404(w)
-			return
-		}
-		RenderPageOrDie(w, c, "text", name)
-	}
-	return WrapHandler(handler)
+type ErrorWithStackTrace struct {
+	Stack []byte // from debug.Stack()
+	Err   error
 }
 
-func DefaultHandler(name string) http.HandlerFunc {
-	handler := func(w http.ResponseWriter, r *http.Request, c *Context) {
-		if r.Method != "GET" {
-			Serve404(w)
-			return
-		}
-		RenderPageOrDie(w, c, name, nil)
+func (e *ErrorWithStackTrace) Error() string {
+	if kPrintStackTrace {
+		return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
 	}
-	return WrapHandler(handler)
+	return fmt.Sprint(e.Err)
 }
 
 func CheckError(err error) {

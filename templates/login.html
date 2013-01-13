@@ -34,7 +34,7 @@
 
 {{define "login-body"}}
 <form action="/login" method="post" onsubmit="return tadue.login.checkForm();">
-  <input type="hidden" name="target" value="{{.Data.target}}">
+  <input type="hidden" name="target" value="{{.target}}">
   <table class="form">
     {{template "login-table"}}
     <tr>

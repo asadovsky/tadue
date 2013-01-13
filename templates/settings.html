@@ -14,7 +14,7 @@
   <table class="form">
     <tr>
       <td class="col-label">Email</td>
-      <td class="col-input">{{.Data.email}}</td>
+      <td class="col-input">{{.email}}</td>
     </tr>
     <tr>
       <td class="col-label">Password</td>
@@ -25,7 +25,7 @@
     <tr>
       <td class="col-label">Full name</td>
       <td class="col-input">
-        <input type="text" class="field" name="name" id="name" value="{{.Data.fullName}}">
+        <input type="text" class="field" name="name" id="name" value="{{.fullName}}">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>
@@ -33,7 +33,7 @@
       <td class="col-label">PayPal email</td>
       <td class="col-input">
         <input type="text" class="field" name="paypal-email" id="paypal-email"
-               value="{{.Data.payPalEmail}}">
+               value="{{.payPalEmail}}">
       </td>
       <td><span class="error-msg"></span></td>
     </tr>

@@ -568,6 +568,7 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 			}
 		}
 		data := map[string]interface{}{
+			"loggedIn":           c.LoggedIn(),
 			"authCodeUrl":        authCodeUrl,
 			"doInitAutoComplete": doInitAutoComplete,
 		}

@@ -11,16 +11,16 @@
 
 {{define "payments-body"}}
 <div id="top-msg">
-  {{if .Data.isNew}}
+  {{if .isNew}}
   <div class="note-info">
     Thanks for signing up!
     <br>Before you can send payment requests, you'll need to verify your email address.
-    <br>A verification link has been sent to {{.Data.user.Email}}.
+    <br>A verification link has been sent to {{.user.Email}}.
   </div>
   {{else}}
-  {{if not .Data.user.EmailOk}}
+  {{if not .user.EmailOk}}
   <div class="note-warning">
-    Your email address ({{.Data.user.Email}}) has not been verified.
+    Your email address ({{.user.Email}}) has not been verified.
     <br>If you have not received an email containing a verification link, <a href="/account/sendverif">click here</a> to request a new one.
   </div>
   {{end}}
@@ -32,8 +32,8 @@
   <input type="button" class="action-button" id="delete" value="Delete">
   <span id="undo">Undo</span>
 </div>
-{{template "payments-data" .Data}}
-<p>Note: Tadue sends reminder emails automatically every {{.Data.reminderFrequency}} days.</p>
+{{template "payments-data" .}}
+<p>Note: Tadue sends reminder emails automatically every {{.reminderFrequency}} days.</p>
 {{end}}
 
 {{define "payments-data"}}

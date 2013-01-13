@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>{{if .Data.Title}}{{.Data.Title}} - {{end}}Tadue</title>
+    <title>{{if .Title}}{{.Title}} - {{end}}Tadue</title>
     <link type="text/css" rel="stylesheet/less" href="/less/common.less">
-    {{.Data.Css}}
+    {{.Css}}
     <script type="text/javascript" src="/third_party/less-1.3.1.min.js"></script>
     <!--<script type="text/javascript" src="/js/ga.js"></script>-->
   </head>
@@ -32,11 +32,11 @@
       </div>
     </div>
     <div id="body">
-      {{if .Data.Message}}
-      <div id="message"><div id="close-message"></div>{{.Data.Message}}</div>
+      {{if .Message}}
+      <div id="message"><div id="close-message"></div>{{.Message}}</div>
       {{end}}
-      {{if .Data.Title}}<div id="title">{{.Data.Title}}</div>{{end}}
-      {{.Data.Body}}
+      {{if .Title}}<div id="title">{{.Title}}</div>{{end}}
+      {{.Body}}
     </div>
     <div id="bottom-nav-begin"></div>
     <div id="bottom-nav">
@@ -64,6 +64,6 @@
     <script type="text/javascript" src="/js/deps.js"></script>
     <script type="text/javascript" src="/js/base.js"></script>
     <script type="text/javascript">tadue.base.init();</script>
-    {{.Data.Js}}
+    {{.Js}}
   </body>
 </html>
