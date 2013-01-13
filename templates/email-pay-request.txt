@@ -1,0 +1,20 @@
+Hello {{.payerEmail}},
+{{if .isReminder}}
+This is a reminder that {{.payeeFullName}} ({{.payeeEmail}}) requested {{.amount}} from you via Tadue.
+
+Description: {{.description}}
+
+This request was made on {{.creationDate}}.
+{{else}}
+{{.payeeFullName}} ({{.payeeEmail}}) has requested {{.amount}} from you via Tadue.
+
+Description: {{.description}}
+{{end}}
+To make your payment, click on the link below (or copy and paste it into your browser):
+{{.payUrl}}
+
+Once you make this payment, Tadue will stop sending you reminder emails. If you've already paid through some other means, click on the link below to mark the payment as complete:
+{{.markAsPaidUrl}}
+
+Thanks,
+The Tadue Team

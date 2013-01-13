@@ -15,8 +15,8 @@ https://developers.google.com/closure/library/docs/depswriter
 https://developers.google.com/closure/compiler/docs/api-tutorial3
 
 Diff:
-git difftool -t tkdiff -y
-git difftool -t opendiff -y
+git difftool -t tkdiff -y HEAD
+git difftool -t opendiff -y HEAD
 
 Add securecookie submodule:
 git submodule add git://github.com/gorilla/securecookie.git securecookie

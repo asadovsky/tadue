@@ -1,0 +1,16 @@
+Hello {{.payeeFullName}},
+
+We're writing to let you know that {{.payerEmail}} has claimed to have paid you.
+
+Amount: {{.amount}}
+Description: {{.description}}
+
+Since they did not pay you via the link we sent them, we cannot verify this claim.
+
+If you take no action, the payment request will be marked as paid, and Tadue will not send any more emails about this payment request.
+
+To check on your payment requests, visit your payments page:
+{{.paymentsUrl}}
+
+Thanks,
+The Tadue Team

@@ -7,6 +7,7 @@
 {{define "pay-body"}}
 <p>{{.Data.payerEmail}}, you owe {{.Data.payeeFullName}} ({{.Data.payeeEmail}}) {{.Data.amount}}.</p>
 <p>Description: {{.Data.description}}</p>
+<p>If you've already paid through some other means, <a href="{{.Data.markAsPaidUrl}}">click here</a> to mark the payment as complete.</p>
 <div id="paypal-button">
   <a href="{{.Data.payWithPayPalUrl}}">
     <img src="/static/pay_with_paypal.gif">

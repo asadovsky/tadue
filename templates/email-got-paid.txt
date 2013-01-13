@@ -1,0 +1,12 @@
+Hello {{.payeeFullName}},
+
+We're happy to let you know that {{.payerEmail}} has paid you.
+
+Amount: {{.amount}}
+Description: {{.description}}
+
+To check on your payment requests, visit your payments page:
+{{.paymentsUrl}}
+
+Thanks,
+The Tadue Team

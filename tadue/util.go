@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"runtime/debug"
+	text_template "text/template"
 
 	"appengine"
 	"securecookie"
@@ -45,6 +46,7 @@ func (e *ErrorWithStackTrace) Error() string {
 }
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))
+var text_tmpl = text_template.Must(text_template.ParseGlob("templates/*.txt"))
 
 func makePageData(name string, data *RenderData) (*PageData, error) {
 	pd := &PageData{}
@@ -122,14 +124,22 @@ func RenderTemplateOrDie(w http.ResponseWriter, name string, data interface{}) {
 	}
 }
 
-// If returned error is not nil, it is guaranteed to have type template.Error.
+// If the returned error is not nil, it is guaranteed to have type
+// template.Error.
 func ExecuteTemplate(name string, data interface{}) (template.HTML, error) {
 	buf := &bytes.Buffer{}
-	err := tmpl.ExecuteTemplate(buf, name, data)
-	if err != nil {
+	if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
 		return "", err
 	}
 	return template.HTML(buf.String()), nil
+}
+
+func ExecuteTextTemplate(name string, data interface{}) (string, error) {
+	buf := &bytes.Buffer{}
+	if err := text_tmpl.ExecuteTemplate(buf, name, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func ServeInfo(w http.ResponseWriter, info string) {

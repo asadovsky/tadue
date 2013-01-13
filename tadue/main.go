@@ -28,8 +28,12 @@ func prependHost(url string, c *Context) string {
 	return fmt.Sprintf("http://%s%s", AppHostname(c), url)
 }
 
-func makePayUrl(reqCode string) string {
-	return fmt.Sprintf("/pay?reqCode=%s", reqCode)
+func makePayUrl(reqCode, method string) string {
+	res := fmt.Sprintf("/pay?reqCode=%s", reqCode)
+	if method != "" {
+		res = fmt.Sprintf("%s&method=%s", res, method)
+	}
+	return res
 }
 
 func makeWrongPasswordError(email string) error {
@@ -270,16 +274,16 @@ func doInitiateResetPassword(email string, c *Context) error {
 		"email":    user.Email,
 		"resetUrl": resetUrl,
 	}
-	body, err := ExecuteTemplate("email-reset-password.html", data)
+	body, err := ExecuteTextTemplate("email-reset-password.txt", data)
 	if err != nil {
 		return err
 	}
 
 	msg := &mail.Message{
-		Sender:   "Tadue <noreply@tadue.com>",
-		To:       []string{user.Email},
-		Subject:  "Reset your Tadue password",
-		HTMLBody: string(body),
+		Sender:  "Tadue <noreply@tadue.com>",
+		To:      []string{user.Email},
+		Subject: "Reset your Tadue password",
+		Body:    body,
 	}
 	return mail.Send(c.Aec(), msg)
 }
@@ -302,16 +306,16 @@ func doInitiateVerifyEmail(c *Context) error {
 		"fullName": c.Session().FullName,
 		"verifUrl": verifUrl,
 	}
-	body, err := ExecuteTemplate("email-verif.html", data)
+	body, err := ExecuteTextTemplate("email-verif.txt", data)
 	if err != nil {
 		return err
 	}
 
 	msg := &mail.Message{
-		Sender:   "Tadue <noreply@tadue.com>",
-		To:       []string{c.Session().Email},
-		Subject:  "Welcome to Tadue",
-		HTMLBody: string(body),
+		Sender:  "Tadue <noreply@tadue.com>",
+		To:      []string{c.Session().Email},
+		Subject: "Welcome to Tadue",
+		Body:    body,
 	}
 	return mail.Send(c.Aec(), msg)
 }
@@ -328,11 +332,12 @@ func doEnqueuePayRequestEmails(reqCodes []string, c *Context) error {
 	return err
 }
 
-func doEnqueueGotPaidEmail(reqCode string, c *Context) error {
-	c.Aec().Infof("Enqueuing got paid email for reqCode: %v", reqCode)
+func doEnqueuePaymentDoneEmail(reqCode, method string, c *Context) error {
+	c.Aec().Infof("Enqueuing payment done email for reqCode=%q, method=%q", reqCode, method)
 	v := url.Values{}
 	v.Set("reqCode", reqCode)
-	t := taskqueue.NewPOSTTask("/tasks/send-got-paid-email", v)
+	v.Set("method", method)
+	t := taskqueue.NewPOSTTask("/tasks/send-payment-done-email", v)
 	_, err := taskqueue.Add(c.Aec(), t, "")
 	return err
 }
@@ -485,7 +490,7 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(err)
 
 	if shouldSendEmail {
-		CheckError(doEnqueueGotPaidEmail(reqCode, c))
+		CheckError(doEnqueuePaymentDoneEmail(reqCode, "paypal", c))
 	}
 }
 
@@ -496,7 +501,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(err)
 
 	method := r.FormValue("method")
-	Assert(method == "" || method == "paypal", "Invalid method: %q", method)
+	Assert(method == "" || method == "offline" || method == "paypal", "Invalid method: %q", method)
 
 	// TODO(sadovsky): Cache PayRequest and User lookups so that multiple loads of
 	// this page (e.g. first with method="", then with method="paypal") don't all
@@ -521,9 +526,16 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 			"payeeFullName":    payee.FullName,
 			"amount":           renderAmount(req.Amount),
 			"description":      req.Description,
-			"payWithPayPalUrl": fmt.Sprintf("%s&method=paypal", r.URL.String()),
+			"markAsPaidUrl":    makePayUrl(reqCode, "offline"),
+			"payWithPayPalUrl": makePayUrl(reqCode, "paypal"),
 		}
 		RenderPageOrDie(w, c, "pay", data)
+	} else if method == "offline" {
+		_, err := doMarkAsPaid([]string{reqCode}, false, false, c)
+		CheckError(err)
+		err = doEnqueuePaymentDoneEmail(reqCode, method, c)
+		CheckError(err)
+		RedirectWithMessage(w, r, "/", "Payment marked as complete. Thanks for using Tadue!")
 	} else { // method == "paypal"
 		// According to the PayPal documentation, the pay key is only valid for
 		// three hours, so we must request it when the payer arrives.
@@ -795,7 +807,7 @@ func getRecentPayRequestsOrDie(
 	for i, pr := range reqs {
 		rpr := &rendReqs[i]
 		rpr.ReqCode = reqKeys[i].Encode()
-		rpr.PayUrl = makePayUrl(rpr.ReqCode)
+		rpr.PayUrl = makePayUrl(rpr.ReqCode, "")
 		rpr.PayerEmail = pr.PayerEmail
 		rpr.Amount = renderAmount(pr.Amount)
 		rpr.Description = pr.Description
@@ -856,15 +868,7 @@ func renderRecentRequests(
 	RenderTemplateOrDie(w, "payments-data", data)
 }
 
-func handleMarkAsPaid(w http.ResponseWriter, r *http.Request, c *Context) {
-	// Note similarity to handleDelete().
-	if r.Method != "POST" {
-		Serve404(w)
-		return
-	}
-	c.AssertLoggedIn()
-	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
-	undo := r.Form["undo"] != nil
+func doMarkAsPaid(reqCodes []string, undo, checkUser bool, c *Context) ([]string, error) {
 	updateFn := func(reqCode string, req *PayRequest) bool {
 		if undo {
 			Assert(req.IsPaid, reqCode)
@@ -879,7 +883,19 @@ func handleMarkAsPaid(w http.ResponseWriter, r *http.Request, c *Context) {
 		}
 		return true
 	}
-	undoableReqCodes, err := updatePayRequests(reqCodes, updateFn, true, c)
+	return updatePayRequests(reqCodes, updateFn, checkUser, c)
+}
+
+func handleMarkAsPaid(w http.ResponseWriter, r *http.Request, c *Context) {
+	// Note similarity to handleDelete().
+	if r.Method != "POST" {
+		Serve404(w)
+		return
+	}
+	c.AssertLoggedIn()
+	reqCodes := strings.Split(r.FormValue("reqCodes"), ",")
+	undo := r.Form["undo"] != nil
+	undoableReqCodes, err := doMarkAsPaid(reqCodes, undo, true, c)
 	CheckError(err)
 	renderRecentRequests(w, undoableReqCodes, []string{}, c)
 }
@@ -1104,11 +1120,12 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 			"payeeFullName": payee.FullName,
 			"amount":        renderAmount(req.Amount),
 			"description":   req.Description,
-			"payUrl":        prependHost(makePayUrl(reqCode), c),
+			"markAsPaidUrl": prependHost(makePayUrl(reqCode, "offline"), c),
+			"payUrl":        prependHost(makePayUrl(reqCode, ""), c),
 			"isReminder":    isReminder,
 			"creationDate":  renderDate(req.CreationDate),
 		}
-		body, err := ExecuteTemplate("email-pay-request.html", data)
+		body, err := ExecuteTextTemplate("email-pay-request.txt", data)
 		CheckError(err)
 
 		var subject string
@@ -1120,11 +1137,11 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 		subject += fmt.Sprintf(" request from %s", template.HTMLEscapeString(payee.FullName))
 
 		msg := &mail.Message{
-			Sender:   "Tadue <noreply@tadue.com>",
-			To:       []string{req.PayerEmail},
-			Cc:       []string{req.PayeeEmail},
-			Subject:  subject,
-			HTMLBody: string(body),
+			Sender:  "Tadue <noreply@tadue.com>",
+			To:      []string{req.PayerEmail},
+			Cc:      []string{req.PayeeEmail},
+			Subject: subject,
+			Body:    body,
 		}
 		CheckError(mail.Send(c.Aec(), msg))
 		c.Aec().Infof("Sent PayRequest email: payee=%q, payer=%q, amount=%q",
@@ -1158,9 +1175,11 @@ func handleEnqueueReminderEmails(w http.ResponseWriter, r *http.Request, c *Cont
 	c.Aec().Infof("Enqueued %d reminder emails", count)
 }
 
-func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) {
-	reqCode := r.FormValue("reqCode")
+func handleSendPaymentDoneEmail(w http.ResponseWriter, r *http.Request, c *Context) {
+	reqCode, method := r.FormValue("reqCode"), r.FormValue("method")
 	Assert(reqCode != "", "No reqCode")
+	Assert(method == "offline" || method == "paypal", "Invalid method: %q", method)
+
 	reqKey, err := datastore.DecodeKey(reqCode)
 	CheckError(err)
 	payeeUserKey := reqKey.Parent()
@@ -1171,6 +1190,13 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 	payee := &User{}
 	CheckError(datastore.Get(c.Aec(), payeeUserKey, payee))
 
+	templateName := "email-got-paid.txt"
+	subject := fmt.Sprintf("You've been paid by %s", req.PayerEmail)
+	if method == "offline" {
+		templateName = "email-marked-as-paid.txt"
+		subject = fmt.Sprintf("Your payment request was marked as paid by %s", req.PayerEmail)
+	}
+
 	data := map[string]interface{}{
 		"payeeFullName": payee.FullName,
 		"payerEmail":    req.PayerEmail,
@@ -1178,18 +1204,18 @@ func handleSendGotPaidEmail(w http.ResponseWriter, r *http.Request, c *Context) 
 		"description":   req.Description,
 		"paymentsUrl":   prependHost("/payments", c),
 	}
-	body, err := ExecuteTemplate("email-got-paid.html", data)
+	body, err := ExecuteTextTemplate(templateName, data)
 	CheckError(err)
 
 	msg := &mail.Message{
-		Sender:   "Tadue <noreply@tadue.com>",
-		To:       []string{req.PayeeEmail},
-		Subject:  "You've been paid!",
-		HTMLBody: string(body),
+		Sender:  "Tadue <noreply@tadue.com>",
+		To:      []string{req.PayeeEmail},
+		Subject: subject,
+		Body:    body,
 	}
 	CheckError(mail.Send(c.Aec(), msg))
-	c.Aec().Infof("Sent GotPaid email: payee=%q, payer=%q, amount=%q",
-		req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
+	c.Aec().Infof("Sent %s email: payee=%q, payer=%q, amount=%q",
+		tmpl, req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
 }
 
 // Uses reflection to print records from datastore.
@@ -1299,7 +1325,7 @@ func init() {
 	// Tasks.
 	http.HandleFunc("/tasks/send-pay-request-emails", WrapHandler(handleSendPayRequestEmails))
 	http.HandleFunc("/tasks/enqueue-reminder-emails", WrapHandler(handleEnqueueReminderEmails))
-	http.HandleFunc("/tasks/send-got-paid-email", WrapHandler(handleSendGotPaidEmail))
+	http.HandleFunc("/tasks/send-payment-done-email", WrapHandler(handleSendPaymentDoneEmail))
 	// Bottom links.
 	http.HandleFunc("/about", WrapHandler(handleAbout))
 	http.HandleFunc("/privacy", WrapHandler(handlePrivacy))

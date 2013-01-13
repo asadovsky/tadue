@@ -1,0 +1,9 @@
+Hello {{.fullName}},
+
+Thank you for creating your Tadue account.
+
+To verify your email address, click on the link below (or copy and paste it into your browser):
+{{.verifUrl}}
+
+Thanks,
+The Tadue Team
