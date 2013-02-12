@@ -7,9 +7,9 @@ Description: {{.description}}
 
 Since they did not pay you via the link we sent them, we cannot verify this claim.
 
-If you take no action, the payment request will be marked as paid, and Tadue will not send any more emails about this payment request.
+For now, this payment request has been marked as paid, and Tadue will not send any more emails about it. If you believe this is an error, please follow up with {{.payerEmail}} and resubmit the payment request as needed.
 
-To check on your payment requests, visit your payments page:
+To check on all of your payment requests, visit your payments page:
 {{.paymentsUrl}}
 
 Thanks,
