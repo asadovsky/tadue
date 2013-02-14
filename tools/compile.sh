@@ -72,9 +72,11 @@ ls $DST/templates/*.html | xargs \
   -e '/src="\/third_party\/closure/d' $f
 
 # Create tadue.js and (if prod) ga.js imports in base.html.
-sed -i '' -e 's|{{/\* TADUE_JS \*/}}|<script src="/js/tadue.js">|' $DST/templates/base.html
+sed -i '' -e 's|{{/\* TADUE_JS \*/}}|<script src="/js/tadue.js"></script>|' \
+  $DST/templates/base.html
 if [ $v = 'prod' ]; then
-  sed -i '' -e 's|{{/\* GA_JS \*/}}|<script src="/js/ga.js">|' $DST/templates/base.html
+  sed -i '' -e 's|{{/\* GA_JS \*/}}|<script src="/js/ga.js"></script>|' \
+    $DST/templates/base.html
 fi
 
 echo 'Updating application name in app.yaml...'
