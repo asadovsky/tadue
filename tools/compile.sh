@@ -64,18 +64,16 @@ echo 'Updating tags in html files...'
 ls $DST/templates/*.html | xargs \
   sed -i '' -e 's|stylesheet/less|stylesheet|' -e 's|/less/\([A-Za-z_\-]*\)\.less|/css/\1.css|'
 
-# Hack to protect one JS import in base.html. After removing all other internal
-# JS imports, we'll turn this one into tadue.js.
-sed -i '' -e 's|/js/base.js|TADUE_JS|' $DST/templates/base.html
+# Remove all internal, less, and closure JS imports.
+ls $DST/templates/*.html | xargs \
+  sed -i '' -e '/src="\/js\//d' -e '/src="\/third_party\/less/d' \
+  -e '/src="\/third_party\/closure/d' $f
 
-# Remove all internal JS imports.
-ls $DST/templates/*.html | xargs sed -i '' -e '/src="\/js\//d'
-for f in `grep -l '<html>' $DST/templates/*.html`; do
-  sed -i '' -e '/src="\/third_party\/less/d' -e '/src="\/third_party\/closure/d' $f
-done
-
-# Create tadue.js import in base.html.
-sed -i '' -e 's|TADUE_JS|/js/tadue.js|' $DST/templates/base.html
+# Create tadue.js and (if prod) ga.js imports in base.html.
+sed -i '' -e 's|{{/\* TADUE_JS \*/}}|<script src="/js/tadue.js">|' $DST/templates/base.html
+if [ $v = 'prod' ]; then
+  sed -i '' -e 's|{{/\* GA_JS \*/}}|<script src="/js/ga.js">|' $DST/templates/base.html
+fi
 
 echo 'Updating application name in app.yaml...'
 sed -i '' -e "s/tadue-prod/tadue-$v/" $DST/app.yaml

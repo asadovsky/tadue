@@ -5,10 +5,10 @@
 {{end}}
 
 {{define "request-payment-js"}}
-<script type="text/javascript" src="/js/request-payment.js"></script>
-<script type="text/javascript">tadue.requestPayment.init();</script>
+<script src="/js/request-payment.js"></script>
+<script>tadue.requestPayment.init();</script>
 {{if .doInitAutoComplete}}
-<script type="text/javascript">tadue.requestPayment.initAutoComplete();</script>
+<script>tadue.requestPayment.initAutoComplete();</script>
 {{end}}
 {{end}}
 
