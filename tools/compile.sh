@@ -41,13 +41,15 @@ cp $SRC/third_party/jquery-*.min.js $DST/third_party/
 echo 'Compiling JS files...'
 mkdir $DST/js
 
-inputs=`ls $SRC/js/*\.js | grep -v deps\.js | sed -e 's|^|--input=|' | tr '\n' ' '`
+inputs=`ls $SRC/js/*.js | grep -v deps.js | grep -v ga.js | sed -e 's|^|--input=|' | tr '\n' ' '`
 $SRC/third_party/closure-library/closure/bin/build/closurebuilder.py \
   --root=$SRC/third_party/closure-library/ --root=$SRC/js/ $inputs \
   --output_mode=compiled \
   --compiler_jar=/Users/asadovsky/active/dev/third_party/closure-compiler/compiler.jar \
   --compiler_flags='--compilation_level=SIMPLE_OPTIMIZATIONS' \
   --output_file=$DST/js/tadue.js 2>/dev/null
+
+cp $SRC/js/ga.js $DST/js/
 
 echo 'Compiling CSS files...'
 mkdir $DST/css
