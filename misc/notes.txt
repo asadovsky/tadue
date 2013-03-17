@@ -6,7 +6,7 @@ Run dev_appserver:
 
 Tools:
 /Users/asadovsky/active/dev/tadue/tools/lint.sh
-/Users/asadovsky/active/dev/tadue/tools/compile.sh local
+/Users/asadovsky/active/dev/tadue/tools/compile.sh prod
 /Users/asadovsky/active/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
 
 Closure references:

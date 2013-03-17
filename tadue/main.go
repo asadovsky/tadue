@@ -1223,6 +1223,7 @@ func handleSendPaymentDoneEmail(w http.ResponseWriter, r *http.Request, c *Conte
 // Reference: http://golang.org/doc/articles/laws_of_reflection.html
 func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeName := r.FormValue("t")
+	unpaid := r.Form["unpaid"] != nil
 	var res interface{}
 	if typeName == "OAuthToken" {
 		res = &OAuthToken{}
@@ -1264,6 +1265,9 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	// Make rows.
 	rows := [][]string{}
 	q := datastore.NewQuery(typeName)
+	if unpaid && typeName == "PayRequest" {
+		q = q.Filter("DeletionDate =", time.Unix(0, 0)).Filter("IsPaid =", false)
+	}
 	for it := q.Run(c.Aec()); ; {
 		key, err := it.Next(res)
 		if err == datastore.Done {
