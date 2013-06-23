@@ -10,6 +10,7 @@ p1 other
 - Fix project organization
     http://blog.golang.org/organizing-go-code
     http://blog.golang.org/the-app-engine-sdk-and-workspaces-gopath
+    http://golang.org/doc/code.html
 - Store Google contacts
 - Switch from securecookie submodule to copy
 - If ajax request is slow, show "loading" message
