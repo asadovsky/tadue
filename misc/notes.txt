@@ -2,12 +2,12 @@ Run Python SMTP debug server:
 python -m smtpd -n -c DebuggingServer localhost:1025
 
 Run dev_appserver:
-/usr/local/google_appengine_go/dev_appserver.py --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025 /Users/asadovsky/active/dev/tadue
+/usr/local/google_appengine_go/dev_appserver.py --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025 /Users/asadovsky/dev/tadue
 
 Tools:
-/Users/asadovsky/active/dev/tadue/tools/lint.sh
-/Users/asadovsky/active/dev/tadue/tools/compile.sh prod
-/Users/asadovsky/active/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
+/Users/asadovsky/dev/tadue/tools/lint.sh
+/Users/asadovsky/dev/tadue/tools/compile.sh prod
+/Users/asadovsky/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
 
 Closure references:
 https://developers.google.com/closure/library/docs/closurebuilder

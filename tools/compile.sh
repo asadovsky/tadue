@@ -18,7 +18,7 @@ fi
 
 v=$1
 
-SRC='/Users/asadovsky/active/dev/tadue'
+SRC='/Users/asadovsky/dev/tadue'
 cd $SRC
 
 config_go="$SRC/misc/config_$v.go.txt"
@@ -45,7 +45,7 @@ inputs=`ls $SRC/js/*.js | grep -v deps.js | grep -v ga.js | sed -e 's|^|--input=
 $SRC/third_party/closure-library/closure/bin/build/closurebuilder.py \
   --root=$SRC/third_party/closure-library/ --root=$SRC/js/ $inputs \
   --output_mode=compiled \
-  --compiler_jar=/Users/asadovsky/active/dev/third_party/closure-compiler/compiler.jar \
+  --compiler_jar=/Users/asadovsky/dev/third_party/closure-compiler/compiler.jar \
   --compiler_flags='--compilation_level=SIMPLE_OPTIMIZATIONS' \
   --output_file=$DST/js/tadue.js 2>/dev/null
 
