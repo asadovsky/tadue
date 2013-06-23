@@ -7,6 +7,9 @@ p1 features
 - Allow "John Doe <email>" format
 
 p1 other
+- Fix project organization
+    http://blog.golang.org/organizing-go-code
+    http://blog.golang.org/the-app-engine-sdk-and-workspaces-gopath
 - Store Google contacts
 - Switch from securecookie submodule to copy
 - If ajax request is slow, show "loading" message
