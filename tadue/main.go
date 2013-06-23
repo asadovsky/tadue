@@ -3,6 +3,7 @@
 package tadue
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -12,7 +13,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	text_template "text/template"
 	"time"
 
 	"appengine"
@@ -705,10 +705,16 @@ func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(err)
 
 	c.Aec().Debugf("Parsed %d contacts", len(contacts))
+	// Prepare list of "Name <Email>" strings.
+	contact_strs := make([]string, len(contacts))
+	for i, v := range contacts {
+		contact_strs[i] = fmt.Sprintf("%s <%s>", v.Name, v.Email)
+	}
+	// JSON-encode the list.
+	b, err := json.Marshal(contact_strs)
+	CheckError(err)
 	w.Header().Set("Content-Type", "application/json")
-	t := text_template.Must(text_template.New("").Parse(
-		`[{{range $i, $v := .}}{{if $i}}, {{end}}"{{js $v.Name}} <{{js $v.Email}}>"{{end}}]`))
-	t.Execute(w, contacts)
+	w.Write(b)
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request, c *Context) {
