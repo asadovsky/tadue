@@ -2,7 +2,7 @@ Run Python SMTP debug server:
 python -m smtpd -n -c DebuggingServer localhost:1025
 
 Run dev_appserver:
-/usr/local/google_appengine_go/dev_appserver.py --clear_datastore --high_replication --address 0.0.0.0 --smtp_host=127.0.0.1 --smtp_port=1025 /Users/asadovsky/dev/tadue
+/usr/local/google_appengine_go/dev_appserver.py --clear_datastore --smtp_host=127.0.0.1 --smtp_port=1025 /Users/asadovsky/dev/tadue
 
 Tools:
 /Users/asadovsky/dev/tadue/tools/lint.sh
