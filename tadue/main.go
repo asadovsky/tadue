@@ -504,7 +504,8 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 	CheckError(err)
 
 	method := r.FormValue("method")
-	Assert(method == "" || method == "offline" || method == "paypal", "Invalid method: %q", method)
+	Assert(method == "" || method == "offline" || method == "paypal",
+		fmt.Sprintf("Invalid method: %q", method))
 
 	// TODO(sadovsky): Cache PayRequest and User lookups so that multiple loads of
 	// this page (e.g. first with method="", then with method="paypal") don't all
@@ -596,7 +597,7 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 			user, err = doSignup(w, r, c)
 			CheckError(err)
 		} else {
-			Assert(doSignupValue == "false", "Invalid doSignupValue: %q", doSignupValue)
+			Assert(doSignupValue == "false", fmt.Sprintf("Invalid doSignupValue: %q", doSignupValue))
 			// TODO(sadovsky): Show nice error page on failed login.
 			user, err = doLogin(w, r, c)
 			CheckError(err)
@@ -703,18 +704,23 @@ func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
 		Transport: &urlfetch.Transport{Context: c.Aec()},
 	}
 	apiResponse, err := transport.Client().Get(GOOGLE_API_REQUEST)
-	// If response is a 401, based on empirical debugging this means the user
-	// revoked their OAuth token. We handle this case by wiping our knowledge of
-	// their OAuth token, so that next time they come back, we show the "sign in
-	// with Google" link again.
-	if apiResponse.StatusCode == http.StatusUnauthorized {
-		CheckError(tc.DeleteToken())
-		Serve404(w)
-		return
+	// If status code is 400 or 401, the user probably revoked their OAuth token.
+	// We handle this case by wiping our knowledge of their OAuth token, so that
+	// next time they initiate a payment request, we'll show the "sign in with
+	// Google" link again.
+	// TODO(sadovsky): Refine this logic. 400 seems to happen when goauth2
+	// attempts to refresh an invalid token.
+	if err != nil {
+		if apiResponse.StatusCode == http.StatusBadRequest ||
+			apiResponse.StatusCode == http.StatusUnauthorized {
+			CheckError(tc.DeleteToken())
+			Serve404(w)
+			return
+		}
+		CheckError(err)
 	}
-	// TODO(sadovsky): Handle other OAuth errors.
-	CheckError(err)
 	defer apiResponse.Body.Close()
+	// TODO(sadovsky): Handle other OAuth errors.
 	contacts, err := GoogleParseContacts(apiResponse.Body)
 	CheckError(err)
 
@@ -1199,7 +1205,7 @@ func handleEnqueueReminderEmails(w http.ResponseWriter, r *http.Request, c *Cont
 func handleSendPaymentDoneEmail(w http.ResponseWriter, r *http.Request, c *Context) {
 	reqCode, method := r.FormValue("reqCode"), r.FormValue("method")
 	Assert(reqCode != "", "No reqCode")
-	Assert(method == "offline" || method == "paypal", "Invalid method: %q", method)
+	Assert(method == "offline" || method == "paypal", fmt.Sprintf("Invalid method: %q", method))
 
 	reqKey, err := datastore.DecodeKey(reqCode)
 	CheckError(err)
@@ -1256,7 +1262,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	} else if typeName == "UserId" {
 		res = &UserId{}
 	} else {
-		Assert(false, "Cannot handle typeName: %q", typeName)
+		Assert(false, fmt.Sprintf("Cannot handle typeName: %q", typeName))
 	}
 
 	renderValue := func(value interface{}) string {
