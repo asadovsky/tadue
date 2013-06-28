@@ -704,23 +704,18 @@ func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
 		Transport: &urlfetch.Transport{Context: c.Aec()},
 	}
 	apiResponse, err := transport.Client().Get(GOOGLE_API_REQUEST)
-	// If status code is 400 or 401, the user probably revoked their OAuth token.
-	// We handle this case by wiping our knowledge of their OAuth token, so that
-	// next time they initiate a payment request, we'll show the "sign in with
-	// Google" link again.
-	// TODO(sadovsky): Refine this logic. 400 seems to happen when goauth2
-	// attempts to refresh an invalid token.
+	// If the request failed, the user probably revoked their OAuth token. We
+	// handle this case by wiping our knowledge of their token, so that next time
+	// they initiate a payment request, we'll show the "sign in with Google" link
+	// again.
+	// TODO(sadovsky): Refine this logic. Unfortunately, goauth2 doesn't give us
+	// the underlying error code.
 	if err != nil {
-		if apiResponse.StatusCode == http.StatusBadRequest ||
-			apiResponse.StatusCode == http.StatusUnauthorized {
-			CheckError(tc.DeleteToken())
-			Serve404(w)
-			return
-		}
-		CheckError(err)
+		CheckError(tc.DeleteToken())
+		Serve404(w)
+		return
 	}
 	defer apiResponse.Body.Close()
-	// TODO(sadovsky): Handle other OAuth errors.
 	contacts, err := GoogleParseContacts(apiResponse.Body)
 	CheckError(err)
 
