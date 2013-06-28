@@ -127,7 +127,7 @@ func updateUser(userId int64, password *string, updateFn func(user *User) bool, 
 	// Sanity check.
 	if password != nil {
 		c.AssertLoggedIn()
-		Assert(c.Session().UserId == userId, "")
+		Assert(c.Session().UserId == userId)
 	}
 	return datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
 		userKey := ToUserKey(c.Aec(), userId)
@@ -176,7 +176,7 @@ func useVerifyEmail(encodedKey string, c *Context) (int64, error) {
 func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	email := ParseEmail(r.FormValue("login-email"))
 	password := r.FormValue("login-password")
-	Assert(email != "", "")
+	Assert(email != "")
 
 	userId, user, err := GetUserFromEmail(email, c)
 	if err == datastore.ErrNoSuchEntity {
@@ -394,10 +394,13 @@ func (tc *DatastoreOAuthTokenCache) Token() (*oauth.Token, error) {
 
 func (tc *DatastoreOAuthTokenCache) PutToken(t *oauth.Token) error {
 	tokenKey := ToOAuthTokenKey(tc.Context.Aec(), tc.UserId, tc.Service)
-	if _, err := datastore.Put(tc.Context.Aec(), tokenKey, (*OAuthToken)(t)); err != nil {
-		return err
-	}
-	return nil
+	_, err := datastore.Put(tc.Context.Aec(), tokenKey, (*OAuthToken)(t))
+	return err
+}
+
+func (tc *DatastoreOAuthTokenCache) DeleteToken() error {
+	tokenKey := ToOAuthTokenKey(tc.Context.Aec(), tc.UserId, tc.Service)
+	return datastore.Delete(tc.Context.Aec(), tokenKey)
 }
 
 ////////////////////////////////////////
@@ -564,6 +567,8 @@ func handleRequestPayment(w http.ResponseWriter, r *http.Request, c *Context) {
 				// User has not done the OAuth dance.
 				authCodeUrl = GoogleMakeConfig(nil).AuthCodeURL("")
 			} else {
+				// TODO(sadovsky): Maybe check with Google whether the token is still
+				// valid (i.e. not revoked).
 				doInitAutoComplete = true
 			}
 		}
@@ -698,7 +703,16 @@ func handleGetContacts(w http.ResponseWriter, r *http.Request, c *Context) {
 		Transport: &urlfetch.Transport{Context: c.Aec()},
 	}
 	apiResponse, err := transport.Client().Get(GOOGLE_API_REQUEST)
-	// TODO(sadovsky): Handle OAuth error.
+	// If response is a 401, based on empirical debugging this means the user
+	// revoked their OAuth token. We handle this case by wiping our knowledge of
+	// their OAuth token, so that next time they come back, we show the "sign in
+	// with Google" link again.
+	if apiResponse.StatusCode == http.StatusUnauthorized {
+		CheckError(tc.DeleteToken())
+		Serve404(w)
+		return
+	}
+	// TODO(sadovsky): Handle other OAuth errors.
 	CheckError(err)
 	defer apiResponse.Body.Close()
 	contacts, err := GoogleParseContacts(apiResponse.Body)
@@ -806,8 +820,8 @@ func getRecentPayRequestsOrDie(
 		CheckError(err)
 		reqKeys = append(reqKeys, extraReqKeys...)
 	}
-	Assert(len(reqs) <= MAX_PAYMENTS_TO_SHOW, "")
-	Assert(len(reqs) == len(reqKeys), "")
+	Assert(len(reqs) <= MAX_PAYMENTS_TO_SHOW)
+	Assert(len(reqs) == len(reqKeys))
 
 	// Convert PayRequests to RenderablePayRequests.
 	rendReqs := make([]RenderablePayRequest, len(reqs))
@@ -1073,7 +1087,7 @@ func doRenderVerifMsg(
 func handleDebugVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	c.AssertLoggedIn()
 	email, sentPayRequestEmails, err := doSetEmailOk(c.Session().UserId, c)
-	Assert(email == c.Session().Email, "")
+	Assert(email == c.Session().Email)
 	CheckError(err)
 	doRenderVerifMsg(email, sentPayRequestEmails, w, r, c)
 }
@@ -1101,7 +1115,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 	payeeUserKey := GetPayeeUserKey(reqCodes[0])
 	// Verify that all reqCodes have the same parent.
 	for _, reqCode := range reqCodes {
-		Assert(GetPayeeUserKey(reqCode).Equal(payeeUserKey), "")
+		Assert(GetPayeeUserKey(reqCode).Equal(payeeUserKey))
 	}
 
 	payee := &User{}

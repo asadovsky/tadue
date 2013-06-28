@@ -181,8 +181,11 @@ func (e *ErrorWithStackTrace) Error() string {
 	return fmt.Sprint(e.Err)
 }
 
-func CheckError(err error) {
+func CheckError(err error, v ...interface{}) {
 	if err != nil {
+		if len(v) > 0 {
+			err = errors.New(fmt.Sprintf("%v\n%v", err, v))
+		}
 		e := &ErrorWithStackTrace{
 			Stack: debug.Stack(),
 			Err:   err,
@@ -191,11 +194,11 @@ func CheckError(err error) {
 	}
 }
 
-func Assert(condition bool, format string, v ...interface{}) {
+func Assert(condition bool, v ...interface{}) {
 	if !condition {
 		e := &ErrorWithStackTrace{
 			Stack: debug.Stack(),
-			Err:   errors.New(fmt.Sprintf(format, v...)),
+			Err:   errors.New(fmt.Sprint(v...)),
 		}
 		panic(e)
 	}
