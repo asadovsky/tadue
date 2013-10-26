@@ -22,15 +22,11 @@ Add securecookie submodule:
 git submodule add git://github.com/gorilla/securecookie.git securecookie
 
 Add closure-library:
-svn checkout http://closure-library.googlecode.com/svn/trunk/ third_party/closure-library
-cd third_party/closure-library
-find . -name .svn -print0 | xargs -0 rm -rf
+git clone http://code.google.com/p/closure-library third_party/closure-library
+chmod 755 third_party/closure-library/closure/bin/build/depswriter.py
 
 Add goauth2:
 hg clone http://code.google.com/p/goauth2 code.google.com/p/goauth2
-cd code.google.com/p/goauth2
-find . -name .hg -print0 | xargs -0 rm -rf
-find . -name .hgtags -print0 | xargs -0 rm -rf
 
 GoDoc: http://godoc.org/github.com/asadovsky/tadue/tadue
 

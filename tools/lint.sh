@@ -5,7 +5,7 @@
 set -e
 set -u
 
-SRC="/Users/asadovsky/dev/tadue"
+SRC="${HOME}/dev/tadue"
 cd $SRC
 
 # Update deps.
