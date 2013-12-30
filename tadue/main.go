@@ -1373,5 +1373,5 @@ func init() {
 	// Development links.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }

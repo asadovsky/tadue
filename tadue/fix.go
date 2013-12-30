@@ -138,6 +138,7 @@ func fixUserIdRecordsOrDie(c *Context) {
 }
 
 func copyPasswords(c *Context) {
+	return // must never be run again
 	makeFn := func() interface{} {
 		return &User{}
 	}
@@ -151,6 +152,20 @@ func copyPasswords(c *Context) {
 	CheckError(updateAll("User", makeFn, updateFn, c))
 }
 
+func clearDeprecatedFields(c *Context) {
+	makeFn := func() interface{} {
+		return &User{}
+	}
+	updateFn := func(value interface{}) bool {
+		user, ok := value.(*User)
+		Assert(ok, "%v", value)
+		user.Salt = ""
+		user.PassHash = ""
+		return true
+	}
+	CheckError(updateAll("User", makeFn, updateFn, c))
+}
+
 func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
 	if false {
 		fixPayRequestRecordsOrDie(c)
@@ -159,8 +174,9 @@ func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
 		fixUserIdRecordsOrDie(c)
 		wipeRecords("VerifyEmail", c)
 		wipeRecords("ResetPassword", c)
+		copyPasswords(c)
 	}
-	copyPasswords(c)
+	clearDeprecatedFields(c)
 
 	ServeInfo(w, "Done")
 }
