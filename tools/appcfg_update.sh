@@ -17,4 +17,4 @@ if [ ! -d $dir ]; then
   exit 1
 fi
 
-/usr/local/google_appengine_go/appcfg.py --noauth_local_webserver --oauth2 update $dir
+/usr/local/go_appengine/appcfg.py --noauth_local_webserver --oauth2 update $dir

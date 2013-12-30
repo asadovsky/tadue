@@ -9,7 +9,7 @@
 set -e
 set -u
 
-usage="Usage: `basename $0` {dev,local,prod}"
+usage="Usage: `basename $0` {local,prod}"
 
 if [ $# -ne 1 ]; then
   echo $usage

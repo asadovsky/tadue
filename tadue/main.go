@@ -3,6 +3,7 @@
 package tadue
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -136,7 +137,7 @@ func updateUser(userId int64, password *string, updateFn func(user *User) bool, 
 			return err
 		}
 		// Check password.
-		if password != nil && SaltAndHash(user.Salt, *password) != user.PassHash {
+		if password != nil && !bytes.Equal(SaltAndHash(user.Salt, *password), user.PassHash) {
 			return makeWrongPasswordError(user.Email)
 		}
 		if updateFn(user) {
@@ -184,7 +185,7 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 	}
 	CheckError(err)
 
-	if SaltAndHash(user.Salt, password) != user.PassHash {
+	if !bytes.Equal(SaltAndHash(user.Salt, password), user.PassHash) {
 		return nil, makeWrongPasswordError(user.Email)
 	}
 
@@ -460,15 +461,16 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 	err = datastore.RunInTransaction(c.Aec(), func(aec appengine.Context) error {
 		shouldSendEmail = true // ensure transaction is idempotent
 		req := &PayRequest{}
-		err := datastore.Get(aec, reqKey, req)
-		if err != nil {
+		if err := datastore.Get(aec, reqKey, req); err != nil {
 			return err
 		}
 
-		// Check payee email and amount.
-		// TODO(sadovsky): Maybe store payer's PayPal email, since we get it here.
-		if msg.PayeeEmail != req.PayeeEmail {
-			return errors.New(fmt.Sprintf("Wrong payee: %q != %q", msg.PayeeEmail, req.PayeeEmail))
+		// Get payee's User object so we can get their paypal email.
+		payee := GetUserOrDie(GetPayeeUserKey(reqCode), c)
+
+		// Check payee's paypal email and amount.
+		if msg.PayeeEmail != payee.PayPalEmail {
+			return errors.New(fmt.Sprintf("Wrong payee: %q != %q", msg.PayeeEmail, payee.PayPalEmail))
 		}
 		if msg.Amount != req.Amount {
 			return errors.New(fmt.Sprintf("Wrong amount: %v != %v", msg.Amount, req.Amount))
@@ -488,6 +490,7 @@ func handleIpn(w http.ResponseWriter, r *http.Request, c *Context) {
 		if _, err := datastore.Put(aec, reqKey, req); err != nil {
 			return err
 		}
+		// TODO(sadovsky): Maybe store payer's paypal email, since we know it here.
 		return nil
 	}, nil)
 	CheckError(err)
@@ -520,7 +523,7 @@ func handlePay(w http.ResponseWriter, r *http.Request, c *Context) {
 		return
 	}
 
-	// Get payee's User object so we can get their name and paypal email address.
+	// Get payee's User object so we can get their name and paypal email.
 	payee := GetUserOrDie(GetPayeeUserKey(reqCode), c)
 
 	if method == "" {
@@ -1250,8 +1253,12 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		res = &OAuthToken{}
 	} else if typeName == "PayRequest" {
 		res = &PayRequest{}
+	} else if typeName == "ResetPassword" {
+		res = &ResetPassword{}
 	} else if typeName == "Session" {
 		res = &Session{}
+	} else if typeName == "VerifyEmail" {
+		res = &VerifyEmail{}
 	} else if typeName == "User" {
 		res = &User{}
 	} else if typeName == "UserId" {
@@ -1270,6 +1277,10 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 				loc = time.UTC
 			}
 			return fmt.Sprintf("%v", t.In(loc))
+		}
+		// If value is a byte slice, render it in hex.
+		if b, ok := value.([]byte); ok {
+			return fmt.Sprintf("%x", b)
 		}
 		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
 		return res[1 : len(res)-1] // strip quotes
@@ -1362,5 +1373,5 @@ func init() {
 	// Development links.
 	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
 	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	http.HandleFunc("/dev/fix", WrapHandler(handleFix))
 }

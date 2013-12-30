@@ -22,8 +22,8 @@ type UserId struct {
 // Keyed by int (NewIncompleteKey).
 type User struct {
 	Email       string // primary email of account holder
-	Salt        string
-	PassHash    string // hash of salted password
+	Salt        []byte
+	PassHash    []byte // hash of salted password
 	FullName    string // full name of user
 	PayPalEmail string // paypal account email
 	EmailOk     bool   // true if user has verified their primary email
@@ -73,7 +73,7 @@ type ResetPassword struct {
 // Key factories
 
 func NewEphemeralKey(c appengine.Context, kind string) *datastore.Key {
-	key := fmt.Sprintf("%v-%s", time.Now().Unix(), GenerateSecureRandomString())
+	key := fmt.Sprintf("%v-%x", time.Now().Unix(), GenerateSecureRandomString())
 	return datastore.NewKey(c, kind, key, 0, nil)
 }
 

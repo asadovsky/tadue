@@ -204,15 +204,15 @@ func Assert(condition bool, v ...interface{}) {
 	}
 }
 
-func GenerateSecureRandomString() string {
-	return string(securecookie.GenerateRandomKey(32))
+func GenerateSecureRandomString() []byte {
+	return securecookie.GenerateRandomKey(32)
 }
 
-func SaltAndHash(salt, password string) string {
+func SaltAndHash(salt []byte, password string) []byte {
 	h := sha1.New()
-	io.WriteString(h, salt)
+	io.WriteString(h, string(salt))
 	io.WriteString(h, password)
-	return string(h.Sum(nil))
+	return h.Sum(nil)
 }
 
 func AppHostname(c *Context) string {

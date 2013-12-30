@@ -1,4 +1,3 @@
-misc/config_dev.go.txt
 misc/config_local.go.txt
 misc/config_prod.go.txt
 tadue/config.go

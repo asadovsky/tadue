@@ -124,8 +124,8 @@ func fixUserIdRecordsOrDie(c *Context) {
 	}
 }
 
-func wipeSessionRecords(c *Context) {
-	q := datastore.NewQuery("Session").KeysOnly()
+func wipeRecords(typeName string, c *Context) {
+	q := datastore.NewQuery(typeName).KeysOnly()
 	keys, err := q.GetAll(c.Aec(), nil)
 	CheckError(err)
 	CheckError(datastore.DeleteMulti(c.Aec(), keys))
@@ -138,6 +138,8 @@ func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
 		fixUserRecordsOrDie(c)
 		fixUserIdRecordsOrDie(c)
 	}
-	wipeSessionRecords(c)
+	wipeRecords("VerifyEmail", c)
+	wipeRecords("ResetPassword", c)
+
 	ServeInfo(w, "Done")
 }

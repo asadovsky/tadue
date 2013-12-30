@@ -2,7 +2,7 @@ Run Python SMTP debug server:
 python -m smtpd -n -c DebuggingServer localhost:1025
 
 Run dev_appserver:
-/usr/local/google_appengine_go/dev_appserver.py --clear_datastore --smtp_host=127.0.0.1 --smtp_port=1025 ${HOME}/dev/tadue
+/usr/local/go_appengine/dev_appserver.py --clear_datastore --smtp_host=127.0.0.1 --smtp_port=1025 ${HOME}/dev/tadue
 
 Tools:
 ${HOME}/dev/tadue/tools/lint.sh
@@ -50,7 +50,7 @@ http://code.google.com/p/googleappengine/issues/detail?id=7948
 http://code.google.com/p/googleappengine/issues/detail?id=7885
 
 Replace all 2** with 2L** as follows:
-cd /usr/local/google_appengine_go
+cd /usr/local/go_appengine
 find ./ -type f -name '*\.py' -print0 | xargs -0 sed -i '' -e 's/2\*\*/2L**/g'
 
 To avoid having email marked as spam, I had to set up SPF and DKIM.
