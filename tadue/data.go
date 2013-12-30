@@ -22,8 +22,10 @@ type UserId struct {
 // Keyed by int (NewIncompleteKey).
 type User struct {
 	Email       string // primary email of account holder
-	Salt        []byte
-	PassHash    []byte // hash of salted password
+	Salt        string // DEPRECATED, use SaltB
+	SaltB       []byte
+	PassHash    string // DEPRECATED, use PassHashB
+	PassHashB   []byte // hash of salted password
 	FullName    string // full name of user
 	PayPalEmail string // paypal account email
 	EmailOk     bool   // true if user has verified their primary email

@@ -137,7 +137,7 @@ func updateUser(userId int64, password *string, updateFn func(user *User) bool, 
 			return err
 		}
 		// Check password.
-		if password != nil && !bytes.Equal(SaltAndHash(user.Salt, *password), user.PassHash) {
+		if password != nil && !bytes.Equal(SaltAndHash(user.SaltB, *password), user.PassHashB) {
 			return makeWrongPasswordError(user.Email)
 		}
 		if updateFn(user) {
@@ -185,7 +185,7 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 	}
 	CheckError(err)
 
-	if !bytes.Equal(SaltAndHash(user.Salt, password), user.PassHash) {
+	if !bytes.Equal(SaltAndHash(user.SaltB, password), user.PassHashB) {
 		return nil, makeWrongPasswordError(user.Email)
 	}
 
@@ -198,10 +198,10 @@ func doLogin(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) 
 func doSignup(w http.ResponseWriter, r *http.Request, c *Context) (*User, error) {
 	salt := GenerateSecureRandomString()
 	newUser := &User{
-		Email:    ParseEmail(r.FormValue("signup-email")),
-		Salt:     salt,
-		PassHash: SaltAndHash(salt, r.FormValue("signup-password")),
-		FullName: ParseFullName(r.FormValue("signup-name")),
+		Email:     ParseEmail(r.FormValue("signup-email")),
+		SaltB:     salt,
+		PassHashB: SaltAndHash(salt, r.FormValue("signup-password")),
+		FullName:  ParseFullName(r.FormValue("signup-name")),
 	}
 	if r.FormValue("signup-copy-email") == "on" {
 		newUser.PayPalEmail = newUser.Email
@@ -1043,8 +1043,8 @@ func handleChangePassword(w http.ResponseWriter, r *http.Request, c *Context) {
 	var err error = nil
 	updateFn := func(user *User) bool {
 		salt := GenerateSecureRandomString()
-		user.Salt = salt
-		user.PassHash = SaltAndHash(salt, r.FormValue("new-password"))
+		user.SaltB = salt
+		user.PassHashB = SaltAndHash(salt, r.FormValue("new-password"))
 		return true
 	}
 	if !isPasswordResetRequest {
@@ -1322,7 +1322,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeNames := [...]string{
-		"PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
+		"OAuthToken", "PayRequest", "ResetPassword", "Session", "User", "UserId", "VerifyEmail"}
 	for _, typeName := range typeNames {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)

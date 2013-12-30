@@ -18,7 +18,7 @@ fi
 
 v=$1
 
-SRC='${HOME}/dev/tadue'
+SRC="${HOME}/dev/tadue"
 cd $SRC
 
 config_go="$SRC/misc/config_$v.go.txt"

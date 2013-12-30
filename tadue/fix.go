@@ -11,6 +11,9 @@ import (
 	"appengine/datastore"
 )
 
+////////////////////////////////////////
+// Util functions
+
 func updateAll(typeName string, makeFn func() interface{}, updateFn func(value interface{}) bool,
 	c *Context) error {
 	q := datastore.NewQuery(typeName).KeysOnly()
@@ -37,6 +40,16 @@ func updateAll(typeName string, makeFn func() interface{}, updateFn func(value i
 	}
 	return nil
 }
+
+func wipeRecords(typeName string, c *Context) {
+	q := datastore.NewQuery(typeName).KeysOnly()
+	keys, err := q.GetAll(c.Aec(), nil)
+	CheckError(err)
+	CheckError(datastore.DeleteMulti(c.Aec(), keys))
+}
+
+////////////////////////////////////////
+// Fix functions
 
 func fixUserRecordsOrDie(c *Context) {
 	makeFn := func() interface{} {
@@ -124,11 +137,18 @@ func fixUserIdRecordsOrDie(c *Context) {
 	}
 }
 
-func wipeRecords(typeName string, c *Context) {
-	q := datastore.NewQuery(typeName).KeysOnly()
-	keys, err := q.GetAll(c.Aec(), nil)
-	CheckError(err)
-	CheckError(datastore.DeleteMulti(c.Aec(), keys))
+func copyPasswords(c *Context) {
+	makeFn := func() interface{} {
+		return &User{}
+	}
+	updateFn := func(value interface{}) bool {
+		user, ok := value.(*User)
+		Assert(ok, "%v", value)
+		user.SaltB = []byte(user.Salt)
+		user.PassHashB = []byte(user.PassHash)
+		return true
+	}
+	CheckError(updateAll("User", makeFn, updateFn, c))
 }
 
 func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
@@ -137,9 +157,10 @@ func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
 		fixSessionRecordsOrDie(c)
 		fixUserRecordsOrDie(c)
 		fixUserIdRecordsOrDie(c)
+		wipeRecords("VerifyEmail", c)
+		wipeRecords("ResetPassword", c)
 	}
-	wipeRecords("VerifyEmail", c)
-	wipeRecords("ResetPassword", c)
+	copyPasswords(c)
 
 	ServeInfo(w, "Done")
 }
