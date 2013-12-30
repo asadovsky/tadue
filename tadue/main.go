@@ -1255,8 +1255,6 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		res = &PayRequest{}
 	} else if typeName == "ResetPassword" {
 		res = &ResetPassword{}
-	} else if typeName == "Session" {
-		res = &Session{}
 	} else if typeName == "VerifyEmail" {
 		res = &VerifyEmail{}
 	} else if typeName == "User" {
@@ -1322,7 +1320,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeNames := [...]string{
-		"OAuthToken", "PayRequest", "ResetPassword", "Session", "User", "UserId", "VerifyEmail"}
+		"OAuthToken", "PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
 	for _, typeName := range typeNames {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)
