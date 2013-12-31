@@ -874,7 +874,7 @@ func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 	rendReqs := getRecentPayRequestsOrDie(c.Session().UserId, user.EmailOk, []string{}, c)
 	data := map[string]interface{}{
 		"user":              user,
-		"isNew":             r.Form["new"] != nil,
+		"isNew":             !user.EmailOk && r.Form["new"] != nil,
 		"rendReqs":          rendReqs,
 		"undoableReqCodes":  "",
 		"reminderFrequency": AUTO_PAY_REQUEST_EMAIL_FREQUENCY,

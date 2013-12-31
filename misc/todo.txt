@@ -12,7 +12,6 @@ p1 other
     http://blog.golang.org/the-app-engine-sdk-and-workspaces-gopath
     http://golang.org/doc/code.html
 - Store Google contacts
-- Switch from securecookie submodule to copy
 - If ajax request is slow, show "loading" message
 - Time zone stuff
 
@@ -30,7 +29,7 @@ p2 other
 - Handle ajax errors
 - Protect against CSRF
 - Write unit tests, e.g. for payments page
-- For templates, use structs, or use FindOrDie map
+- For templates, use anonymous structs
 - Add GetFormValueOrDie function
 
 p3
