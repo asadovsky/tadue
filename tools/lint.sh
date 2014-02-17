@@ -15,10 +15,12 @@ echo "Running gofmt..."
 gofmt -w $SRC
 
 echo "Running gjslint..."
-ls $SRC/js/*\.js $SRC/misc/html/*\.js|xargs gjslint --nojsdoc --nobeep
+find . -name '*.js' -not -path '*/third_party/*' \
+  -print0 | xargs -0 gjslint --nojsdoc --nobeep
 
 echo "Running jshint..."
-ls $SRC/js/*\.js $SRC/misc/html/*\.js|xargs jshint
+find . -name '*.js' -not -path '*/third_party/*' \
+  -print0 | xargs -0 jshint
 
 # Write new deps.js.
 echo "Running depswriter..."

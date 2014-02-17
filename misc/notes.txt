@@ -1,14 +1,3 @@
-Run Python SMTP debug server:
-python -m smtpd -n -c DebuggingServer localhost:1025
-
-Run dev_appserver:
-/usr/local/go_appengine/dev_appserver.py --clear_datastore --smtp_host=127.0.0.1 --smtp_port=1025 ${HOME}/dev/tadue
-
-Tools:
-${HOME}/dev/tadue/tools/lint.sh
-${HOME}/dev/tadue/tools/compile.sh prod
-${HOME}/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
-
 Closure references:
 https://developers.google.com/closure/library/docs/closurebuilder
 https://developers.google.com/closure/library/docs/depswriter
@@ -18,21 +7,10 @@ Diff:
 git difftool -t tkdiff -y HEAD
 git difftool -t opendiff -y HEAD
 
-Add securecookie submodule:
-git submodule add git://github.com/gorilla/securecookie.git securecookie
-
-Add closure-library:
-git clone http://code.google.com/p/closure-library third_party/closure-library
-chmod 755 third_party/closure-library/closure/bin/build/depswriter.py
-rm -rf third_party/closure-library/.git
-
-Add goauth2:
-hg clone http://code.google.com/p/goauth2 code.google.com/p/goauth2
-
 GoDoc: http://godoc.org/github.com/asadovsky/tadue/tadue
 
 Port routing:
- - Figure out internal IP:
+ - Determine internal IP:
      ifconfig | grep 192  ==>  inet addr:192.168.1.113
  - Forward port in router:
      Go to 192.168.1.1 (username="", password="admin")
@@ -44,14 +22,6 @@ Port routing:
      http://98.248.42.191:8080
 
 Favicon generator: http://www.degraeve.com/favicon/
-
-Bugs in dev_appserver admin:
-http://code.google.com/p/googleappengine/issues/detail?id=7948
-http://code.google.com/p/googleappengine/issues/detail?id=7885
-
-Replace all 2** with 2L** as follows:
-cd /usr/local/go_appengine
-find ./ -type f -name '*\.py' -print0 | xargs -0 sed -i '' -e 's/2\*\*/2L**/g'
 
 To avoid having email marked as spam, I had to set up SPF and DKIM.
  - To verify SPF: nslookup -q=txt tadue.com
