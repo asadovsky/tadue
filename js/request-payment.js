@@ -174,7 +174,7 @@ tadue.requestPayment.initAutoComplete = function() {
       this.activeElement_.value = email;
     };
   });
-  request.fail(function(jqXHR, textStatus) {
+  request.fail(function() {
   });
 };
 

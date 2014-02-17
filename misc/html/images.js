@@ -44,7 +44,6 @@ setTimeout(drawLogos, 200);
 
 var RADIUS = 10;
 var DIAMETER = 2 * RADIUS;
-var BORDER_WIDTH = 1;
 var LINE_LENGTH = 12;
 
 var initCanvas = function(canvasSelector, width, height) {
@@ -52,21 +51,6 @@ var initCanvas = function(canvasSelector, width, height) {
   canvas.width = width;
   canvas.height = height;
   return canvas.getContext('2d');
-};
-
-var makeCircle = function(ctx, startX, color, alpha) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(startX + RADIUS, RADIUS, RADIUS, 0, Math.PI * 2, true);
-  ctx.fill();
-
-  var oldAlpha = ctx.globalAlpha;
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(startX + RADIUS, RADIUS, RADIUS - BORDER_WIDTH, 0, Math.PI * 2, true);
-  ctx.fill();
-  ctx.globalAlpha = oldAlpha;
 };
 
 var makeLine = function(ctx, startX, color, vertical) {
@@ -108,7 +92,6 @@ var makeX = function(ctx) {
 };
 
 var PURPLE = '#66c';
-var LIGHT_GRAY = '#ddd';
 var BLACK = '#000';
 
 var drawIcons = function() {

@@ -21,7 +21,7 @@ v=$1
 SRC="${HOME}/dev/tadue"
 cd $SRC
 
-config_go="$SRC/misc/config_$v.go.txt"
+config_go="$SRC/misc/config_$v.go"
 if [ ! -e $config_go ]; then
   echo $usage
   exit 1

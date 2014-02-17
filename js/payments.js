@@ -70,7 +70,7 @@ tadue.payments.applyActionToReqCodes = function(url, reqCodes, undo) {
     tadue.payments.updateVisibleState();
   });
   // TODO(sadovsky): Handle ajax failure.
-  request.fail(function(jqXHR, textStatus) {
+  request.fail(function() {
   });
 };
 

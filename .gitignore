@@ -1,6 +1,4 @@
-misc/config_local.go.txt
-misc/config_prod.go.txt
-tadue/config.go
+misc/config_*.go
 
 code.google.com/p/goauth2/
 third_party/closure-library/
