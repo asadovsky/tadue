@@ -1,5 +1,7 @@
 'use strict';
 
+/* global -$ */
+
 var $ = document.querySelector.bind(document);
 
 var renderPng = function(canvasSelector, imgSelector) {
