@@ -9,6 +9,10 @@ ${HOME}/dev/tadue/tools/lint.sh
 ${HOME}/dev/tadue/tools/compile.sh prod
 ${HOME}/dev/tadue/tools/appcfg_update.sh /tmp/tadue.prod.DIR
 
+Diff:
+git difftool -t tkdiff -y HEAD
+git difftool -t opendiff -y HEAD
+
 Add securecookie submodule:
 git submodule add git://github.com/gorilla/securecookie.git securecookie
 

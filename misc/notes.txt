@@ -3,25 +3,19 @@ https://developers.google.com/closure/library/docs/closurebuilder
 https://developers.google.com/closure/library/docs/depswriter
 https://developers.google.com/closure/compiler/docs/api-tutorial3
 
-Diff:
-git difftool -t tkdiff -y HEAD
-git difftool -t opendiff -y HEAD
-
 GoDoc: http://godoc.org/github.com/asadovsky/tadue
 
 Port routing:
  - Determine internal IP:
-     ifconfig | grep 192  ==>  inet addr:192.168.1.113
+     ifconfig | grep 192  ==>  inet 192.168.1.113
  - Forward port in router:
-     Go to 192.168.1.1 (username="", password="admin")
-     Go to "Applications & Gaming" tab
      Add single port forward (in=8080, out=8080, ip=113)
  - Get public IP:
      https://www.google.com/search?q=ip  ==>  98.248.42.191
  - Set IPN url to IP:
      http://98.248.42.191:8080
 
-Favicon generator: http://www.degraeve.com/favicon/
+Favicon drawing tool: http://www.xiconeditor.com/
 
 To avoid having email marked as spam, I had to set up SPF and DKIM.
  - To verify SPF: nslookup -q=txt tadue.com
