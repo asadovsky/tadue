@@ -1,8 +1,10 @@
 'use strict';
 
+var $ = document.querySelector.bind(document);
+
 var renderPng = function(canvasSelector, imgSelector) {
-  var imgSrc = $(canvasSelector).get(0).toDataURL('image/png');
-  $(imgSelector).attr('src', imgSrc);
+  var imgSrc = $(canvasSelector).toDataURL('image/png');
+  $(imgSelector).setAttribute('src', imgSrc);
 };
 
 //////////////////////////////
@@ -18,9 +20,9 @@ var DARK_PURPLE = '#448';
 // Logo
 
 var drawOneLogo = function(canvasSelector, spanSelector, font) {
-  var canvas = $(canvasSelector).get(0);
-  canvas.width = $(spanSelector).width();
-  canvas.height = $(spanSelector).height();
+  var canvas = $(canvasSelector);
+  canvas.width = $(spanSelector).offsetWidth;
+  canvas.height = $(spanSelector).offsetHeight;
 
   var ctx = canvas.getContext('2d');
 
@@ -54,7 +56,7 @@ var DIAMETER = 2 * RADIUS;
 var LINE_LENGTH = 12;
 
 var initCanvas = function(canvasSelector, width, height) {
-  var canvas = $(canvasSelector).get(0);
+  var canvas = $(canvasSelector);
   canvas.width = width;
   canvas.height = height;
   return canvas.getContext('2d');
