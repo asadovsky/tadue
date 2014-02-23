@@ -1,9 +1,7 @@
-// Copyright 2012 Adam Sadovsky. All rights reserved.
-
 // Specialized version of Gorilla context object:
 // http://gorilla-web.appspot.com/src/pkg/gorilla/context/context.go
 
-package tadue
+package app
 
 import (
 	"appengine"

@@ -1,6 +1,4 @@
-// Copyright 2012 Adam Sadovsky. All rights reserved.
-
-package tadue
+package app
 
 const (
 	kAppHostname          = ""
@@ -18,8 +16,8 @@ const (
 
 // Credentials from: https://code.google.com/apis/console/
 const (
-	kGoogleClientId     = "262705026339-i57hgsn249mkbsoujtb133s37uk6vcsb.apps.googleusercontent.com"
-	kGoogleClientSecret = "qakZmYbYGs6NPKYxS-bIrkRd"
+	kGoogleClientId     = "71909377510-8k8ncu2rj698g4h9pl8gjdc1hc89n2ih.apps.googleusercontent.com"
+	kGoogleClientSecret = "H58q7A1ZOenZylcZARDp-kW3"
 	kGoogleRedirectURL  = "http://localhost:8080/oauth2callback"
 )
 

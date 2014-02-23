@@ -1,6 +1,4 @@
-// Copyright 2012 Adam Sadovsky. All rights reserved.
-
-package tadue
+package app
 
 import (
 	"errors"
@@ -175,8 +173,7 @@ func handleFix(w http.ResponseWriter, r *http.Request, c *Context) {
 		wipeRecords("VerifyEmail", c)
 		wipeRecords("ResetPassword", c)
 		copyPasswords(c)
+		clearDeprecatedFields(c)
 	}
-	clearDeprecatedFields(c)
-
 	ServeInfo(w, "Done")
 }

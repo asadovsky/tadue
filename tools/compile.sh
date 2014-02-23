@@ -21,7 +21,7 @@ v=$1
 SRC="${HOME}/dev/tadue"
 cd $SRC
 
-config_go="$SRC/misc/config_$v.go"
+config_go="$SRC/app/config_$v.go"
 if [ ! -e $config_go ]; then
   echo $usage
   exit 1
@@ -32,8 +32,8 @@ echo "Made $DST"
 
 echo 'Copying files...'
 cp *.yaml $DST/
-cp -rf code.google.com misc securecookie static tadue templates $DST/
-cp $config_go $DST/tadue/config.go
+cp -rf app code.google.com securecookie static templates $DST/
+cp $config_go $DST/app/config.go
 
 mkdir $DST/third_party
 cp $SRC/third_party/jquery-*.min.js $DST/third_party/

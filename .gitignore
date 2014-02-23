@@ -1,4 +1,4 @@
-misc/config_*.go
+app/config_*.go
 
 code.google.com/p/goauth2/
 third_party/closure-library/

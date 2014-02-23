@@ -2,7 +2,11 @@ application: tadue-prod
 version: 2
 runtime: go
 api_version: go1
-nobuild_files: ^(tools|misc)/
+
+skip_files:
+- ^app/config_.*.go
+- ^misc/
+- ^tools/
 
 handlers:
 - url: /admin/.*

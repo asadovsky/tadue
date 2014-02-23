@@ -1,8 +1,6 @@
-// Copyright 2012 Adam Sadovsky. All rights reserved.
-
 // TODO(sadovsky): This should probably be a separate package.
 
-package tadue
+package app
 
 import (
 	"errors"

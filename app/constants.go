@@ -1,6 +1,4 @@
-// Copyright 2012 Adam Sadovsky. All rights reserved.
-
-package tadue
+package app
 
 const (
 	SESSION_COOKIE_LIFESPAN          = 14 // lifespan of session cookie in days

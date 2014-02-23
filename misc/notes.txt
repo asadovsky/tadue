@@ -7,7 +7,7 @@ Diff:
 git difftool -t tkdiff -y HEAD
 git difftool -t opendiff -y HEAD
 
-GoDoc: http://godoc.org/github.com/asadovsky/tadue/tadue
+GoDoc: http://godoc.org/github.com/asadovsky/tadue
 
 Port routing:
  - Determine internal IP:
