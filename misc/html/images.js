@@ -1,9 +1,18 @@
 'use strict';
 
-var makeImage = function(canvasSelector, imgSelector) {
+var renderPng = function(canvasSelector, imgSelector) {
   var imgSrc = $(canvasSelector).get(0).toDataURL('image/png');
   $(imgSelector).attr('src', imgSrc);
 };
+
+//////////////////////////////
+// Colors
+
+var BLACK = '#000';
+var WHITE = '#fff';
+var GRAY = '#777';
+var PURPLE = '#66c';
+var DARK_PURPLE = '#448';
 
 //////////////////////////////
 // Logo
@@ -15,12 +24,12 @@ var drawOneLogo = function(canvasSelector, spanSelector, font) {
 
   var ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#448';
+  ctx.fillStyle = DARK_PURPLE;
   ctx.fillRect(0, 0, 1000, 1000);
   ctx.fill();
 
   ctx.font = font;
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = WHITE;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('tadue', 0, canvas.height - 1);
@@ -28,10 +37,10 @@ var drawOneLogo = function(canvasSelector, spanSelector, font) {
 
 var drawLogos = function() {
   drawOneLogo('#logo', '#css_logo', '60px Alice');
-  makeImage('#logo', '#ilogo');
+  renderPng('#logo', '#ilogo');
 
   drawOneLogo('#logo_small', '#css_logo_small', '40px Alice');
-  makeImage('#logo_small', '#ilogo_small');
+  renderPng('#logo_small', '#ilogo_small');
 };
 
 // Add a delay to allow font to load.
@@ -51,7 +60,7 @@ var initCanvas = function(canvasSelector, width, height) {
   return canvas.getContext('2d');
 };
 
-var makeLine = function(ctx, startX, color, vertical) {
+var drawLine = function(ctx, startX, color, vertical) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -65,21 +74,20 @@ var makeLine = function(ctx, startX, color, vertical) {
   ctx.stroke();
 };
 
-var makeMinus = function(ctx, startX, color) {
-  makeLine(ctx, startX, color, false);
+var drawMinus = function(ctx, startX, color) {
+  drawLine(ctx, startX, color, false);
 };
 
-var makePlus = function(ctx, startX, color) {
-  makeLine(ctx, startX, color, false);
-  makeLine(ctx, startX, color, true);
+var drawPlus = function(ctx, startX, color) {
+  drawLine(ctx, startX, color, false);
+  drawLine(ctx, startX, color, true);
 };
 
 var X_WIDTH = 9;
 var X_LINE_WIDTH = 2;
-var X_COLOR = '#777';
 
-var makeX = function(ctx) {
-  ctx.strokeStyle = X_COLOR;
+var drawX = function(ctx) {
+  ctx.strokeStyle = GRAY;
   ctx.lineWidth = X_LINE_WIDTH;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -89,29 +97,52 @@ var makeX = function(ctx) {
   ctx.stroke();
 };
 
-var PURPLE = '#66c';
-var BLACK = '#000';
+var FAVICON_WIDTH = 16;
+
+var drawFavicon = function(ctx) {
+  // Fill the background.
+  ctx.fillStyle = DARK_PURPLE;
+  ctx.fillRect(0, 0, FAVICON_WIDTH, FAVICON_WIDTH);
+  // Draw the "t".
+  // https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Canvas_tutorial/Applying_styles_and_colors#A_lineWidth_example
+  ctx.strokeStyle = WHITE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(3.5, 6);
+  ctx.lineTo(3.5, 13);
+  ctx.moveTo(2, 8.5);
+  ctx.lineTo(6, 8.5);
+  ctx.moveTo(4, 13.5);
+  ctx.lineTo(6, 13.5);
+  ctx.moveTo(6, 12.5);
+  ctx.lineTo(7, 12.5);
+  ctx.stroke();
+};
 
 var drawIcons = function() {
   var ctx = initCanvas('#plus', DIAMETER, DIAMETER);
-  makePlus(ctx, 0, PURPLE);
-  makeImage('#plus', '#iplus');
+  drawPlus(ctx, 0, PURPLE);
+  renderPng('#plus', '#iplus');
 
   ctx = initCanvas('#plus-active', DIAMETER, DIAMETER);
-  makePlus(ctx, 0, BLACK);
-  makeImage('#plus-active', '#iplus-active');
+  drawPlus(ctx, 0, BLACK);
+  renderPng('#plus-active', '#iplus-active');
 
   ctx = initCanvas('#minus', DIAMETER, DIAMETER);
-  makeMinus(ctx, 0, PURPLE);
-  makeImage('#minus', '#iminus');
+  drawMinus(ctx, 0, PURPLE);
+  renderPng('#minus', '#iminus');
 
   ctx = initCanvas('#minus-active', DIAMETER, DIAMETER);
-  makeMinus(ctx, 0, BLACK);
-  makeImage('#minus-active', '#iminus-active');
+  drawMinus(ctx, 0, BLACK);
+  renderPng('#minus-active', '#iminus-active');
 
   ctx = initCanvas('#close', X_WIDTH, X_WIDTH);
-  makeX(ctx);
-  makeImage('#close', '#iclose');
+  drawX(ctx);
+  renderPng('#close', '#iclose');
+
+  ctx = initCanvas('#favicon', FAVICON_WIDTH, FAVICON_WIDTH);
+  drawFavicon(ctx);
+  renderPng('#favicon', '#ifavicon');  // png and ico have the same format
 };
 
 drawIcons();
