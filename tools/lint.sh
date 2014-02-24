@@ -5,7 +5,7 @@
 set -e
 set -u
 
-SRC="${HOME}/dev/tadue"
+SRC=$PROJPATH
 cd $SRC
 
 echo "Removing deps.js..."

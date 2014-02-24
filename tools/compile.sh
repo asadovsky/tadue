@@ -18,7 +18,7 @@ fi
 
 v=$1
 
-SRC="${HOME}/dev/tadue"
+SRC=$PROJPATH
 cd $SRC
 
 config_go="$SRC/app/config_$v.go"
