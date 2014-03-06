@@ -123,7 +123,7 @@ var drawFavicon = function(ctx) {
   ctx.stroke();
 };
 
-var drawIcons = function() {
+var makeImages = function() {
   var ctx = initCanvas('#plus', DIAMETER, DIAMETER);
   drawPlus(ctx, 0, PURPLE);
   renderPng('#plus', '#iplus');
@@ -149,4 +149,4 @@ var drawIcons = function() {
   renderPng('#favicon', '#ifavicon');  // png and ico have the same format
 };
 
-drawIcons();
+makeImages();
