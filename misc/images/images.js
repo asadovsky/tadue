@@ -1,6 +1,6 @@
 'use strict';
 
-/*global -$ */
+/* global -$ */
 
 var $ = document.querySelector.bind(document);
 
