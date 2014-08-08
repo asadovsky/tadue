@@ -17,11 +17,12 @@ Run dev_appserver:
 
 Add securecookie submodule:
 git submodule add git://github.com/gorilla/securecookie.git securecookie
+git submodule update --init
 
 Add closure-library:
-git clone http://code.google.com/p/closure-library third_party/closure-library
-chmod 755 third_party/closure-library/closure/bin/build/*.py
+git clone git@github.com:google/closure-library.git third_party/closure-library
 rm -rf third_party/closure-library/.git
+chmod 755 third_party/closure-library/closure/bin/build/*.py
 
 Add goauth2:
 hg clone http://code.google.com/p/goauth2 code.google.com/p/goauth2
