@@ -106,20 +106,20 @@ tadue.requestPayment.init = function() {
   // Initialize "add payer" button.
   $('#add-payer').click(function() {
     tadue.requestPayment.addPayerEventCount++;
-    var new_tr = $(this).closest('tr').clone();
-    new_tr.find('input').val('');
-    new_tr.find('.error-msg').text('');
-    var email = new_tr.find('.payer-email-field');
+    var newTr = $(this).closest('tr').clone();
+    newTr.find('input').val('');
+    newTr.find('.error-msg').text('');
+    var email = newTr.find('.payer-email-field');
     email.attr('name',
                'payer-email-' + tadue.requestPayment.addPayerEventCount);
     if (tadue.requestPayment.inputHandler !== null) {
       tadue.requestPayment.inputHandler.attachInput(email.get(0));
       email.attr('autocomplete', 'off');
     }
-    var amount = new_tr.find('.amount-field');
+    var amount = newTr.find('.amount-field');
     amount.attr('name', 'amount-' + tadue.requestPayment.addPayerEventCount);
     amount.blur(function() { tadue.requestPayment.updateTotal(); });
-    var icon = new_tr.find('.icon');
+    var icon = newTr.find('.icon');
     icon.addClass('remove-payer');
     icon.removeAttr('id');
     icon.attr('title', 'Remove this payer');
@@ -131,11 +131,11 @@ tadue.requestPayment.init = function() {
       }
       tadue.requestPayment.updateTotal();
     });
-    new_tr.insertBefore('#row-total');
+    newTr.insertBefore('#row-total');
     $('#row-total').css('display', 'table-row');
 
     if (tadue.requestPayment.runChecksOnEveryInputEvent) {
-      new_tr.find('input').on('input', tadue.requestPayment.runChecks);
+      newTr.find('input').on('input', tadue.requestPayment.runChecks);
       tadue.requestPayment.runChecks();
     }
   });

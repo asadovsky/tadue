@@ -1,4 +1,6 @@
+.DS_Store
 app/config_*.go
-
-code.google.com/p/goauth2/
-third_party/closure-library/
+code.google.com/p/goauth2
+node_modules
+third_party/closure-compiler
+third_party/closure-library

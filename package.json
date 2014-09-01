@@ -1,0 +1,10 @@
+{
+  "name": "tadue",
+  "version": "0.0.1",
+  "dependencies": {},
+  "devDependencies": {
+    "less": "^1.7.4"
+  },
+  "license": "Apache-2.0",
+  "private": true
+}

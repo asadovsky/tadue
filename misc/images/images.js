@@ -1,13 +1,16 @@
 'use strict';
 
-/* global -$ */
+function renderPng(canvasSelector, imgSelector) {
+  var imgSrc = $(canvasSelector).get(0).toDataURL('image/png');
+  $(imgSelector).attr('src', imgSrc);
+}
 
-var $ = document.querySelector.bind(document);
-
-var renderPng = function(canvasSelector, imgSelector) {
-  var imgSrc = $(canvasSelector).toDataURL('image/png');
-  $(imgSelector).setAttribute('src', imgSrc);
-};
+function initCanvas(canvasSelector, width, height) {
+  var canvas = $(canvasSelector).get(0);
+  canvas.width = width;
+  canvas.height = height;
+  return canvas.getContext('2d');
+}
 
 //////////////////////////////
 // Colors
@@ -21,12 +24,12 @@ var DARK_PURPLE = '#448';
 //////////////////////////////
 // Logo
 
-var drawOneLogo = function(canvasSelector, spanSelector, font) {
-  var canvas = $(canvasSelector);
-  canvas.width = $(spanSelector).offsetWidth;
-  canvas.height = $(spanSelector).offsetHeight;
-
-  var ctx = canvas.getContext('2d');
+function drawOneLogo(canvasSelector, spanSelector) {
+  var span = $(spanSelector);
+  var font = [
+    span.css('font-weight'), span.css('font-size'), span.css('font-family')
+  ].join(' ');
+  var ctx = initCanvas(canvasSelector, span.width(), span.height());
 
   ctx.fillStyle = DARK_PURPLE;
   ctx.fillRect(0, 0, 1000, 1000);
@@ -36,16 +39,16 @@ var drawOneLogo = function(canvasSelector, spanSelector, font) {
   ctx.fillStyle = WHITE;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('tadue', 0, canvas.height - 1);
-};
+  ctx.fillText('tadue', 0, span.height() - 1);
+}
 
-var drawLogos = function() {
-  drawOneLogo('#logo', '#css_logo', '60px Alice');
+function drawLogos() {
+  drawOneLogo('#logo', '#css-logo');
   renderPng('#logo', '#ilogo');
 
-  drawOneLogo('#logo_small', '#css_logo_small', '40px Alice');
-  renderPng('#logo_small', '#ilogo_small');
-};
+  drawOneLogo('#logo-small', '#css-logo-small');
+  renderPng('#logo-small', '#ilogo-small');
+}
 
 // Add a delay to allow font to load.
 setTimeout(drawLogos, 200);
@@ -57,14 +60,7 @@ var RADIUS = 10;
 var DIAMETER = 2 * RADIUS;
 var LINE_LENGTH = 12;
 
-var initCanvas = function(canvasSelector, width, height) {
-  var canvas = $(canvasSelector);
-  canvas.width = width;
-  canvas.height = height;
-  return canvas.getContext('2d');
-};
-
-var drawLine = function(ctx, startX, color, vertical) {
+function drawLine(ctx, startX, color, vertical) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -76,21 +72,21 @@ var drawLine = function(ctx, startX, color, vertical) {
     ctx.lineTo(startX + RADIUS + LINE_LENGTH / 2, RADIUS);
   }
   ctx.stroke();
-};
+}
 
-var drawMinus = function(ctx, startX, color) {
+function drawMinus(ctx, startX, color) {
   drawLine(ctx, startX, color, false);
-};
+}
 
-var drawPlus = function(ctx, startX, color) {
+function drawPlus(ctx, startX, color) {
   drawLine(ctx, startX, color, false);
   drawLine(ctx, startX, color, true);
-};
+}
 
 var X_WIDTH = 9;
 var X_LINE_WIDTH = 2;
 
-var drawX = function(ctx) {
+function drawX(ctx) {
   ctx.strokeStyle = GRAY;
   ctx.lineWidth = X_LINE_WIDTH;
   ctx.beginPath();
@@ -99,11 +95,11 @@ var drawX = function(ctx) {
   ctx.moveTo(0, X_WIDTH);
   ctx.lineTo(X_WIDTH, 0);
   ctx.stroke();
-};
+}
 
 var FAVICON_WIDTH = 16;
 
-var drawFavicon = function(ctx) {
+function drawFavicon(ctx) {
   // Fill the background.
   ctx.fillStyle = DARK_PURPLE;
   ctx.fillRect(0, 0, FAVICON_WIDTH, FAVICON_WIDTH);
@@ -121,9 +117,9 @@ var drawFavicon = function(ctx) {
   ctx.moveTo(6, 12.5);
   ctx.lineTo(7, 12.5);
   ctx.stroke();
-};
+}
 
-var makeImages = function() {
+function makeImages() {
   var ctx = initCanvas('#plus', DIAMETER, DIAMETER);
   drawPlus(ctx, 0, PURPLE);
   renderPng('#plus', '#iplus');
@@ -147,6 +143,6 @@ var makeImages = function() {
   ctx = initCanvas('#favicon', FAVICON_WIDTH, FAVICON_WIDTH);
   drawFavicon(ctx);
   renderPng('#favicon', '#ifavicon');  // png and ico have the same format
-};
+}
 
 makeImages();
