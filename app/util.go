@@ -137,7 +137,7 @@ func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 		// See http://blog.golang.org/2010/08/defer-panic-and-recover.html.
 		defer func() {
 			if data := recover(); data != nil {
-				c.Aec().Errorf(fmt.Sprintf("%v", data))
+				c.Aec().Errorf(fmt.Sprint(data))
 				ServeError(w, data)
 			}
 		}()
