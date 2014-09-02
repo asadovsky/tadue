@@ -384,16 +384,24 @@ type DatastoreOAuthTokenCache struct {
 }
 
 func (tc *DatastoreOAuthTokenCache) Token() (*oauth.Token, error) {
-	token, err := GetOAuthTokenFromUserId(tc.UserId, tc.Service, tc.Context)
+	t, err := GetOAuthTokenFromUserId(tc.UserId, tc.Service, tc.Context)
 	if err != nil {
 		return nil, err
 	}
-	return (*oauth.Token)(token), nil
+	return &oauth.Token{
+		AccessToken:  t.AccessToken,
+		RefreshToken: t.RefreshToken,
+		Expiry:       t.Expiry,
+	}, nil
 }
 
 func (tc *DatastoreOAuthTokenCache) PutToken(t *oauth.Token) error {
 	tokenKey := ToOAuthTokenKey(tc.Context.Aec(), tc.UserId, tc.Service)
-	_, err := datastore.Put(tc.Context.Aec(), tokenKey, (*OAuthToken)(t))
+	_, err := datastore.Put(tc.Context.Aec(), tokenKey, &OAuthToken{
+		AccessToken:  t.AccessToken,
+		RefreshToken: t.RefreshToken,
+		Expiry:       t.Expiry,
+	})
 	return err
 }
 

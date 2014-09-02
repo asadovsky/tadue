@@ -9,7 +9,6 @@ import (
 
 	"appengine"
 	"appengine/datastore"
-	"code.google.com/p/goauth2/oauth"
 )
 
 // Keyed by email address string.
@@ -30,7 +29,12 @@ type User struct {
 }
 
 // Keyed by service name (e.g. "google"), with User as parent.
-type OAuthToken oauth.Token
+// Subset of oauth.Token.
+type OAuthToken struct {
+	AccessToken  string
+	RefreshToken string
+	Expiry       time.Time
+}
 
 // Payment types.
 const (
