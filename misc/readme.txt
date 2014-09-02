@@ -13,3 +13,4 @@ https://developers.google.com/closure/library/docs/gettingstarted
 
 Add goauth2:
 hg clone http://code.google.com/p/goauth2 code.google.com/p/goauth2
+rm -rf code.google.com/p/goauth2/.hg
