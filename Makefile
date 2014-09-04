@@ -1,3 +1,4 @@
+export GOPATH := $(pwd)
 export PROJPATH := ${HOME}/dev/tadue
 
 start:

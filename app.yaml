@@ -6,6 +6,7 @@ api_version: go1
 skip_files:
 - ^app/config_.*.go
 - ^misc/
+- ^node_modules/
 - ^tools/
 
 handlers:
