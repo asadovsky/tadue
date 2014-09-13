@@ -1,4 +1,3 @@
-.DS_Store
 app/config_*.go
 code.google.com/p/goauth2
 node_modules

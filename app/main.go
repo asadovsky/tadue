@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -1280,13 +1279,13 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 			if t.Equal(time.Unix(0, 0)) {
 				loc = time.UTC
 			}
-			return fmt.Sprintf("%v", t.In(loc))
+			return fmt.Sprint(t.In(loc))
 		}
 		// If value is a byte slice, render it in hex.
 		if b, ok := value.([]byte); ok {
 			return fmt.Sprintf("%x", b)
 		}
-		res := strconv.QuoteToASCII(fmt.Sprintf("%v", value))
+		res := fmt.Sprintf("%+q", fmt.Sprint(value))
 		return res[1 : len(res)-1] // strip quotes
 	}
 
