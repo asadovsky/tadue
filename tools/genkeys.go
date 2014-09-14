@@ -8,6 +8,7 @@ import (
 	"io"
 )
 
+// http://www.gorillatoolkit.org/pkg/securecookie#GenerateRandomKey
 func GenerateRandomKey(strength int) []byte {
 	k := make([]byte, strength)
 	if _, err := io.ReadFull(rand.Reader, k); err != nil {

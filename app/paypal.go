@@ -75,8 +75,8 @@ func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount 
 
 	baseUrl := fmt.Sprintf("http://%s", AppHostnameForPayPal(c))
 
-	// NOTE(sadovsky): We could add a trackingId here, but reqCode in url seems good
-	// enough.
+	// NOTE(sadovsky): We could add a trackingId here, but reqCode in url seems
+	// good enough.
 	v := url.Values{}
 	v.Set("requestEnvelope.errorLanguage", "en_US")
 	v.Set("actionType", "PAY")

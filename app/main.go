@@ -1270,10 +1270,10 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		Assert(false, fmt.Sprintf("Cannot handle typeName: %q", typeName))
 	}
 
-	renderValue := func(value interface{}) string {
-		// If value is a timestamp and it's not the Unix epoch, render it in Pacific
+	renderValue := func(v interface{}) string {
+		// If v is a time.Time and it's not the Unix epoch, render it in Pacific
 		// time.
-		if t, ok := value.(time.Time); ok {
+		if t, ok := v.(time.Time); ok {
 			loc, err := time.LoadLocation("America/Los_Angeles")
 			CheckError(err)
 			if t.Equal(time.Unix(0, 0)) {
@@ -1281,15 +1281,15 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 			}
 			return fmt.Sprint(t.In(loc))
 		}
-		// If value is a byte slice, render it in hex.
-		if b, ok := value.([]byte); ok {
+		// If v is a byte slice, render it in hex.
+		if b, ok := v.([]byte); ok {
 			return fmt.Sprintf("%x", b)
 		}
-		res := fmt.Sprintf("%+q", fmt.Sprint(value))
+		res := fmt.Sprintf("%+q", fmt.Sprint(v))
 		return res[1 : len(res)-1] // strip quotes
 	}
 
-	// Make headers.
+	// Make header row.
 	headers := []string{"Key", "EncodedKey"}
 	s := reflect.ValueOf(res).Elem()
 	t := s.Type()
@@ -1297,7 +1297,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		headers = append(headers, t.Field(i).Name)
 	}
 
-	// Make rows.
+	// Make data rows.
 	rows := [][]string{}
 	q := datastore.NewQuery(typeName)
 	if unpaid && typeName == "PayRequest" {
@@ -1324,8 +1324,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
-	typeNames := [...]string{
-		"OAuthToken", "PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
+	typeNames := []string{"OAuthToken", "PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
 	for _, typeName := range typeNames {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)
