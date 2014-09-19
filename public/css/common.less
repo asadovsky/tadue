@@ -138,13 +138,20 @@ th, td {
 }
 
 #top-nav-logo {
-  background-image: url("/static/logo.png");
-  background-repeat: no-repeat;
-  margin-bottom: 10px;
+  color: #fff;
+  display: inline-block;
+  font-family: "Lato", sans-serif;
+  font-size: 48px;
+  font-weight: 300;
+  line-height: 1em;
+  margin: 5px 0;
   position: absolute;
   left: 15px;  /* matches container padding */
-  width: 117px;
-  height: 48px;
+}
+
+#top-nav-logo:hover {
+  color: #fe7;
+  text-decoration: none;
 }
 
 @media (min-width: 641px) {
@@ -163,7 +170,7 @@ th, td {
 #top-nav-links a {
   color: #ddd;
   display: inline-block;  /* force padding to take effect */
-  padding-bottom: 5px;
+  margin: 5px 0;
 }
 
 #top-nav-links li:hover a {

@@ -17,33 +17,31 @@ const (
 	GOOGLE_API_REQUEST = "https://www.google.com/m8/feeds/contacts/default/full?max-results=10000&alt=json"
 )
 
-// TODO(sadovsky): Make these structs private.
-
-type IdType struct {
+type idType struct {
 	Email string `json:"$t"`
 }
 
-type TitleType struct {
+type titleType struct {
 	Name string `json:"$t"`
 }
 
-type EmailType struct {
+type emailType struct {
 	Address string
 	Primary string
 }
 
-type EntryType struct {
-	Title  TitleType
-	Emails []EmailType `json:"gd$email"`
+type entryType struct {
+	Title  titleType
+	Emails []emailType `json:"gd$email"`
 }
 
-type FeedType struct {
-	Id      IdType
-	Entries []EntryType `json:"entry"`
+type feedType struct {
+	Id      idType
+	Entries []entryType `json:"entry"`
 }
 
-type ResponseType struct {
-	Feed FeedType
+type responseType struct {
+	Feed feedType
 }
 
 ////////////////////////////////////////
@@ -55,7 +53,7 @@ type Contact struct {
 }
 
 func GoogleParseContacts(r io.Reader) ([]*Contact, error) {
-	var response ResponseType
+	var response responseType
 	d := json.NewDecoder(r)
 	if err := d.Decode(&response); err != nil {
 		return nil, err

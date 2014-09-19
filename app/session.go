@@ -25,7 +25,7 @@ func MakeSession(userId int64, email, fullName string, w http.ResponseWriter, c 
 		FullName:  fullName,
 	}
 	options := &CookieOptions{
-		MaxAge: 86400 * SESSION_COOKIE_LIFESPAN,
+		MaxAge: 86400 * kSessionCookieLifespan,
 	}
 	if err := SetCookie(sessionKey, s, options, w); err != nil {
 		return err
@@ -37,7 +37,7 @@ func MakeSession(userId int64, email, fullName string, w http.ResponseWriter, c 
 // Updates session cookie and context.
 func UpdateSession(s *Session, w http.ResponseWriter, c *Context) error {
 	options := &CookieOptions{
-		MaxAge: 86400*SESSION_COOKIE_LIFESPAN - int(time.Now().Sub(s.Timestamp).Seconds()),
+		MaxAge: 86400*kSessionCookieLifespan - int(time.Now().Sub(s.Timestamp).Seconds()),
 	}
 	if err := SetCookie(sessionKey, s, options, w); err != nil {
 		return err
@@ -55,7 +55,7 @@ func ReadSession(r *http.Request, c *Context) error {
 	} else if err != nil {
 		return err
 	}
-	if time.Now().Before(s.Timestamp.AddDate(0, 0, SESSION_COOKIE_LIFESPAN)) {
+	if time.Now().Before(s.Timestamp.AddDate(0, 0, kSessionCookieLifespan)) {
 		c.SetSession(s)
 	}
 	return nil

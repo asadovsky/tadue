@@ -11,7 +11,6 @@ const (
 	kDetailsEndpoint      = "https://svcs.sandbox.paypal.com/AdaptivePayments/PaymentDetails"
 	kPayBaseUrl           = "https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_ap-payment"
 	kValidateIpnUrl       = "https://www.sandbox.paypal.com/cgi-bin/webscr"
-	kPrintStackTrace      = true
 )
 
 // Credentials from: https://code.google.com/apis/console/

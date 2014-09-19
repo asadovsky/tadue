@@ -52,13 +52,10 @@ func setHeaders(r *http.Request) {
 // Wrapper around urlfetch.Client to extract response body string. Returns error
 // if response status is not 200.
 func getResponseBody(resp *http.Response, err error) (string, error) {
-	if resp != nil {
-		// TODO(sadovsky): Is this right? See http://goo.gl/2zs4n for discussion.
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(resp.Status)
 	}
@@ -69,8 +66,7 @@ func getResponseBody(resp *http.Response, err error) (string, error) {
 	return string(bytes), nil
 }
 
-func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount float32,
-	c *Context) (*PayPalPayResponse, string, error) {
+func PayPalSendPayRequest(reqCode, payeePayPalEmail, description string, amount float32, c *Context) (*PayPalPayResponse, string, error) {
 	c.Aec().Debugf("PayPalSendPayRequest, payee=%q", payeePayPalEmail)
 
 	baseUrl := fmt.Sprintf("http://%s", AppHostnameForPayPal(c))

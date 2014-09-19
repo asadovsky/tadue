@@ -12,8 +12,7 @@ import (
 ////////////////////////////////////////
 // Util functions
 
-func updateAll(typeName string, makeFn func() interface{}, updateFn func(value interface{}) bool,
-	c *Context) error {
+func updateAll(typeName string, makeFn func() interface{}, updateFn func(value interface{}) bool, c *Context) error {
 	q := datastore.NewQuery(typeName).KeysOnly()
 	keys, err := q.GetAll(c.Aec(), nil)
 	CheckError(err)

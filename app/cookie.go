@@ -18,8 +18,7 @@ type CookieOptions struct {
 	MaxAge int
 }
 
-func SetCookie(
-	name string, value interface{}, options *CookieOptions, w http.ResponseWriter) error {
+func SetCookie(name string, value interface{}, options *CookieOptions, w http.ResponseWriter) error {
 	encoded, err := securecookie.EncodeMulti(name, value, codecs...)
 	if err != nil {
 		return err

@@ -6,7 +6,7 @@
 
     <title>{{if .Title}}{{.Title}} - {{end}}Tadue</title>
 
-    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Lato:300">
     <link rel="stylesheet/less" href="/css/common.less">
     <link rel="stylesheet/less" href="/css/form.less">
     {{.Css}}
@@ -16,9 +16,8 @@
   <body>
     <div id="top-nav" class="clearfix">
       <div class="container">
-        <a id="top-nav-logo" href="/"></a>
+        <a id="top-nav-logo" href="/">tadue</a>
         <ul id="top-nav-links" class="menu">
-          <li><a href="/">Home</a></li>
           <li><a href="/request-payment">Request payment</a></li>
           {{if .FullName}}
           <li>
@@ -51,7 +50,7 @@
           <ul id="bottom-nav-links" class="menu">
             <li><a href="/about">About</a></li>
             <li><a href="/privacy">Privacy</a></li>
-            {{/*<li><a href="/terms">Terms</a></li>*/}}
+            <li><a href="/terms">Terms</a></li>
             <li><a href="/help">Help</a></li>
           </ul>
           <div id="bottom-nav-copyright">Tadue &copy; 2014</div>

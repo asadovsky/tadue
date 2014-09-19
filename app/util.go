@@ -155,6 +155,11 @@ func WrapHandlerImpl(fn AppHandlerFunc, parseForm bool) http.HandlerFunc {
 		if parseForm {
 			CheckError(r.ParseForm())
 		}
+
+		if appengine.IsDevAppServer() {
+			tmpl = template.Must(template.ParseGlob("templates/*.html"))
+			text_tmpl = text_template.Must(text_template.ParseGlob("templates/*.txt"))
+		}
 		fn(w, r, c)
 	}
 }
@@ -167,38 +172,40 @@ func WrapHandlerNoParseForm(fn AppHandlerFunc) http.HandlerFunc {
 	return WrapHandlerImpl(fn, false)
 }
 
-type ErrorWithStackTrace struct {
-	Stack []byte // from debug.Stack()
-	Err   error
+type errorWithStackTrace struct {
+	stack []byte // from debug.Stack()
+	err   error
 }
 
-func (e *ErrorWithStackTrace) Error() string {
-	if kPrintStackTrace {
-		return fmt.Sprintf("%s\n%v", e.Stack, e.Err)
+func (err *errorWithStackTrace) Error() string {
+	if err.stack != nil {
+		return fmt.Sprintf("%s\n%v", err.stack, err.err)
 	}
-	return fmt.Sprint(e.Err)
+	return fmt.Sprint(err.err)
 }
 
-func CheckError(err error, v ...interface{}) {
+func debugStack() []byte {
+	if appengine.IsDevAppServer() {
+		return debug.Stack()
+	}
+	return nil
+}
+
+func CheckError(err error) {
 	if err != nil {
-		if len(v) > 0 {
-			err = errors.New(fmt.Sprintf("%v\n%v", err, v))
-		}
-		e := &ErrorWithStackTrace{
-			Stack: debug.Stack(),
-			Err:   err,
-		}
-		panic(e)
+		panic(&errorWithStackTrace{
+			stack: debugStack(),
+			err:   err,
+		})
 	}
 }
 
 func Assert(condition bool, v ...interface{}) {
 	if !condition {
-		e := &ErrorWithStackTrace{
-			Stack: debug.Stack(),
-			Err:   errors.New(fmt.Sprint(v...)),
-		}
-		panic(e)
+		panic(&errorWithStackTrace{
+			stack: debugStack(),
+			err:   errors.New(fmt.Sprint(v...)),
+		})
 	}
 }
 

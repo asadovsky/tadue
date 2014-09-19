@@ -80,9 +80,7 @@ func steerThroughLogin(w http.ResponseWriter, r *http.Request, c *Context) bool 
 // Applies updateFn to each PayRequest specified in reqCodes.
 // If checkUser is true, aborts the transaction if any PayRequest does not
 // belong to the current user.
-func updatePayRequests(
-	reqCodes []string, updateFn func(reqCode string, req *PayRequest) bool, checkUser bool,
-	c *Context) ([]string, error) {
+func updatePayRequests(reqCodes []string, updateFn func(reqCode string, req *PayRequest) bool, checkUser bool, c *Context) ([]string, error) {
 	Assert(len(reqCodes) > 0, "No reqCodes")
 	if checkUser {
 		c.AssertLoggedIn()
@@ -152,7 +150,7 @@ func useResetPassword(encodedKey string, c *Context) (int64, error) {
 	CheckError(err)
 	v := &ResetPassword{}
 	CheckError(datastore.Get(c.Aec(), key, v))
-	if time.Now().After(v.Timestamp.Add(time.Minute * RESET_PASSWORD_LIFESPAN_MINUTES)) {
+	if time.Now().After(v.Timestamp.Add(time.Minute * kResetPasswordLifespanMinutes)) {
 		return 0, makeExpiredLinkError("Password reset")
 	}
 	return v.UserId, nil
@@ -164,7 +162,7 @@ func useVerifyEmail(encodedKey string, c *Context) (int64, error) {
 	CheckError(err)
 	v := &VerifyEmail{}
 	CheckError(datastore.Get(c.Aec(), key, v))
-	if time.Now().After(v.Timestamp.AddDate(0, 0, VERIFY_EMAIL_LIFESPAN)) {
+	if time.Now().After(v.Timestamp.AddDate(0, 0, kVerifyEmailLifespan)) {
 		return 0, makeExpiredLinkError("Email verification")
 	}
 	return v.UserId, nil
@@ -807,29 +805,28 @@ func renderAmount(amount float32) string {
 	return fmt.Sprintf("$%.2f", amount)
 }
 
-func getRecentPayRequestsOrDie(
-	userId int64, emailOk bool, sentReminderReqCodes []string, c *Context) []RenderablePayRequest {
+func getRecentPayRequestsOrDie(userId int64, emailOk bool, sentReminderReqCodes []string, c *Context) []RenderablePayRequest {
 	userKey := ToUserKey(c.Aec(), userId)
 	reqs := []PayRequest{}
 
 	// Get unpaid requests. Then, if there's still space, append paid requests.
 	// Note the similarity to email inbox rendering.
 	q := makePayRequestQuery(userKey, false).
-		Order("-CreationDate").Limit(MAX_PAYMENTS_TO_SHOW)
+		Order("-CreationDate").Limit(kMaxPaymentsToShow)
 	reqKeys, err := q.GetAll(c.Aec(), &reqs)
 	CheckError(err)
 
 	// NOTE(sadovsky): Because GAE does not allow Filter("x !="), and also does
 	// not allow Filter("x >") with Order("y") for x != y, we must filter on
 	// IsPaid rather than PaymentDate.
-	if len(reqs) < MAX_PAYMENTS_TO_SHOW {
+	if len(reqs) < kMaxPaymentsToShow {
 		q = makePayRequestQuery(userKey, true).
-			Order("-CreationDate").Limit(MAX_PAYMENTS_TO_SHOW - len(reqs))
+			Order("-CreationDate").Limit(kMaxPaymentsToShow - len(reqs))
 		extraReqKeys, err := q.GetAll(c.Aec(), &reqs)
 		CheckError(err)
 		reqKeys = append(reqKeys, extraReqKeys...)
 	}
-	Assert(len(reqs) <= MAX_PAYMENTS_TO_SHOW)
+	Assert(len(reqs) <= kMaxPaymentsToShow)
 	Assert(len(reqs) == len(reqKeys))
 
 	// Convert PayRequests to RenderablePayRequests.
@@ -882,13 +879,12 @@ func handlePayments(w http.ResponseWriter, r *http.Request, c *Context) {
 		"isNew":             !user.EmailOk && r.Form["new"] != nil,
 		"rendReqs":          rendReqs,
 		"undoableReqCodes":  "",
-		"reminderFrequency": AUTO_PAY_REQUEST_EMAIL_FREQUENCY,
+		"reminderFrequency": kAutoPayRequestEmailFrequency,
 	}
 	RenderPageOrDie(w, c, "payments", data)
 }
 
-func renderRecentRequests(
-	w http.ResponseWriter, undoableReqCodes, sentReminderReqCodes []string, c *Context) {
+func renderRecentRequests(w http.ResponseWriter, undoableReqCodes, sentReminderReqCodes []string, c *Context) {
 	c.AssertLoggedIn()
 	rendReqs := getRecentPayRequestsOrDie(c.Session().UserId, false, sentReminderReqCodes, c)
 	data := map[string]interface{}{
@@ -1084,8 +1080,7 @@ func handleSendVerif(w http.ResponseWriter, r *http.Request, c *Context) {
 	RedirectWithMessage(w, r, "/", makeSentLinkMessage("Email verification", c.Session().Email))
 }
 
-func doRenderVerifMsg(
-	email string, sentPayRequestEmails bool, w http.ResponseWriter, r *http.Request, c *Context) {
+func doRenderVerifMsg(email string, sentPayRequestEmails bool, w http.ResponseWriter, r *http.Request, c *Context) {
 	msg := fmt.Sprintf("Email address %s has been verified.", email)
 	if sentPayRequestEmails {
 		msg += " All pending payment requests have been sent."
@@ -1139,7 +1134,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 	updateFn := func(reqCode string, req *PayRequest) bool {
 		if req.IsPaid {
 			return false
-		} else if req.ReminderSentDate.After(time.Now().AddDate(0, 0, -PAY_REQUEST_EMAIL_COOLDOWN)) {
+		} else if req.ReminderSentDate.After(time.Now().AddDate(0, 0, -kPayRequestEmailCooldown)) {
 			return false
 		}
 
@@ -1190,7 +1185,7 @@ func handleSendPayRequestEmails(w http.ResponseWriter, r *http.Request, c *Conte
 
 func handleEnqueueReminderEmails(w http.ResponseWriter, r *http.Request, c *Context) {
 	q := makePayRequestQuery(nil, false).
-		Filter("ReminderSentDate <", time.Now().AddDate(0, 0, -AUTO_PAY_REQUEST_EMAIL_FREQUENCY)).
+		Filter("ReminderSentDate <", time.Now().AddDate(0, 0, -kAutoPayRequestEmailFrequency)).
 		KeysOnly()
 	count := 0
 	for it := q.Run(c.Aec()); ; {
@@ -1248,27 +1243,26 @@ func handleSendPaymentDoneEmail(w http.ResponseWriter, r *http.Request, c *Conte
 		tmpl, req.PayeeEmail, req.PayerEmail, renderAmount(req.Amount))
 }
 
+var types = map[string]interface{}{
+	"OAuthToken":    &OAuthToken{},
+	"PayRequest":    &PayRequest{},
+	"ResetPassword": &ResetPassword{},
+	"VerifyEmail":   &VerifyEmail{},
+	"User":          &User{},
+	"UserId":        &UserId{},
+}
+
+func makeNew(typeName string) interface{} {
+	val, ok := types[typeName]
+	Assert(ok, fmt.Sprintf("Cannot handle typeName: %q", typeName))
+	return reflect.New(reflect.ValueOf(val).Type()).Interface()
+}
+
 // Uses reflection to print records from datastore.
 // Reference: http://golang.org/doc/articles/laws_of_reflection.html
 func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 	typeName := r.FormValue("t")
 	unpaid := r.Form["unpaid"] != nil
-	var res interface{}
-	if typeName == "OAuthToken" {
-		res = &OAuthToken{}
-	} else if typeName == "PayRequest" {
-		res = &PayRequest{}
-	} else if typeName == "ResetPassword" {
-		res = &ResetPassword{}
-	} else if typeName == "VerifyEmail" {
-		res = &VerifyEmail{}
-	} else if typeName == "User" {
-		res = &User{}
-	} else if typeName == "UserId" {
-		res = &UserId{}
-	} else {
-		Assert(false, fmt.Sprintf("Cannot handle typeName: %q", typeName))
-	}
 
 	renderValue := func(v interface{}) string {
 		// If v is a time.Time and it's not the Unix epoch, render it in Pacific
@@ -1291,7 +1285,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 
 	// Make header row.
 	headers := []string{"Key", "EncodedKey"}
-	s := reflect.ValueOf(res).Elem()
+	s := reflect.ValueOf(makeNew(typeName)).Elem()
 	t := s.Type()
 	for i := 0; i < s.NumField(); i++ {
 		headers = append(headers, t.Field(i).Name)
@@ -1304,12 +1298,13 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 		q = q.Filter("DeletionDate =", time.Unix(0, 0)).Filter("IsPaid =", false)
 	}
 	for it := q.Run(c.Aec()); ; {
-		key, err := it.Next(res)
+		val := makeNew(typeName)
+		key, err := it.Next(val)
 		if err == datastore.Done {
 			break
 		}
 		CheckError(err)
-		s := reflect.ValueOf(res).Elem()
+		s := reflect.ValueOf(val).Elem()
 		row := []string{renderValue(key.String()), renderValue(key.Encode())}
 		for i := 0; i < s.NumField(); i++ {
 			row = append(row, renderValue(s.Field(i).Interface()))
@@ -1324,8 +1319,7 @@ func handleDump(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
-	typeNames := []string{"OAuthToken", "PayRequest", "ResetPassword", "User", "UserId", "VerifyEmail"}
-	for _, typeName := range typeNames {
+	for typeName, _ := range types {
 		q := datastore.NewQuery(typeName).KeysOnly()
 		keys, err := q.GetAll(c.Aec(), nil)
 		CheckError(err)
@@ -1336,44 +1330,44 @@ func handleWipe(w http.ResponseWriter, r *http.Request, c *Context) {
 }
 
 func init() {
-	http.HandleFunc("/", WrapHandler(handleHome))
-	http.HandleFunc("/ipn", WrapHandlerNoParseForm(handleIpn))
+	http.Handle("/", WrapHandler(handleHome))
+	http.Handle("/ipn", WrapHandlerNoParseForm(handleIpn))
 	// Account.
-	http.HandleFunc("/settings", WrapHandler(handleSettings))
-	http.HandleFunc("/account/change-password", WrapHandler(handleChangePassword))
-	http.HandleFunc("/account/reset-password", WrapHandler(handleResetPassword))
-	http.HandleFunc("/account/sendverif", WrapHandler(handleSendVerif))
-	http.HandleFunc("/account/verif", WrapHandler(handleVerif))
+	http.Handle("/settings", WrapHandler(handleSettings))
+	http.Handle("/account/change-password", WrapHandler(handleChangePassword))
+	http.Handle("/account/reset-password", WrapHandler(handleResetPassword))
+	http.Handle("/account/sendverif", WrapHandler(handleSendVerif))
+	http.Handle("/account/verif", WrapHandler(handleVerif))
 	// Payments page.
-	http.HandleFunc("/payments", WrapHandler(handlePayments))
-	http.HandleFunc("/payments/mark-as-paid", WrapHandler(handleMarkAsPaid))
-	http.HandleFunc("/payments/send-reminder", WrapHandler(handleSendReminder))
-	http.HandleFunc("/payments/delete", WrapHandler(handleDelete))
+	http.Handle("/payments", WrapHandler(handlePayments))
+	http.Handle("/payments/mark-as-paid", WrapHandler(handleMarkAsPaid))
+	http.Handle("/payments/send-reminder", WrapHandler(handleSendReminder))
+	http.Handle("/payments/delete", WrapHandler(handleDelete))
 	// Request payment.
-	http.HandleFunc("/request-payment", WrapHandler(handleRequestPayment))
-	http.HandleFunc("/oauth2callback", WrapHandler(handleOAuthCallback))
+	http.Handle("/request-payment", WrapHandler(handleRequestPayment))
+	http.Handle("/oauth2callback", WrapHandler(handleOAuthCallback))
 	// NOTE(sadovsky): ParseForm fails with error "mime: no media type".
-	http.HandleFunc("/get-contacts", WrapHandlerNoParseForm(handleGetContacts))
+	http.Handle("/get-contacts", WrapHandlerNoParseForm(handleGetContacts))
 	// Pay.
-	http.HandleFunc("/pay", WrapHandler(handlePay))
-	http.HandleFunc("/pay/done", WrapHandler(handlePayDone))
+	http.Handle("/pay", WrapHandler(handlePay))
+	http.Handle("/pay/done", WrapHandler(handlePayDone))
 	// Login, logout, signup.
-	http.HandleFunc("/login", WrapHandler(handleLogin))
-	http.HandleFunc("/logout", WrapHandler(handleLogout))
-	http.HandleFunc("/signup", WrapHandler(handleSignup))
+	http.Handle("/login", WrapHandler(handleLogin))
+	http.Handle("/logout", WrapHandler(handleLogout))
+	http.Handle("/signup", WrapHandler(handleSignup))
 	// Tasks.
-	http.HandleFunc("/tasks/send-pay-request-emails", WrapHandler(handleSendPayRequestEmails))
-	http.HandleFunc("/tasks/enqueue-reminder-emails", WrapHandler(handleEnqueueReminderEmails))
-	http.HandleFunc("/tasks/send-payment-done-email", WrapHandler(handleSendPaymentDoneEmail))
+	http.Handle("/tasks/send-pay-request-emails", WrapHandler(handleSendPayRequestEmails))
+	http.Handle("/tasks/enqueue-reminder-emails", WrapHandler(handleEnqueueReminderEmails))
+	http.Handle("/tasks/send-payment-done-email", WrapHandler(handleSendPaymentDoneEmail))
 	// Bottom links.
-	http.HandleFunc("/about", WrapHandler(handleAbout))
-	http.HandleFunc("/privacy", WrapHandler(handlePrivacy))
-	http.HandleFunc("/terms", WrapHandler(handleTerms))
-	http.HandleFunc("/help", WrapHandler(handleHelp))
+	http.Handle("/about", WrapHandler(handleAbout))
+	http.Handle("/privacy", WrapHandler(handlePrivacy))
+	http.Handle("/terms", WrapHandler(handleTerms))
+	http.Handle("/help", WrapHandler(handleHelp))
 	// Admin links.
-	http.HandleFunc("/admin/dump", WrapHandler(handleDump))
+	http.Handle("/admin/dump", WrapHandler(handleDump))
 	// Development links.
-	http.HandleFunc("/dev/dv", WrapHandler(handleDebugVerif))
-	//http.HandleFunc("/dev/wipe", WrapHandler(handleWipe))
-	//http.HandleFunc("/dev/fix", WrapHandler(handleFix))
+	http.Handle("/dev/dv", WrapHandler(handleDebugVerif))
+	//http.Handle("/dev/wipe", WrapHandler(handleWipe))
+	//http.Handle("/dev/fix", WrapHandler(handleFix))
 }

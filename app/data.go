@@ -165,7 +165,7 @@ func GetOAuthTokenFromUserId(userId int64, service string, c *Context) (*OAuthTo
 	return token, nil
 }
 
-//////////////////////////////
+////////////////////////////////////////
 // Other util functions
 
 func GetPayeeUserKey(reqCode string) *datastore.Key {
@@ -174,7 +174,7 @@ func GetPayeeUserKey(reqCode string) *datastore.Key {
 	return reqKey.Parent()
 }
 
-//////////////////////////////
+////////////////////////////////////////
 // String parsing functions
 
 // Typically used for parsing form values.
