@@ -1244,12 +1244,12 @@ func handleSendPaymentDoneEmail(w http.ResponseWriter, r *http.Request, c *Conte
 }
 
 var types = map[string]interface{}{
-	"OAuthToken":    &OAuthToken{},
-	"PayRequest":    &PayRequest{},
-	"ResetPassword": &ResetPassword{},
-	"VerifyEmail":   &VerifyEmail{},
-	"User":          &User{},
-	"UserId":        &UserId{},
+	"OAuthToken":    OAuthToken{},
+	"PayRequest":    PayRequest{},
+	"ResetPassword": ResetPassword{},
+	"VerifyEmail":   VerifyEmail{},
+	"User":          User{},
+	"UserId":        UserId{},
 }
 
 func makeNew(typeName string) interface{} {
