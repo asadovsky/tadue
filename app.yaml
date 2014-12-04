@@ -4,9 +4,10 @@ runtime: go
 api_version: go1
 
 skip_files:
+- ^(.*/)?.git/.*$
+- ^(.*/)?node_modules/.*$
 - ^app/config_.*.go
 - ^misc/
-- ^node_modules/
 - ^tools/
 
 handlers:

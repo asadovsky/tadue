@@ -18,9 +18,6 @@ FILES=$(find . -name '*.js' \
   -not -name 'deps.js' \
   -not -path '*/third_party/*' -not -path '*/node_modules/*')
 
-echo "Running gjslint..."
-echo $FILES | xargs gjslint --nojsdoc --nobeep
-
 echo "Running jshint..."
 echo $FILES | xargs jshint
 
