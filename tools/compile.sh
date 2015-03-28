@@ -4,7 +4,6 @@
 #  - Use ADVANCED_OPTIMIZATIONS (with jQuery externs).
 #  - Run tests on the compiled app.
 #  - Write a proper Makefile.
-#  - Fix Google Analytics script tag.
 
 set -e
 set -u
@@ -43,15 +42,13 @@ cp $SRC/third_party/jquery.min.js $DST/third_party/
 echo 'Compiling JS files...'
 mkdir $DST/public/js
 
-inputs=`ls $SRC/public/js/*.js | grep -v deps.js | grep -v ga.js | sed -e 's|^|--input=|' | tr '\n' ' '`
+inputs=`ls $SRC/public/js/*.js | grep -v deps.js | sed -e 's|^|--input=|' | tr '\n' ' '`
 $SRC/third_party/closure-library/closure/bin/build/closurebuilder.py \
   --root=$SRC/third_party/closure-library/ --root=$SRC/public/js/ $inputs \
   --output_mode=compiled \
   --compiler_jar=$SRC/third_party/closure-compiler/compiler.jar \
   --compiler_flags='--compilation_level=SIMPLE_OPTIMIZATIONS' \
   --output_file=$DST/public/js/tadue.js 2>/dev/null
-
-cp $SRC/public/js/ga.js $DST/public/js/
 
 echo 'Compiling CSS files...'
 mkdir $DST/public/css
@@ -73,13 +70,9 @@ ls $DST/templates/*.html | xargs \
   sed -i '' -e '/src="\/js\//d' -e '/src="\/third_party\/less/d' \
   -e '/src="\/third_party\/closure/d' $f
 
-# Create tadue.js and (if prod) ga.js imports in base.html.
+# Add tadue.js import to base.html.
 sed -i '' -e 's|{{/\* TADUE_JS \*/}}|<script src="/js/tadue.js"></script>|' \
   $DST/templates/base.html
-if [ $v = 'prod' ]; then
-  sed -i '' -e 's|{{/\* GA_JS \*/}}|<script src="/js/ga.js"></script>|' \
-    $DST/templates/base.html
-fi
 
 echo 'Updating application name in app.yaml...'
 sed -i '' -e "s/tadue-prod/tadue-$v/" $DST/app.yaml
